@@ -14,12 +14,14 @@ datasource db {
 }
 
 model User {
-  id        String      @id @default(cuid())
-  email     String      @unique
-  name      String?
-  createdAt DateTime    @default(now())
-  roles     UserRole[]
-  Workspace Workspace[]
+  id            String      @id @default(cuid())
+  email         String      @unique
+  name          String?
+  createdAt     DateTime    @default(now())
+  roles         UserRole[]
+  clerkId       String      @unique
+  Workspace     Workspace[]
+  createdEvents Event[]
 }
 
 model Workspace {
@@ -66,4 +68,6 @@ model Event {
   endsAt      DateTime
   locationId  String
   location    Location @relation(fields: [locationId], references: [id])
+  userId      String
+  createdBy   User     @relation(fields: [userId], references: [id])
 }

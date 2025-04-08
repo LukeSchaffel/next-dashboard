@@ -1,34 +1,37 @@
-"use client";
-import { AppShell, Burger } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+// app/dashboard/layout.tsx
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { prisma } from "../../lib/prisma";
+import ClientDashboardLayout from "./_components/client-layout";
+import { clerkClient } from "@clerk/clerk-sdk-node";
 
-import { Sider } from "./sider";
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { userId } = await auth();
 
-const Layout = ({ children }: { children: any }) => {
-  const [opened, { toggle }] = useDisclosure();
+  if (!userId) {
+    redirect("/sign-in");
+  }
 
-  return (
-    <AppShell
-      header={{ height: 60 }}
-      navbar={{
-        width: 300,
-        breakpoint: "sm",
-        collapsed: { mobile: !opened },
-      }}
-      padding="md"
-    >
-      <AppShell.Header>
-        <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-        <div>Logo</div>
-      </AppShell.Header>
+  // Check if the user exists in your Prisma DB
+  const existingUser = await prisma.user.findUnique({
+    where: { clerkId: userId },
+  });
+  // If not, fetch info from Clerk and create them
+  if (!existingUser) {
+    const clerkUser = await clerkClient.users.getUser(userId);
 
-      <AppShell.Navbar>
-        <Sider />
-      </AppShell.Navbar>
+    await prisma.user.create({
+      data: {
+        clerkId: clerkUser.id,
+        email: clerkUser.emailAddresses[0].emailAddress,
+        name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim(),
+      },
+    });
+  }
 
-      <AppShell.Main>{children}</AppShell.Main>
-    </AppShell>
-  );
-};
-
-export default Layout;
+  return <ClientDashboardLayout>{children}</ClientDashboardLayout>;
+}

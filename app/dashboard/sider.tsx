@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import {
   Icon2fa,
@@ -21,7 +22,8 @@ import {
   IconMap,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { SegmentedControl, Text } from "@mantine/core";
+import { SignedIn, SignedOut, SignOutButton, UserButton } from "@clerk/nextjs";
+import { Flex, SegmentedControl, Text } from "@mantine/core";
 import classes from "./_sider.module.css";
 
 const tabs = {
@@ -74,10 +76,6 @@ export function Sider() {
   return (
     <nav className={classes.navbar}>
       <div>
-        <Text fw={500} size="sm" className={classes.title} c="dimmed" mb="xs">
-          bgluesticker@mantine.dev
-        </Text>
-
         <SegmentedControl
           value={section}
           onChange={(value: any) => setSection(value)}
@@ -98,18 +96,22 @@ export function Sider() {
           className={classes.link}
           onClick={(event) => event.preventDefault()}
         >
-          <IconSwitchHorizontal className={classes.linkIcon} stroke={1.5} />
-          <span>Change account</span>
+          <Flex gap={"sm"} align={"center"}>
+            <UserButton></UserButton>
+            <span>Mangage account</span>
+          </Flex>
         </a>
 
-        <a
-          href="#"
-          className={classes.link}
-          onClick={(event) => event.preventDefault()}
-        >
-          <IconLogout className={classes.linkIcon} stroke={1.5} />
-          <span>Logout</span>
-        </a>
+        <SignOutButton>
+          <a
+            href="#"
+            className={classes.link}
+            onClick={(event) => event.preventDefault()}
+          >
+            <IconLogout className={classes.linkIcon} stroke={1.5} />
+            <span>Logout</span>
+          </a>
+        </SignOutButton>
       </div>
     </nav>
   );
