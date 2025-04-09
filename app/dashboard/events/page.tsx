@@ -7,6 +7,8 @@ import {
   Button,
   LoadingOverlay,
   Box,
+  Popover,
+  Text,
 } from "@mantine/core";
 import { Event } from "@prisma/client";
 
@@ -44,6 +46,18 @@ export default function EventsPage() {
     setEvents((prev) => prev.map((evt) => (evt.id === event.id ? event : evt)));
   };
 
+  const handleDeleteEvent = async (event: Event) => {
+    try {
+      const res = await fetch(`/api/events/${event.id}`, { method: "DELETE" });
+      if (res.ok) {
+        const deltedEvent = res.json();
+        setEvents((prev) => [...prev].filter((e) => e.id !== event.id));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <>
       <Flex justify={"space-between"}>
@@ -77,9 +91,35 @@ export default function EventsPage() {
                 "n/a",
                 dayjs(evt.startsAt).format("MM/DD/YYYY"),
                 dayjs(evt.endsAt).format("MM/DD/YYYY"),
-                <Button variant="subtle" onClick={() => setSelectedEvent(evt)}>
-                  Edit
-                </Button>,
+                <Flex>
+                  <Button
+                    variant="subtle"
+                    onClick={() => setSelectedEvent(evt)}
+                  >
+                    Edit
+                  </Button>
+
+                  <Popover shadow="md">
+                    <Popover.Target>
+                      <Button color="red" variant="transparent">
+                        Delete
+                      </Button>
+                    </Popover.Target>
+                    <Popover.Dropdown>
+                      <Text size="xs">
+                        Are you sure you want to delete this?
+                      </Text>
+                      <Button
+                        variant="transparent"
+                        size="xs"
+                        onClick={() => handleDeleteEvent(evt)}
+                        color="red"
+                      >
+                        Yes
+                      </Button>
+                    </Popover.Dropdown>
+                  </Popover>
+                </Flex>,
               ];
             }),
           }}

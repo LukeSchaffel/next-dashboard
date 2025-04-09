@@ -1,5 +1,8 @@
+'use client'
+import { UserProfile } from "@clerk/clerk-react";
+
 const SettingsPage = () => {
-  return <>This is the settings page</>;
+  return <UserProfile />;
 };
 
 export default SettingsPage;

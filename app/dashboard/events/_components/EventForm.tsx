@@ -29,8 +29,8 @@ const EventForm = ({
     mode: "uncontrolled",
     initialValues: {
       name: "",
-      startsAt: dayjs(),
-      endsAt: dayjs(),
+      startsAt: dayjs().toDate(),
+      endsAt: dayjs().toDate(),
       description: "",
     },
 
@@ -54,8 +54,8 @@ const EventForm = ({
         ...prev,
         name,
         description: description || "",
-        startsAt: dayjs(startsAt),
-        endsAt: dayjs(endsAt),
+        startsAt: dayjs(startsAt).toDate(),
+        endsAt: dayjs(endsAt).toDate(),
       }));
     }
   }, [selectedEvent]);
