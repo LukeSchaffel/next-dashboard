@@ -9,6 +9,7 @@ import {
   Box,
   Popover,
   Text,
+  ScrollArea,
 } from "@mantine/core";
 import { Event } from "@prisma/client";
 
@@ -76,54 +77,56 @@ export default function EventsPage() {
           zIndex={1000}
           overlayProps={{ radius: "sm", blur: 2 }}
         />
-        <Table
-          withTableBorder
-          highlightOnHover
-          striped
-          mt={"md"}
-          data={{
-            caption: "My events",
-            head: ["Name", "Description", "Location", "Start", "End", ""],
-            body: events.map((evt) => {
-              return [
-                evt.name,
-                evt.description,
-                "n/a",
-                dayjs(evt.startsAt).format("MM/DD/YYYY"),
-                dayjs(evt.endsAt).format("MM/DD/YYYY"),
-                <Flex>
-                  <Button
-                    variant="subtle"
-                    onClick={() => setSelectedEvent(evt)}
-                  >
-                    Edit
-                  </Button>
+        <ScrollArea scrollbars={"x"}>
+          <Table
+            withTableBorder
+            highlightOnHover
+            striped
+            mt={"md"}
+            data={{
+              caption: "My events",
+              head: ["Name", "Description", "Location", "Start", "End", ""],
+              body: events.map((evt) => {
+                return [
+                  evt.name,
+                  evt.description,
+                  "n/a",
+                  dayjs(evt.startsAt).format("MM/DD/YYYY"),
+                  dayjs(evt.endsAt).format("MM/DD/YYYY"),
+                  <Flex>
+                    <Button
+                      variant="subtle"
+                      onClick={() => setSelectedEvent(evt)}
+                    >
+                      Edit
+                    </Button>
 
-                  <Popover shadow="md">
-                    <Popover.Target>
-                      <Button color="red" variant="transparent">
-                        Delete
-                      </Button>
-                    </Popover.Target>
-                    <Popover.Dropdown>
-                      <Text size="xs">
-                        Are you sure you want to delete this?
-                      </Text>
-                      <Button
-                        variant="transparent"
-                        size="xs"
-                        onClick={() => handleDeleteEvent(evt)}
-                        color="red"
-                      >
-                        Yes
-                      </Button>
-                    </Popover.Dropdown>
-                  </Popover>
-                </Flex>,
-              ];
-            }),
-          }}
-        />
+                    <Popover shadow="md">
+                      <Popover.Target>
+                        <Button color="red" variant="transparent">
+                          Delete
+                        </Button>
+                      </Popover.Target>
+                      <Popover.Dropdown>
+                        <Text size="xs">
+                          Are you sure you want to delete this?
+                        </Text>
+                        <Button
+                          variant="transparent"
+                          size="xs"
+                          onClick={() => handleDeleteEvent(evt)}
+                          color="red"
+                        >
+                          Yes
+                        </Button>
+                      </Popover.Dropdown>
+                    </Popover>
+                  </Flex>,
+                ];
+              }),
+            }}
+          />
+        </ScrollArea>
       </Box>
     </>
   );

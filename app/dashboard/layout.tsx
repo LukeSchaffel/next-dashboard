@@ -1,7 +1,7 @@
 // app/dashboard/layout.tsx
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { prisma } from "../../lib/prisma";
+import { prisma } from "@/lib/prisma";
 import ClientDashboardLayout from "./_components/client-layout";
 import { clerkClient } from "@clerk/clerk-sdk-node";
 
