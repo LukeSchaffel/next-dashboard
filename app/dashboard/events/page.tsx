@@ -2,10 +2,7 @@
 import {
   Flex,
   Title,
-  Table,
-  Paper,
   Button,
-  LoadingOverlay,
   Box,
   Popover,
   Text,
@@ -13,6 +10,7 @@ import {
 } from "@mantine/core";
 import { Event } from "@prisma/client";
 
+import { Table } from "@/lib/components";
 import EventForm from "./_components/EventForm";
 import { useContext, useEffect, useState } from "react";
 import { DashboardContext } from "../_components/client-layout";
@@ -71,63 +69,47 @@ export default function EventsPage() {
           handleUpdateEvent={handleUpdateEvent}
         />
       </Flex>
-      <Box style={{ position: "relative" }}>
-        <LoadingOverlay
-          visible={loading}
-          zIndex={1000}
-          overlayProps={{ radius: "sm", blur: 2 }}
-        />
-        <ScrollArea scrollbars={"x"}>
-          <Table
-            withTableBorder
-            highlightOnHover
-            striped
-            mt={"md"}
-            data={{
-              caption: "My events",
-              head: ["Name", "Description", "Location", "Start", "End", ""],
-              body: events.map((evt) => {
-                return [
-                  evt.name,
-                  evt.description,
-                  "n/a",
-                  dayjs(evt.startsAt).format("MM/DD/YYYY"),
-                  dayjs(evt.endsAt).format("MM/DD/YYYY"),
-                  <Flex>
-                    <Button
-                      variant="subtle"
-                      onClick={() => setSelectedEvent(evt)}
-                    >
-                      Edit
-                    </Button>
 
-                    <Popover shadow="md">
-                      <Popover.Target>
-                        <Button color="red" variant="transparent">
-                          Delete
-                        </Button>
-                      </Popover.Target>
-                      <Popover.Dropdown>
-                        <Text size="xs">
-                          Are you sure you want to delete this?
-                        </Text>
-                        <Button
-                          variant="transparent"
-                          size="xs"
-                          onClick={() => handleDeleteEvent(evt)}
-                          color="red"
-                        >
-                          Yes
-                        </Button>
-                      </Popover.Dropdown>
-                    </Popover>
-                  </Flex>,
-                ];
-              }),
-            }}
-          />
-        </ScrollArea>
-      </Box>
+      <Table
+        loading={loading}
+        data={{
+          caption: "My events",
+          head: ["Name", "Description", "Location", "Start", "End", ""],
+          body: events.map((evt) => {
+            return [
+              evt.name,
+              evt.description,
+              "n/a",
+              dayjs(evt.startsAt).format("MM/DD/YYYY"),
+              dayjs(evt.endsAt).format("MM/DD/YYYY"),
+              <Flex>
+                <Button variant="subtle" onClick={() => setSelectedEvent(evt)}>
+                  Edit
+                </Button>
+
+                <Popover shadow="md">
+                  <Popover.Target>
+                    <Button color="red" variant="transparent">
+                      Delete
+                    </Button>
+                  </Popover.Target>
+                  <Popover.Dropdown>
+                    <Text size="xs">Are you sure you want to delete this?</Text>
+                    <Button
+                      variant="transparent"
+                      size="xs"
+                      onClick={() => handleDeleteEvent(evt)}
+                      color="red"
+                    >
+                      Yes
+                    </Button>
+                  </Popover.Dropdown>
+                </Popover>
+              </Flex>,
+            ];
+          }),
+        }}
+      />
     </>
   );
 }
