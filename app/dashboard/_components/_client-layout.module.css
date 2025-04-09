@@ -1,0 +1,9 @@
+.main {
+  background-color: var(--mantine-color-gray-0);
+  display: flex;
+  flex-direction: column;
+}
+
+.mainContent {
+  flex: 1;
+}

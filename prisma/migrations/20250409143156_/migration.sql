@@ -27,7 +27,9 @@ CREATE TABLE "UserRole" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "workspaceId" TEXT NOT NULL,
-    "role" "Role" NOT NULL,
+    "Role" "Role" NOT NULL,
+    "email" TEXT NOT NULL,
+    "name" TEXT,
 
     CONSTRAINT "UserRole_pkey" PRIMARY KEY ("id")
 );
@@ -47,9 +49,11 @@ CREATE TABLE "Event" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "startsAt" TIMESTAMP(3) NOT NULL,
-    "endsAt" TIMESTAMP(3) NOT NULL,
-    "locationId" TEXT NOT NULL,
+    "startsAt" TIMESTAMP(3),
+    "endsAt" TIMESTAMP(3),
+    "locationId" TEXT,
+    "userRoleId" TEXT NOT NULL,
+    "workspaceId" TEXT NOT NULL,
 
     CONSTRAINT "Event_pkey" PRIMARY KEY ("id")
 );
@@ -76,4 +80,10 @@ ALTER TABLE "UserRole" ADD CONSTRAINT "UserRole_workspaceId_fkey" FOREIGN KEY ("
 ALTER TABLE "Location" ADD CONSTRAINT "Location_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Event" ADD CONSTRAINT "Event_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Event" ADD CONSTRAINT "Event_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Event" ADD CONSTRAINT "Event_userRoleId_fkey" FOREIGN KEY ("userRoleId") REFERENCES "UserRole"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Event" ADD CONSTRAINT "Event_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

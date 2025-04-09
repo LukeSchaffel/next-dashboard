@@ -16,22 +16,50 @@ export default async function DashboardLayout({
     redirect("/sign-in");
   }
 
-  // Check if the user exists in your Prisma DB
+  let activeRole;
   const existingUser = await prisma.user.findUnique({
     where: { clerkId: userId },
+    include: {
+      Roles: { include: { CreatedEvents: true, Workspace: true, User: true } },
+    },
   });
-  // If not, fetch info from Clerk and create them
+
   if (!existingUser) {
     const clerkUser = await clerkClient.users.getUser(userId);
 
-    await prisma.user.create({
+    const dbUser = await prisma.user.create({
       data: {
         clerkId: clerkUser.id,
         email: clerkUser.emailAddresses[0].emailAddress,
         name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim(),
       },
     });
+
+    // Create a workspace for the new user
+    const newWorkspace = await prisma.workspace.create({
+      data: {
+        name: `${clerkUser.firstName}'s Workspace`, // Example name
+        ownerId: dbUser.id, // Assuming clerkUser.id is the userId
+      },
+    });
+
+    // Create a user role for the new user in the new workspace
+    activeRole = await prisma.userRole.create({
+      data: {
+        userId: dbUser.id,
+        workspaceId: newWorkspace.id,
+        Role: "ADMIN", // Assign a default role
+        email: clerkUser.emailAddresses[0].emailAddress,
+        name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim(),
+      },
+    });
+  } else {
+    activeRole = existingUser.Roles[0];
   }
 
-  return <ClientDashboardLayout>{children}</ClientDashboardLayout>;
+  return (
+    <ClientDashboardLayout userRole={activeRole}>
+      {children}
+    </ClientDashboardLayout>
+  );
 }

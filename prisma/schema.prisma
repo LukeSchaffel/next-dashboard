@@ -14,34 +14,37 @@ datasource db {
 }
 
 model User {
-  id            String      @id @default(cuid())
-  email         String      @unique
-  name          String?
-  createdAt     DateTime    @default(now())
-  roles         UserRole[]
-  clerkId       String      @unique
-  Workspace     Workspace[]
-  createdEvents Event[]
+  id        String      @id @default(cuid())
+  email     String      @unique
+  name      String?
+  createdAt DateTime    @default(now())
+  Roles     UserRole[]
+  clerkId   String      @unique
+  Workspace Workspace[]
 }
 
 model Workspace {
   id        String     @id @default(cuid())
   name      String
   ownerId   String
-  owner     User       @relation(fields: [ownerId], references: [id])
-  locations Location[]
-  roles     UserRole[]
+  Owner     User       @relation(fields: [ownerId], references: [id])
+  Locations Location[]
+  Roles     UserRole[]
   createdAt DateTime   @default(now())
+  Events    Event[]
 }
 
 model UserRole {
-  id          String @id @default(cuid())
-  userId      String
-  workspaceId String
-  role        Role
+  id            String  @id @default(cuid())
+  userId        String
+  workspaceId   String
+  Role          Role
+  email         String
+  name          String?
+  CreatedEvents Event[]
 
-  user      User      @relation(fields: [userId], references: [id])
-  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  User      User      @relation(fields: [userId], references: [id])
+  Workspace Workspace @relation(fields: [workspaceId], references: [id])
 
   @@unique([userId, workspaceId])
 }
@@ -56,18 +59,20 @@ model Location {
   name        String
   address     String?
   workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
-  events      Event[]
+  Workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  Events      Event[]
 }
 
 model Event {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String?
-  startsAt    DateTime
-  endsAt      DateTime
-  locationId  String
-  location    Location @relation(fields: [locationId], references: [id])
-  userId      String
-  createdBy   User     @relation(fields: [userId], references: [id])
+  startsAt    DateTime?
+  endsAt      DateTime?
+  locationId  String?
+  Location    Location? @relation(fields: [locationId], references: [id])
+  userRoleId  String
+  CreatedBy   UserRole  @relation(fields: [userRoleId], references: [id])
+  workspaceId String
+  Workspace   Workspace @relation(fields: [workspaceId], references: [id])
 }
