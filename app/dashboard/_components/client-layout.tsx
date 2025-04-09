@@ -50,7 +50,7 @@ export default function ClientDashboardLayout({
         </AppShell.Navbar>
 
         <AppShell.Main className={styles.main} pt={40}>
-          <Title pb={"md"}>{formatTitle()}</Title>
+          <Title pt={'xl'} pb={"md"}>{formatTitle()}</Title>
           <Paper
             className={styles.mainContent}
             p={"xl"}

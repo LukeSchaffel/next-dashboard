@@ -1,5 +1,5 @@
 import "@mantine/core/styles.css";
-import '@mantine/dates/styles.css';
+import "@mantine/dates/styles.css";
 import {
   ClerkProvider,
   SignInButton,
@@ -34,13 +34,6 @@ export default function RootLayout({ children }: { children: any }) {
           />
         </head>
         <body>
-          <SignedOut>
-            <SignInButton />
-            <SignUpButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
           <MantineProvider theme={theme}>{children}</MantineProvider>
         </body>
       </html>
