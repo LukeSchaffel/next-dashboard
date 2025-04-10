@@ -13,12 +13,12 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-export const eventWithLocationArgs =
-  Prisma.validator<Prisma.EventDefaultArgs>()({
-    include: {
-      Location: true,
-    },
-  });
+const eventWithLocationArgs = {
+  include: {
+    Location: true,
+    Tickets: true,
+  },
+} as const;
 
 export type EventWithLocation = Prisma.EventGetPayload<
   typeof eventWithLocationArgs

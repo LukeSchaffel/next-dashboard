@@ -75,4 +75,27 @@ model Event {
   CreatedBy   UserRole  @relation(fields: [userRoleId], references: [id])
   workspaceId String
   Workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  Tickets     Ticket[]
+}
+
+model Ticket {
+  id        String       @id @default(cuid())
+  name      String
+  email     String
+  price     Int // Price in cents
+  status    TicketStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  eventId   String
+  Event     Event        @relation(fields: [eventId], references: [id])
+
+  @@index([email])
+  @@index([status])
+}
+
+enum TicketStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REFUNDED
 }

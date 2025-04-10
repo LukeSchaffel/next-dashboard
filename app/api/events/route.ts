@@ -23,7 +23,7 @@ export async function POST(request: Request) {
         workspaceId,
         locationId: locationId || null,
       },
-      include: { Location: true },
+      include: { Location: true, Tickets: true },
     });
     return NextResponse.json(event, { status: 201 });
   } catch (error) {
@@ -49,6 +49,7 @@ export async function GET(request: Request) {
       },
       include: {
         Location: true,
+        Tickets: true,
       },
       orderBy: {
         startsAt: "asc",
