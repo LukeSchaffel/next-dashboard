@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { IconTicket, IconCalendar, IconTrendingUp } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { AreaChart } from "@mantine/charts";
+import { AreaChart, LineChart, DonutChart } from "@mantine/charts";
 import dayjs from "dayjs";
 
 interface DashboardStats {
@@ -136,7 +136,7 @@ export default function DashboardPage() {
           <Title order={3} mb="md">
             Revenue Trend
           </Title>
-          <AreaChart
+          <LineChart
             h={300}
             data={stats.monthlyRevenue}
             dataKey="month"
@@ -150,37 +150,53 @@ export default function DashboardPage() {
             Ticket Status Distribution
           </Title>
           <Center>
-            <RingProgress
-              size={200}
-              thickness={20}
-              sections={[
+            <DonutChart
+              withLabelsLine
+              labelsType="value"
+              withLabels
+              h={300}
+              data={[
                 {
-                  value:
-                    (stats.ticketStatusCounts.CONFIRMED / stats.totalTickets) *
-                    100,
+                  value: parseFloat(
+                    (
+                      (stats.ticketStatusCounts.CONFIRMED /
+                        stats.totalTickets) *
+                      100
+                    ).toFixed(2)
+                  ),
                   color: "green",
-                  label: "Confirmed",
+                  name: "Confirmed",
                 },
                 {
-                  value:
-                    (stats.ticketStatusCounts.PENDING / stats.totalTickets) *
-                    100,
+                  value: parseFloat(
+                    (
+                      (stats.ticketStatusCounts.PENDING / stats.totalTickets) *
+                      100
+                    ).toFixed(2)
+                  ),
                   color: "yellow",
-                  label: "Pending",
+                  name: "Pending",
                 },
                 {
-                  value:
-                    (stats.ticketStatusCounts.CANCELLED / stats.totalTickets) *
-                    100,
+                  value: parseFloat(
+                    (
+                      (stats.ticketStatusCounts.CANCELLED /
+                        stats.totalTickets) *
+                      100
+                    ).toFixed(2)
+                  ),
                   color: "red",
-                  label: "Cancelled",
+                  name: "Cancelled",
                 },
                 {
-                  value:
-                    (stats.ticketStatusCounts.REFUNDED / stats.totalTickets) *
-                    100,
+                  value: parseFloat(
+                    (
+                      (stats.ticketStatusCounts.REFUNDED / stats.totalTickets) *
+                      100
+                    ).toFixed(2)
+                  ),
                   color: "gray",
-                  label: "Refunded",
+                  name: "Refunded",
                 },
               ]}
             />
