@@ -8,7 +8,7 @@ import {
   Text,
   ScrollArea,
 } from "@mantine/core";
-import { Event } from "@prisma/client";
+import { EventWithLocation } from "@/lib/prisma";
 
 import { Table } from "@/lib/components";
 import EventForm from "./_components/EventForm";
@@ -18,10 +18,10 @@ import dayjs from "dayjs";
 
 export default function EventsPage() {
   const { userRole } = useContext(DashboardContext);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(
-    undefined
-  );
+  const [events, setEvents] = useState<EventWithLocation[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<
+    EventWithLocation | undefined
+  >(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,15 +37,15 @@ export default function EventsPage() {
     getEvents();
   }, []);
 
-  const handleAddEvent = (event: Event) => {
+  const handleAddEvent = (event: EventWithLocation) => {
     setEvents([...events, event]);
   };
 
-  const handleUpdateEvent = (event: Event) => {
+  const handleUpdateEvent = (event: EventWithLocation) => {
     setEvents((prev) => prev.map((evt) => (evt.id === event.id ? event : evt)));
   };
 
-  const handleDeleteEvent = async (event: Event) => {
+  const handleDeleteEvent = async (event: EventWithLocation) => {
     try {
       const res = await fetch(`/api/events/${event.id}`, { method: "DELETE" });
       if (res.ok) {
@@ -79,7 +79,7 @@ export default function EventsPage() {
             return [
               evt.name,
               evt.description,
-              "n/a",
+              evt.Location?.name || "No location",
               dayjs(evt.startsAt).format("MM/DD/YYYY"),
               dayjs(evt.endsAt).format("MM/DD/YYYY"),
               <Flex>

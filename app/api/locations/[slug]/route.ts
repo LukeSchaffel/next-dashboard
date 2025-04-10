@@ -6,26 +6,22 @@ export async function PATCH(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
-  const { name, startsAt, endsAt, description, locationId } =
-    await request.json();
+  const { name, address } = await request.json();
 
   try {
-    const event = await prisma.event.update({
+    const location = await prisma.location.update({
       where: {
         id: String(slug),
       },
       data: {
         name,
-        startsAt: new Date(startsAt),
-        endsAt: new Date(endsAt),
-        description,
-        locationId: locationId || null,
+        address,
       },
     });
-    return NextResponse.json(event, { status: 200 });
+    return NextResponse.json(location, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to update event" },
+      { error: "Failed to update location" },
       { status: 500 }
     );
   }
@@ -38,11 +34,13 @@ export async function DELETE(
   const { slug } = await params;
 
   try {
-    const event = await prisma.event.delete({ where: { id: String(slug) } });
-    return NextResponse.json(event, { status: 200 });
+    const location = await prisma.location.delete({
+      where: { id: String(slug) },
+    });
+    return NextResponse.json(location, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to update event" },
+      { error: "Failed to delete location" },
       { status: 500 }
     );
   }

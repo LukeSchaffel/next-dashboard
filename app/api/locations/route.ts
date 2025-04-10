@@ -2,33 +2,20 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
-  const {
-    name,
-    startsAt,
-    endsAt,
-    description,
-    userRoleId,
-    workspaceId,
-    locationId,
-  } = await request.json();
+  const { name, address, workspaceId } = await request.json();
 
   try {
-    const event = await prisma.event.create({
+    const location = await prisma.location.create({
       data: {
         name,
-        startsAt: new Date(startsAt),
-        endsAt: new Date(endsAt),
-        description,
-        userRoleId,
+        address,
         workspaceId,
-        locationId: locationId || null,
       },
-      include: { Location: true },
     });
-    return NextResponse.json(event, { status: 201 });
+    return NextResponse.json(location, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to create event" },
+      { error: "Failed to create location" },
       { status: 500 }
     );
   }
@@ -43,22 +30,19 @@ export async function GET(request: Request) {
   }
 
   try {
-    const events = await prisma.event.findMany({
+    const locations = await prisma.location.findMany({
       where: {
         workspaceId,
       },
-      include: {
-        Location: true,
-      },
       orderBy: {
-        startsAt: "asc",
+        name: "asc",
       },
     });
 
-    return NextResponse.json(events, { status: 200 });
+    return NextResponse.json(locations, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch events" },
+      { error: "Failed to fetch locations" },
       { status: 500 }
     );
   }
