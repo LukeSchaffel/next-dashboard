@@ -1,27 +1,17 @@
 "use client";
-import {
-  Flex,
-  Title,
-  Button,
-  Box,
-  Popover,
-  Text,
-  ScrollArea,
-  Anchor,
-  Badge,
-} from "@mantine/core";
+import { Flex, Title, Button, Box, Popover, Text, Badge } from "@mantine/core";
 import { EventWithLocation } from "@/lib/prisma";
 
 import { Table } from "@/lib/components";
 import EventForm from "./_components/EventForm";
-import { useContext, useEffect, useState } from "react";
-import { DashboardContext } from "../_components/client-layout";
+import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { IconEye } from "@tabler/icons-react";
+import { useClientAuthSession } from "../_components/client-layout";
 
 export default function EventsPage() {
-  const { userRole } = useContext(DashboardContext);
+  const { userRole } = useClientAuthSession();
   const [events, setEvents] = useState<EventWithLocation[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<
     EventWithLocation | undefined

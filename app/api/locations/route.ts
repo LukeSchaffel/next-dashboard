@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession } from "@/lib/auth";
 
 export async function POST(request: Request) {
-  const { name, address, workspaceId } = await request.json();
-
   try {
+    const { name, address } = await request.json();
+    const { workspaceId } = await getAuthSession();
+
     const location = await prisma.location.create({
       data: {
         name,
@@ -22,14 +24,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const workspaceId = searchParams.get("workspaceId");
-
-  if (!workspaceId) {
-    return NextResponse.json({ error: "Missing workspaceId" }, { status: 400 });
-  }
-
   try {
+    const { workspaceId } = await getAuthSession();
+
     const locations = await prisma.location.findMany({
       where: {
         workspaceId,
