@@ -16,25 +16,23 @@ import dayjs from "dayjs";
 import { EventWithLocation } from "@/lib/prisma";
 import { Location } from "@prisma/client";
 import { SetStateAction, useEffect, useState } from "react";
+import { useEventStore } from "@/stores/useEventStore";
 
 const EventForm = ({
   userRole,
-  handleAddEvent,
   selectedEvent,
   setSelectedEvent,
-  handleUpdateEvent,
 }: {
   userRole: any;
-  handleAddEvent: (event: EventWithLocation) => void;
   selectedEvent?: EventWithLocation;
   setSelectedEvent: React.Dispatch<
     SetStateAction<EventWithLocation | undefined>
   >;
-  handleUpdateEvent: (event: EventWithLocation) => void;
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState<Location[]>([]);
+  const { createEvent, updateEvent } = useEventStore();
 
   const form = useForm({
     mode: "uncontrolled",
@@ -88,43 +86,9 @@ const EventForm = ({
     setLoading(true);
     try {
       if (selectedEvent) {
-        const response = await fetch(`/api/events/${selectedEvent.id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...values,
-            userRoleId: userRole.id,
-            workspaceId: userRole.workspaceId,
-          }),
-        });
-
-        if (response.ok) {
-          const event: EventWithLocation = await response.json();
-          handleUpdateEvent(event);
-        } else {
-          console.error("Failed to update event", response);
-        }
+        await updateEvent(selectedEvent.id, values);
       } else {
-        const response = await fetch("/api/events", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...values,
-            userRoleId: userRole.id,
-            workspaceId: userRole.workspaceId,
-          }),
-        });
-
-        if (response.ok) {
-          const event: EventWithLocation = await response.json();
-          handleAddEvent(event);
-        } else {
-          console.error("Failed to create event");
-        }
+        await createEvent(values);
       }
     } catch (error) {
       console.log(error);

@@ -4,10 +4,10 @@ import { getAuthSession } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
-    const { name, startsAt, endsAt, description, userRoleId, locationId } =
+    const { name, startsAt, endsAt, description, locationId } =
       await request.json();
 
-    const { workspaceId } = await getAuthSession();
+    const { workspaceId, userRoleId } = await getAuthSession();
 
     const event = await prisma.event.create({
       data: {
