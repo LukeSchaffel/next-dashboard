@@ -24,14 +24,15 @@ model User {
 }
 
 model Workspace {
-  id        String     @id @default(cuid())
-  name      String
-  ownerId   String
-  Owner     User       @relation(fields: [ownerId], references: [id])
-  Locations Location[]
-  Roles     UserRole[]
-  createdAt DateTime   @default(now())
-  Events    Event[]
+  id           String         @id @default(cuid())
+  name         String
+  ownerId      String
+  Owner        User           @relation(fields: [ownerId], references: [id])
+  Locations    Location[]
+  Roles        UserRole[]
+  createdAt    DateTime       @default(now())
+  Events       Event[]
+  PurchaseLink PurchaseLink[]
 }
 
 model UserRole {
@@ -64,18 +65,19 @@ model Location {
 }
 
 model Event {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  startsAt    DateTime?
-  endsAt      DateTime?
-  locationId  String?
-  Location    Location? @relation(fields: [locationId], references: [id])
-  userRoleId  String
-  CreatedBy   UserRole  @relation(fields: [userRoleId], references: [id])
-  workspaceId String
-  Workspace   Workspace @relation(fields: [workspaceId], references: [id])
-  Tickets     Ticket[]
+  id            String         @id @default(cuid())
+  name          String
+  description   String?
+  startsAt      DateTime?
+  endsAt        DateTime?
+  locationId    String?
+  Location      Location?      @relation(fields: [locationId], references: [id])
+  userRoleId    String
+  CreatedBy     UserRole       @relation(fields: [userRoleId], references: [id])
+  workspaceId   String
+  Workspace     Workspace      @relation(fields: [workspaceId], references: [id])
+  Tickets       Ticket[]
+  PurchaseLinks PurchaseLink[]
 }
 
 model Ticket {
@@ -91,6 +93,16 @@ model Ticket {
 
   @@index([email])
   @@index([status])
+}
+
+model PurchaseLink {
+  id          String    @id @default(cuid())
+  price       Int
+  eventId     String
+  Event       Event     @relation(fields: [eventId], references: [id])
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  createdAt   DateTime  @default(now())
 }
 
 enum TicketStatus {

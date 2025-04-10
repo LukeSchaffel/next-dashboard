@@ -13,6 +13,7 @@ export async function GET(
       include: {
         Location: true,
         Tickets: true,
+        PurchaseLinks: true,
       },
     });
 
