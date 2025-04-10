@@ -7,6 +7,7 @@ import {
   Popover,
   Text,
   ScrollArea,
+  Anchor,
 } from "@mantine/core";
 import { Location } from "@prisma/client";
 
@@ -14,6 +15,8 @@ import { Table } from "@/lib/components";
 import LocationForm from "./_components/LocationForm";
 import { useContext, useEffect, useState } from "react";
 import { DashboardContext } from "../_components/client-layout";
+import Link from "next/link";
+import { IconEye } from "@tabler/icons-react";
 
 export default function LocationsPage() {
   const { userRole } = useContext(DashboardContext);
@@ -76,9 +79,14 @@ export default function LocationsPage() {
         loading={loading}
         data={{
           caption: "My locations",
-          head: ["Name", "Address", ""],
+          head: ["", "Name", "Address", ""],
           body: locations.map((loc) => {
             return [
+              <Link href={`/dashboard/locations/${loc.id}`} key={loc.id}>
+                <Button variant="subtle" leftSection={<IconEye size={16} />}>
+                  View
+                </Button>
+              </Link>,
               loc.name,
               loc.address || "No address provided",
               <Flex>

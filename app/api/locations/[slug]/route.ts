@@ -45,3 +45,37 @@ export async function DELETE(
     );
   }
 }
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await params;
+
+  try {
+    const location = await prisma.location.findUnique({
+      where: { id: String(slug) },
+      include: {
+        Events: {
+          orderBy: {
+            startsAt: "asc",
+          },
+        },
+      },
+    });
+
+    if (!location) {
+      return NextResponse.json(
+        { error: "Location not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(location, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to fetch location" },
+      { status: 500 }
+    );
+  }
+}
