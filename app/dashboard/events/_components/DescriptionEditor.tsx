@@ -1,8 +1,14 @@
-import { Modal, Stack, Button, Group, LoadingOverlay } from "@mantine/core";
-import { RichTextEditor, Link } from "@mantine/tiptap";
-import { useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import { use, useEffect, useState } from "react";
+import {
+  Modal,
+  Stack,
+  Button,
+  Group,
+  LoadingOverlay,
+} from "@mantine/core";
+import { RichTextEditor, Link } from '@mantine/tiptap';
+import { useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { useEffect, useState } from "react";
 import { useEventStore } from "@/stores/useEventStore";
 
 interface DescriptionEditorProps {
@@ -24,19 +30,18 @@ export default function DescriptionEditor({
   const { updateEvent } = useEventStore();
   const editor = useEditor({
     extensions: [StarterKit, Link],
-    content: "",
+    content: '',
   });
-  console.log(eventId)
 
   useEffect(() => {
     if (opened && editor) {
-      editor.commands.setContent(description || "");
+      editor.commands.setContent(description || '');
     }
   }, [opened, description, editor]);
 
   const handleSave = async () => {
     if (!editor) return;
-
+    
     setLoading(true);
     try {
       const updatedEvent = await updateEvent(eventId, {
@@ -45,7 +50,7 @@ export default function DescriptionEditor({
       onUpdate(updatedEvent);
       onClose();
     } catch (error) {
-      console.error("Failed to update description:", error);
+      console.error('Failed to update description:', error);
     } finally {
       setLoading(false);
     }
@@ -111,7 +116,9 @@ export default function DescriptionEditor({
           <Button variant="default" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Description</Button>
+          <Button onClick={handleSave}>
+            Save Description
+          </Button>
         </Group>
       </Stack>
     </Modal>

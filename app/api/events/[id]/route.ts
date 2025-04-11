@@ -55,6 +55,11 @@ export async function PATCH(
           locationId: updateData.locationId || null,
         }),
       },
+      include: {
+        Location: true,
+        Tickets: true,
+        PurchaseLinks: true,
+      },
     });
     return NextResponse.json(event, { status: 200 });
   } catch (error) {

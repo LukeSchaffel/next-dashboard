@@ -10,7 +10,7 @@ interface EventsStore {
   fetchEvents: () => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
   createEvent: (values: any) => Promise<void>;
-  updateEvent: (id: string, values: any) => Promise<void>;
+  updateEvent: (id: string, values: any) => Promise<EventWithLocation>;
 }
 
 export const useEventStore = create<EventsStore>((set, get) => ({
@@ -81,8 +81,11 @@ export const useEventStore = create<EventsStore>((set, get) => ({
       set({
         events: get().events.map((e) => (e.id === id ? updatedEvent : e)),
       });
+
+      return updatedEvent;
     } catch (err) {
       console.error("Update failed:", err);
+      throw err;
     }
   },
 }));
