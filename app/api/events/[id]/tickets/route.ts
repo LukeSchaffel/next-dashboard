@@ -4,11 +4,11 @@ import { TicketStatus } from "@prisma/client";
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const event = await prisma.event.findUnique({
-      where: { id: params.slug },
+      where: { id: params.id },
       include: {
         Tickets: true,
       },
@@ -30,7 +30,7 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const body = await request.json();
@@ -42,7 +42,7 @@ export async function POST(
         email,
         price,
         status: status || TicketStatus.PENDING,
-        eventId: params.slug,
+        eventId: params.id,
       },
     });
 

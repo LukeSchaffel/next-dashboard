@@ -3,13 +3,13 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { slug } = params;
+  const { id } = params;
 
   try {
     const event = await prisma.event.findUnique({
-      where: { id: slug },
+      where: { id },
       include: {
         Location: true,
         Tickets: true,
@@ -33,16 +33,16 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { slug } = params;
+  const { id } = params;
   const { name, startsAt, endsAt, description, locationId } =
     await request.json();
 
   try {
     const event = await prisma.event.update({
       where: {
-        id: slug,
+        id,
       },
       data: {
         name,
@@ -63,12 +63,12 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { slug } = params;
+  const { id } = params;
 
   try {
-    const event = await prisma.event.delete({ where: { id: slug } });
+    const event = await prisma.event.delete({ where: { id } });
     return NextResponse.json(event, { status: 200 });
   } catch (error) {
     return NextResponse.json(

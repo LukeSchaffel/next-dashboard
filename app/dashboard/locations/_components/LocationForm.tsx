@@ -6,22 +6,20 @@ import { useDisclosure } from "@mantine/hooks";
 
 import { Location } from "@prisma/client";
 import { SetStateAction, useEffect, useState } from "react";
+import { useLocationStore } from "@/stores/useLocationStore";
 
 const LocationForm = ({
   userRole,
-  handleAddLocation,
   selectedLocation,
   setSelectedLocation,
-  handleUpdateLocation,
 }: {
   userRole: any;
-  handleAddLocation: (location: Location) => void;
   selectedLocation?: Location;
   setSelectedLocation: React.Dispatch<SetStateAction<Location | undefined>>;
-  handleUpdateLocation: (location: Location) => void;
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [loading, setLoading] = useState(false);
+  const { createLocation, updateLocation } = useLocationStore();
 
   const form = useForm({
     mode: "uncontrolled",
@@ -58,41 +56,15 @@ const LocationForm = ({
     setLoading(true);
     try {
       if (selectedLocation) {
-        const response = await fetch(`/api/locations/${selectedLocation.id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...values,
-            workspaceId: userRole.workspaceId,
-          }),
+        await updateLocation(selectedLocation.id, {
+          ...values,
+          workspaceId: userRole.workspaceId,
         });
-
-        if (response.ok) {
-          const location: Location = await response.json();
-          handleUpdateLocation(location);
-        } else {
-          console.error("Failed to update location", response);
-        }
       } else {
-        const response = await fetch("/api/locations", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...values,
-            workspaceId: userRole.workspaceId,
-          }),
+        await createLocation({
+          ...values,
+          workspaceId: userRole.workspaceId,
         });
-
-        if (response.ok) {
-          const location: Location = await response.json();
-          handleAddLocation(location);
-        } else {
-          console.error("Failed to create location");
-        }
       }
     } catch (error) {
       console.log(error);

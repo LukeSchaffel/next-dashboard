@@ -8,6 +8,7 @@ import {
   Text,
   ScrollArea,
   Anchor,
+  Group,
 } from "@mantine/core";
 import { Location } from "@prisma/client";
 
@@ -16,62 +17,38 @@ import LocationForm from "./_components/LocationForm";
 import { useContext, useEffect, useState } from "react";
 import { DashboardContext } from "../_components/client-layout";
 import Link from "next/link";
-import { IconEye } from "@tabler/icons-react";
+import { IconEye, IconRefresh } from "@tabler/icons-react";
+import { useLocationStore } from "@/stores/useLocationStore";
 
 export default function LocationsPage() {
   const { userRole } = useContext(DashboardContext);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<
-    Location | undefined
-  >(undefined);
-  const [loading, setLoading] = useState(true);
+  const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(undefined);
+  const { locations, loading, hasFetched, fetchLocations, deleteLocation } = useLocationStore();
 
   useEffect(() => {
-    const getLocations = async () => {
-      setLoading(true);
-      const res = await fetch(
-        `/api/locations?workspaceId=${userRole.workspaceId}`
-      );
-      const locationsJSON = await res.json();
-      setLocations(locationsJSON);
-      setLoading(false);
-    };
-    getLocations();
-  }, []);
-
-  const handleAddLocation = (location: Location) => {
-    setLocations([...locations, location]);
-  };
-
-  const handleUpdateLocation = (location: Location) => {
-    setLocations((prev) =>
-      prev.map((loc) => (loc.id === location.id ? location : loc))
-    );
-  };
-
-  const handleDeleteLocation = async (location: Location) => {
-    try {
-      const res = await fetch(`/api/locations/${location.id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        setLocations((prev) => [...prev].filter((l) => l.id !== location.id));
-      }
-    } catch (error) {
-      console.log(error);
+    if (!hasFetched) {
+      fetchLocations();
     }
-  };
+  }, [hasFetched, fetchLocations]);
 
   return (
     <>
       <Flex justify={"space-between"}>
-        <Title order={4}>Locations</Title>
+        <Group>
+          <Title order={4}>Locations</Title>
+          <Button 
+            variant="subtle" 
+            leftSection={<IconRefresh size={16} />} 
+            onClick={fetchLocations}
+            loading={loading}
+          >
+            Refresh
+          </Button>
+        </Group>
         <LocationForm
           userRole={userRole}
-          handleAddLocation={handleAddLocation}
           selectedLocation={selectedLocation}
           setSelectedLocation={setSelectedLocation}
-          handleUpdateLocation={handleUpdateLocation}
         />
       </Flex>
 
@@ -108,7 +85,7 @@ export default function LocationsPage() {
                     <Button
                       variant="transparent"
                       size="xs"
-                      onClick={() => handleDeleteLocation(loc)}
+                      onClick={() => deleteLocation(loc.id)}
                       color="red"
                     >
                       Yes

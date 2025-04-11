@@ -17,6 +17,7 @@ import { EventWithLocation } from "@/lib/prisma";
 import { Location } from "@prisma/client";
 import { SetStateAction, useEffect, useState } from "react";
 import { useEventStore } from "@/stores/useEventStore";
+import { useLocationStore } from "@/stores/useLocationStore";
 
 const EventForm = ({
   userRole,
@@ -31,7 +32,7 @@ const EventForm = ({
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [loading, setLoading] = useState(false);
-  const [locations, setLocations] = useState<Location[]>([]);
+  const { locations, fetchLocations } = useLocationStore();
   const { createEvent, updateEvent } = useEventStore();
 
   const form = useForm({
@@ -50,15 +51,8 @@ const EventForm = ({
   });
 
   useEffect(() => {
-    const fetchLocations = async () => {
-      const res = await fetch(
-        `/api/locations?workspaceId=${userRole.workspaceId}`
-      );
-      const locationsJSON = await res.json();
-      setLocations(locationsJSON);
-    };
     fetchLocations();
-  }, [userRole.workspaceId]);
+  }, []);
 
   const handleCancel = () => {
     form.reset();
@@ -70,13 +64,13 @@ const EventForm = ({
   useEffect(() => {
     if (selectedEvent) {
       open();
-      const { startsAt, endsAt, name, description, locationId } = selectedEvent;
+      const { name, startsAt, endsAt, description, locationId } = selectedEvent;
       form.setValues((prev) => ({
         ...prev,
         name,
-        description: description || "",
         startsAt: dayjs(startsAt).toDate(),
         endsAt: dayjs(endsAt).toDate(),
+        description: description || "",
         locationId: locationId || "",
       }));
     }
@@ -86,9 +80,15 @@ const EventForm = ({
     setLoading(true);
     try {
       if (selectedEvent) {
-        await updateEvent(selectedEvent.id, values);
+        await updateEvent(selectedEvent.id, {
+          ...values,
+          workspaceId: userRole.workspaceId,
+        });
       } else {
-        await createEvent(values);
+        await createEvent({
+          ...values,
+          workspaceId: userRole.workspaceId,
+        });
       }
     } catch (error) {
       console.log(error);

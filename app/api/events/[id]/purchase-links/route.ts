@@ -4,17 +4,17 @@ import { getAuthSession } from "@/lib/auth";
 
 export async function POST(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { price } = await request.json();
-    const { slug } = params;
+    const { id } = params;
     const { workspaceId } = await getAuthSession();
 
     const purchaseLink = await prisma.purchaseLink.create({
       data: {
         price,
-        eventId: slug,
+        eventId: id,
         workspaceId,
       },
     });

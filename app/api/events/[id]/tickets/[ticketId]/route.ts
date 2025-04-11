@@ -4,7 +4,7 @@ import { TicketStatus } from "@prisma/client";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { slug: string; ticketId: string } }
+  { params }: { params: { id: string; ticketId: string } }
 ) {
   try {
     const body = await request.json();
@@ -27,7 +27,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { slug: string; ticketId: string } }
+  { params }: { params: { id: string; ticketId: string } }
 ) {
   try {
     await prisma.ticket.delete({
