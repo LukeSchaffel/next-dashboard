@@ -1,29 +1,38 @@
 "use client";
 import { IconPlus } from "@tabler/icons-react";
-import { TextInput, Modal, Button, Flex, LoadingOverlay } from "@mantine/core";
+import {
+  TextInput,
+  Modal,
+  Button,
+  Flex,
+  LoadingOverlay,
+  Select,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { DateInput } from "@mantine/dates";
 import dayjs from "dayjs";
 
-import { Event } from "@prisma/client";
+import { EventWithLocation } from "@/lib/prisma";
+import { Location } from "@prisma/client";
 import { SetStateAction, useEffect, useState } from "react";
+import { useEventStore } from "@/stores/useEventStore";
 
 const EventForm = ({
   userRole,
-  handleAddEvent,
   selectedEvent,
   setSelectedEvent,
-  handleUpdateEvent,
 }: {
   userRole: any;
-  handleAddEvent: (event: Event) => void;
-  selectedEvent?: Event;
-  setSelectedEvent: React.Dispatch<SetStateAction<Event | undefined>>;
-  handleUpdateEvent: (event: Event) => void;
+  selectedEvent?: EventWithLocation;
+  setSelectedEvent: React.Dispatch<
+    SetStateAction<EventWithLocation | undefined>
+  >;
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [loading, setLoading] = useState(false);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const { createEvent, updateEvent } = useEventStore();
 
   const form = useForm({
     mode: "uncontrolled",
@@ -32,12 +41,24 @@ const EventForm = ({
       startsAt: dayjs().toDate(),
       endsAt: dayjs().toDate(),
       description: "",
+      locationId: "",
     },
 
     validate: {
       // email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
     },
   });
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      const res = await fetch(
+        `/api/locations?workspaceId=${userRole.workspaceId}`
+      );
+      const locationsJSON = await res.json();
+      setLocations(locationsJSON);
+    };
+    fetchLocations();
+  }, [userRole.workspaceId]);
 
   const handleCancel = () => {
     form.reset();
@@ -49,13 +70,14 @@ const EventForm = ({
   useEffect(() => {
     if (selectedEvent) {
       open();
-      const { startsAt, endsAt, name, description } = selectedEvent;
+      const { startsAt, endsAt, name, description, locationId } = selectedEvent;
       form.setValues((prev) => ({
         ...prev,
         name,
         description: description || "",
         startsAt: dayjs(startsAt).toDate(),
         endsAt: dayjs(endsAt).toDate(),
+        locationId: locationId || "",
       }));
     }
   }, [selectedEvent]);
@@ -64,43 +86,9 @@ const EventForm = ({
     setLoading(true);
     try {
       if (selectedEvent) {
-        const response = await fetch(`/api/events/${selectedEvent.id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...values,
-            userRoleId: userRole.id, // Assuming userRole has an id
-            workspaceId: userRole.workspaceId, // Assuming userRole has a workspaceId
-          }),
-        });
-
-        if (response.ok) {
-          const event: Event = await response.json();
-          handleUpdateEvent(event);
-        } else {
-          console.error("Failed to update event", response);
-        }
+        await updateEvent(selectedEvent.id, values);
       } else {
-        const response = await fetch("/api/events", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...values,
-            userRoleId: userRole.id, // Assuming userRole has an id
-            workspaceId: userRole.workspaceId, // Assuming userRole has a workspaceId
-          }),
-        });
-
-        if (response.ok) {
-          const event: Event = await response.json();
-          handleAddEvent(event);
-        } else {
-          console.error("Failed to create event");
-        }
+        await createEvent(values);
       }
     } catch (error) {
       console.log(error);
@@ -114,7 +102,7 @@ const EventForm = ({
       <Modal
         opened={opened}
         onClose={close}
-        title="Create a new event"
+        title={selectedEvent ? "Edit event" : "Create a new event"}
         centered
         closeButtonProps={{ onClick: handleCancel }}
       >
@@ -148,6 +136,16 @@ const EventForm = ({
               placeholder="Describe this event"
               required
               {...form.getInputProps("description")}
+            />
+            <Select
+              label="Location"
+              placeholder="Select a location"
+              data={locations.map((loc) => ({
+                value: loc.id,
+                label: loc.name,
+              }))}
+              clearable
+              {...form.getInputProps("locationId")}
             />
             <Button type="submit">Submit</Button>
           </Flex>

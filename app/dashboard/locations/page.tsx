@@ -1,61 +1,64 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Flex, Title, Button, Popover, Text } from "@mantine/core";
+import {
+  Flex,
+  Title,
+  Button,
+  Box,
+  Popover,
+  Text,
+  ScrollArea,
+  Anchor,
+} from "@mantine/core";
 import { Location } from "@prisma/client";
+
 import { Table } from "@/lib/components";
 import LocationForm from "./_components/LocationForm";
-import { useDashboard } from "../_components/client-layout";
+import { useContext, useEffect, useState } from "react";
+import { DashboardContext } from "../_components/client-layout";
+import Link from "next/link";
+import { IconEye } from "@tabler/icons-react";
 
-const LocationsPage = () => {
-  const { userRole } = useDashboard();
+export default function LocationsPage() {
+  const { userRole } = useContext(DashboardContext);
   const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<Location>();
-
-  const fetchLocations = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/locations");
-      if (response.ok) {
-        const data = await response.json();
-        setLocations(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch locations", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [selectedLocation, setSelectedLocation] = useState<
+    Location | undefined
+  >(undefined);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchLocations();
+    const getLocations = async () => {
+      setLoading(true);
+      const res = await fetch(
+        `/api/locations?workspaceId=${userRole.workspaceId}`
+      );
+      const locationsJSON = await res.json();
+      setLocations(locationsJSON);
+      setLoading(false);
+    };
+    getLocations();
   }, []);
 
   const handleAddLocation = (location: Location) => {
-    setLocations((prev) => [...prev, location]);
+    setLocations([...locations, location]);
   };
 
-  const handleUpdateLocation = (updatedLocation: Location) => {
+  const handleUpdateLocation = (location: Location) => {
     setLocations((prev) =>
-      prev.map((loc) =>
-        loc.id === updatedLocation.id ? updatedLocation : loc
-      )
+      prev.map((loc) => (loc.id === location.id ? location : loc))
     );
   };
 
   const handleDeleteLocation = async (location: Location) => {
     try {
-      const response = await fetch(`/api/locations/${location.id}`, {
+      const res = await fetch(`/api/locations/${location.id}`, {
         method: "DELETE",
       });
-
-      if (response.ok) {
-        setLocations((prev) => prev.filter((loc) => loc.id !== location.id));
-      } else {
-        console.error("Failed to delete location");
+      if (res.ok) {
+        setLocations((prev) => [...prev].filter((l) => l.id !== location.id));
       }
     } catch (error) {
-      console.error("Error deleting location", error);
+      console.log(error);
     }
   };
 
@@ -76,13 +79,21 @@ const LocationsPage = () => {
         loading={loading}
         data={{
           caption: "My locations",
-          head: ["Name", "Address", ""],
+          head: ["", "Name", "Address", ""],
           body: locations.map((loc) => {
             return [
+              <Link href={`/dashboard/locations/${loc.id}`} key={loc.id}>
+                <Button variant="subtle" leftSection={<IconEye size={16} />}>
+                  View
+                </Button>
+              </Link>,
               loc.name,
               loc.address || "No address provided",
               <Flex>
-                <Button variant="subtle" onClick={() => setSelectedLocation(loc)}>
+                <Button
+                  variant="subtle"
+                  onClick={() => setSelectedLocation(loc)}
+                >
                   Edit
                 </Button>
 
@@ -111,6 +122,4 @@ const LocationsPage = () => {
       />
     </>
   );
-};
-
-export default LocationsPage;
+}

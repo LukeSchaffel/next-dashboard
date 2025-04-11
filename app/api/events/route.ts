@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession } from "@/lib/auth";
 
 export async function POST(request: Request) {
-  const { name, startsAt, endsAt, description, userRoleId, workspaceId } =
-    await request.json();
-
   try {
+    const { name, startsAt, endsAt, description, locationId } =
+      await request.json();
+
+    const { workspaceId, userRoleId } = await getAuthSession();
+
     const event = await prisma.event.create({
       data: {
         name,
@@ -14,7 +17,9 @@ export async function POST(request: Request) {
         description,
         userRoleId,
         workspaceId,
+        locationId: locationId || null,
       },
+      include: { Location: true, Tickets: true, PurchaseLinks: true },
     });
     return NextResponse.json(event, { status: 201 });
   } catch (error) {
@@ -26,17 +31,22 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const workspaceId = searchParams.get("workspaceId");
-
-  if (!workspaceId) {
-    return NextResponse.json({ error: "Missing workspaceId" }, { status: 400 });
-  }
-
   try {
+    const { workspaceId } = await getAuthSession();
+    if (!workspaceId) {
+      return NextResponse.json(
+        { error: "Missing workspaceId" },
+        { status: 400 }
+      );
+    }
     const events = await prisma.event.findMany({
       where: {
         workspaceId,
+      },
+      include: {
+        Location: true,
+        Tickets: true,
+        PurchaseLinks: true,
       },
       orderBy: {
         startsAt: "asc",

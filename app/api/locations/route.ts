@@ -1,61 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+import { getAuthSession } from "@/lib/auth";
 
-export async function GET() {
+export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const userRole = await prisma.userRole.findFirst({
-      where: {
-        email: session.user?.email,
-      },
-    });
-
-    if (!userRole) {
-      return new NextResponse("User role not found", { status: 404 });
-    }
-
-    const locations = await prisma.location.findMany({
-      where: {
-        workspaceId: userRole.workspaceId,
-      },
-    });
-
-    return NextResponse.json(locations);
-  } catch (error) {
-    console.error("Error fetching locations:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
-  }
-}
-
-export async function POST(req: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const userRole = await prisma.userRole.findFirst({
-      where: {
-        email: session.user?.email,
-      },
-    });
-
-    if (!userRole) {
-      return new NextResponse("User role not found", { status: 404 });
-    }
-
-    const body = await req.json();
-    const { name, address, workspaceId } = body;
-
-    if (!name || !workspaceId) {
-      return new NextResponse("Missing required fields", { status: 400 });
-    }
+    const { name, address } = await request.json();
+    const { workspaceId } = await getAuthSession();
 
     const location = await prisma.location.create({
       data: {
@@ -64,10 +14,33 @@ export async function POST(req: Request) {
         workspaceId,
       },
     });
-
-    return NextResponse.json(location);
+    return NextResponse.json(location, { status: 201 });
   } catch (error) {
-    console.error("Error creating location:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create location" },
+      { status: 500 }
+    );
   }
-} 
+}
+
+export async function GET(request: Request) {
+  try {
+    const { workspaceId } = await getAuthSession();
+
+    const locations = await prisma.location.findMany({
+      where: {
+        workspaceId,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return NextResponse.json(locations, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to fetch locations" },
+      { status: 500 }
+    );
+  }
+}

@@ -52,13 +52,17 @@ export default async function DashboardLayout({
         email: clerkUser.emailAddresses[0].emailAddress,
         name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim(),
       },
+      include: { Workspace: true },
     });
   } else {
     activeRole = existingUser.Roles[0];
   }
 
   return (
-    <ClientDashboardLayout userRole={activeRole}>
+    <ClientDashboardLayout
+      userRole={activeRole}
+      workspace={activeRole.Workspace}
+    >
       {children}
     </ClientDashboardLayout>
   );

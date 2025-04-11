@@ -4,7 +4,7 @@ import { AppShell, Burger, Paper, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { usePathname } from "next/navigation";
 import { capitalize } from "lodash";
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 
 import { Sider } from "../sider";
 import styles from "./_client-layout.module.css";
@@ -12,14 +12,17 @@ import { Event, User, UserRole, Workspace } from "@prisma/client";
 
 export const DashboardContext = createContext<{
   userRole: UserRole;
-}>({ userRole: {} as UserRole });
+  workspace: Workspace;
+}>({ userRole: {} as UserRole, workspace: {} as Workspace });
 
 export default function ClientDashboardLayout({
   children,
   userRole,
+  workspace,
 }: {
   children: React.ReactNode;
   userRole: UserRole;
+  workspace: Workspace;
 }) {
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
@@ -30,7 +33,7 @@ export default function ClientDashboardLayout({
   };
 
   return (
-    <DashboardContext.Provider value={{ userRole }}>
+    <DashboardContext.Provider value={{ userRole, workspace }}>
       <AppShell
         header={{ height: 60 }}
         navbar={{
@@ -50,7 +53,9 @@ export default function ClientDashboardLayout({
         </AppShell.Navbar>
 
         <AppShell.Main className={styles.main} pt={40}>
-          <Title pt={'xl'} pb={"md"}>{formatTitle()}</Title>
+          <Title pt={"xl"} pb={"md"}>
+            {formatTitle()}
+          </Title>
           <Paper
             className={styles.mainContent}
             p={"xl"}
@@ -64,3 +69,9 @@ export default function ClientDashboardLayout({
     </DashboardContext.Provider>
   );
 }
+
+export const useClientAuthSession = () => {
+  const { userRole, workspace } = useContext(DashboardContext);
+
+  return { userRole, workspace };
+};

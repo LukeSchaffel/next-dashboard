@@ -3,6 +3,7 @@ import { IconPlus } from "@tabler/icons-react";
 import { TextInput, Modal, Button, Flex, LoadingOverlay } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+
 import { Location } from "@prisma/client";
 import { SetStateAction, useEffect, useState } from "react";
 
@@ -30,7 +31,7 @@ const LocationForm = ({
     },
 
     validate: {
-      name: (value) => (value.length < 2 ? "Name must be at least 2 characters" : null),
+      name: (value) => (value.length < 1 ? "Name is required" : null),
     },
   });
 
@@ -139,4 +140,4 @@ const LocationForm = ({
   );
 };
 
-export default LocationForm; 
+export default LocationForm;
