@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { TicketStatus } from "@prisma/client";
 
 export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { name, email } = await request.json();
+
     const purchaseLink = await prisma.purchaseLink.findUnique({
-      where: { id: params.id },
+      where: { id: id },
+      include: {
+        Event: true,
+      },
     });
 
     if (!purchaseLink) {

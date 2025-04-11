@@ -5,12 +5,24 @@ import { getAuthSession } from "@/lib/auth";
 
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { price } = await request.json();
-    const { id } = context.params;
     const { workspaceId } = await getAuthSession();
+
+    const event = await prisma.event.findUnique({
+      where: { id },
+    });
+
+    if (!event) {
+      return NextResponse.json({ error: "Event not found" }, { status: 404 });
+    }
+
+    if (event.workspaceId !== workspaceId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
 
     const purchaseLink = await prisma.purchaseLink.create({
       data: {
@@ -20,11 +32,44 @@ export async function POST(
       },
     });
 
-    return NextResponse.json(purchaseLink);
+    return NextResponse.json(purchaseLink, { status: 201 });
   } catch (error) {
     console.error("Failed to create purchase link:", error);
     return NextResponse.json(
       { error: "Failed to create purchase link" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const { workspaceId } = await getAuthSession();
+
+    const event = await prisma.event.findUnique({
+      where: { id },
+      include: {
+        PurchaseLinks: true,
+      },
+    });
+
+    if (!event) {
+      return NextResponse.json({ error: "Event not found" }, { status: 404 });
+    }
+
+    if (event.workspaceId !== workspaceId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    return NextResponse.json(event.PurchaseLinks, { status: 200 });
+  } catch (error) {
+    console.error("Failed to fetch purchase links:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch purchase links" },
       { status: 500 }
     );
   }

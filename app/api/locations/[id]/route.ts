@@ -1,24 +1,41 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthSession } from "@/lib/auth";
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
-  const { name, address } = await request.json();
-
   try {
-    const location = await prisma.location.update({
-      where: {
-        id,
-      },
+    const { id } = await params;
+    const { name, address } = await request.json();
+    const { workspaceId } = await getAuthSession();
+
+    const location = await prisma.location.findUnique({
+      where: { id },
+    });
+
+    if (!location) {
+      return NextResponse.json({ error: "Location not found" }, { status: 404 });
+    }
+
+    if (location.workspaceId !== workspaceId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 403 }
+      );
+    }
+
+    const updatedLocation = await prisma.location.update({
+      where: { id },
       data: {
         name,
         address,
       },
     });
-    return NextResponse.json(location, { status: 200 });
+
+    return NextResponse.json(updatedLocation, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to update location" },
@@ -28,16 +45,33 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
-
   try {
-    const location = await prisma.location.delete({
+    const { id } = await params;
+    const { workspaceId } = await getAuthSession();
+
+    const location = await prisma.location.findUnique({
       where: { id },
     });
-    return NextResponse.json(location, { status: 200 });
+
+    if (!location) {
+      return NextResponse.json({ error: "Location not found" }, { status: 404 });
+    }
+
+    if (location.workspaceId !== workspaceId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 403 }
+      );
+    }
+
+    await prisma.location.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to delete location" },
@@ -47,12 +81,13 @@ export async function DELETE(
 }
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
-
   try {
+    const { id } = await params;
+    const { workspaceId } = await getAuthSession();
+
     const location = await prisma.location.findUnique({
       where: { id },
       include: {
@@ -65,9 +100,13 @@ export async function GET(
     });
 
     if (!location) {
+      return NextResponse.json({ error: "Location not found" }, { status: 404 });
+    }
+
+    if (location.workspaceId !== workspaceId) {
       return NextResponse.json(
-        { error: "Location not found" },
-        { status: 404 }
+        { error: "Unauthorized" },
+        { status: 403 }
       );
     }
 
