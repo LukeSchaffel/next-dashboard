@@ -10,6 +10,7 @@ import {
   Anchor,
   Group,
   Badge,
+  SimpleGrid,
 } from "@mantine/core";
 import { EventWithLocation } from "@/lib/prisma";
 
@@ -60,7 +61,7 @@ export default function EventsPage() {
           head: ["", "Name", "Location", "Start Date", "End Date", "Tickets", ""],
           body: events.map((event) => {
             return [
-              <Link href={`/dashboard/events/${event.id}`} key={event.id}>
+              <Link href={`/dashboard/events/${event.id}`} key={`view-${event.id}`}>
                 <Button variant="subtle" leftSection={<IconEye size={16} />}>
                   View
                 </Button>
@@ -69,10 +70,10 @@ export default function EventsPage() {
               event.Location?.name || "No location",
               event.startsAt ? new Date(event.startsAt).toLocaleString() : "Not set",
               event.endsAt ? new Date(event.endsAt).toLocaleString() : "Not set",
-              <Badge size="lg" variant="light">
+              <Badge key={`badge-${event.id}`} size="lg" variant="light">
                 {event.Tickets?.length || 0} {event.Tickets?.length === 1 ? "Ticket" : "Tickets"}
               </Badge>,
-              <Flex>
+              <Flex key={`actions-${event.id}`}>
                 <Button
                   variant="subtle"
                   onClick={() => setSelectedEvent(event)}
@@ -98,7 +99,7 @@ export default function EventsPage() {
                     </Button>
                   </Popover.Dropdown>
                 </Popover>
-              </Flex>,
+              </Flex>
             ];
           }),
         }}

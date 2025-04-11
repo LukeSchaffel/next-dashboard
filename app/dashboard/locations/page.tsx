@@ -9,6 +9,8 @@ import {
   ScrollArea,
   Anchor,
   Group,
+  Badge,
+  SimpleGrid,
 } from "@mantine/core";
 import { Location } from "@prisma/client";
 
@@ -57,19 +59,19 @@ export default function LocationsPage() {
         data={{
           caption: "My locations",
           head: ["", "Name", "Address", ""],
-          body: locations.map((loc) => {
+          body: locations.map((location) => {
             return [
-              <Link href={`/dashboard/locations/${loc.id}`} key={loc.id}>
+              <Link href={`/dashboard/locations/${location.id}`} key={`view-${location.id}`}>
                 <Button variant="subtle" leftSection={<IconEye size={16} />}>
                   View
                 </Button>
               </Link>,
-              loc.name,
-              loc.address || "No address provided",
-              <Flex>
+              location.name,
+              location.address || "No address",
+              <Flex key={`actions-${location.id}`}>
                 <Button
                   variant="subtle"
-                  onClick={() => setSelectedLocation(loc)}
+                  onClick={() => setSelectedLocation(location)}
                 >
                   Edit
                 </Button>
@@ -85,14 +87,14 @@ export default function LocationsPage() {
                     <Button
                       variant="transparent"
                       size="xs"
-                      onClick={() => deleteLocation(loc.id)}
+                      onClick={() => deleteLocation(location.id)}
                       color="red"
                     >
                       Yes
                     </Button>
                   </Popover.Dropdown>
                 </Popover>
-              </Flex>,
+              </Flex>
             ];
           }),
         }}
