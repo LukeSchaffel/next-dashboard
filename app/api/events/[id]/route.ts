@@ -25,10 +25,7 @@ export async function GET(
     }
 
     if (event.workspaceId !== workspaceId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     return NextResponse.json(event, { status: 200 });
@@ -46,18 +43,21 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const { name, startsAt, endsAt, description, locationId } =
-      await request.json();
+    const updateData = await request.json();
     const { workspaceId } = await getAuthSession();
 
     const event = await prisma.event.update({
       where: { id },
       data: {
-        name,
-        startsAt: new Date(startsAt),
-        endsAt: new Date(endsAt),
-        description,
-        locationId: locationId || null,
+        ...(updateData.name && { name: updateData.name }),
+        ...(updateData.startsAt && { startsAt: new Date(updateData.startsAt) }),
+        ...(updateData.endsAt && { endsAt: new Date(updateData.endsAt) }),
+        ...(updateData.description !== undefined && {
+          description: updateData.description,
+        }),
+        ...(updateData.locationId !== undefined && {
+          locationId: updateData.locationId || null,
+        }),
       },
       include: { Location: true, Tickets: true, PurchaseLinks: true },
     });
@@ -88,10 +88,7 @@ export async function DELETE(
     }
 
     if (event.workspaceId !== workspaceId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     await prisma.event.delete({
