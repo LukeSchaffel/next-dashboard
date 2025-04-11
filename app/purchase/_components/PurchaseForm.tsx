@@ -1,5 +1,5 @@
 "use client";
-import { Stack, TextInput, Button, LoadingOverlay } from "@mantine/core";
+import { Stack, TextInput, Button, LoadingOverlay, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ export default function PurchaseForm({
   purchaseLinkId,
 }: PurchaseFormProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const form = useForm({
@@ -29,6 +30,7 @@ export default function PurchaseForm({
 
   const handleSubmit = async (values: typeof form.values) => {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch(
         `/api/purchase-links/${purchaseLinkId}/purchase`,
@@ -42,14 +44,17 @@ export default function PurchaseForm({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to purchase ticket");
+        const data = await response.json();
+        throw new Error(data.message || "Failed to purchase ticket");
       }
 
-      // TODO: Handle successful purchase (e.g., redirect to success page)
-      console.log("Purchase successful!");
-      router.push("/purchase/success");
+      const data = await response.json();
+      router.push(`/purchase/success?ticketId=${data.id}`);
     } catch (error) {
       console.error("Failed to purchase ticket:", error);
+      setError(
+        error instanceof Error ? error.message : "An unexpected error occurred"
+      );
     } finally {
       setLoading(false);
     }
@@ -63,6 +68,11 @@ export default function PurchaseForm({
           zIndex={1000}
           overlayProps={{ radius: "sm", blur: 2 }}
         />
+        {error && (
+          <Text c="red" size="sm">
+            {error}
+          </Text>
+        )}
         <TextInput
           label="Name"
           placeholder="Your name"
