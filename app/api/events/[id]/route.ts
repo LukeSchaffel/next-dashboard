@@ -36,8 +36,8 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const { name, startsAt, endsAt, description, locationId } =
-    await request.json();
+
+  const updateData = await request.json();
 
   try {
     const event = await prisma.event.update({
@@ -45,11 +45,15 @@ export async function PATCH(
         id,
       },
       data: {
-        name,
-        startsAt: new Date(startsAt),
-        endsAt: new Date(endsAt),
-        description,
-        locationId: locationId || null,
+        ...(updateData.name && { name: updateData.name }),
+        ...(updateData.startsAt && { startsAt: new Date(updateData.startsAt) }),
+        ...(updateData.endsAt && { endsAt: new Date(updateData.endsAt) }),
+        ...(updateData.description !== undefined && {
+          description: updateData.description,
+        }),
+        ...(updateData.locationId !== undefined && {
+          locationId: updateData.locationId || null,
+        }),
       },
     });
     return NextResponse.json(event, { status: 200 });

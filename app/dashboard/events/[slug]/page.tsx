@@ -30,7 +30,10 @@ import {
   IconCopy,
   IconCheck,
   IconDownload,
+  IconEdit,
 } from "@tabler/icons-react";
+import DescriptionEditor from "../_components/DescriptionEditor";
+import { useEventStore } from "@/stores/useEventStore";
 
 interface EventWithTickets extends Event {
   Tickets: Ticket[];
@@ -54,6 +57,7 @@ export default function EventPage({
   const [event, setEvent] = useState<EventWithTickets | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchaseLink, setPurchaseLink] = useState<string | null>(null);
+  const { updateEvent } = useEventStore();
 
   const [
     ticketModalOpened,
@@ -63,7 +67,31 @@ export default function EventPage({
     purchaseLinkModalOpened,
     { open: openPurchaseLinkModal, close: closePurchaseLinkModal },
   ] = useDisclosure(false);
+  const [
+    descriptionModalOpened,
+    { open: openDescriptionModal, close: closeDescriptionModal },
+  ] = useDisclosure(false);
   const [ticketLoading, setTicketLoading] = useState(false);
+  const [descriptionLoading, setDescriptionLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        const res = await fetch(`/api/events/${slug}`);
+        if (!res.ok) {
+          notFound();
+        }
+        const data = await res.json();
+        setEvent(data);
+      } catch (error) {
+        console.error("Failed to fetch event:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvent();
+  }, [slug]);
 
   const ticketForm = useForm({
     initialValues: {
@@ -87,25 +115,6 @@ export default function EventPage({
       price: (value) => (value < 0 ? "Price must be positive" : null),
     },
   });
-
-  useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        const res = await fetch(`/api/events/${slug}`);
-        if (!res.ok) {
-          notFound();
-        }
-        const data = await res.json();
-        setEvent(data);
-      } catch (error) {
-        console.error("Failed to fetch event:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvent();
-  }, [slug]);
 
   const handleAddTicket = async (values: typeof ticketForm.values) => {
     setTicketLoading(true);
@@ -191,6 +200,33 @@ export default function EventPage({
     }
   };
 
+  const handleUpdateDescription = async (content: string) => {
+    if (!event) return;
+    
+    setDescriptionLoading(true);
+    try {
+      const response = await fetch(`/api/events/${event.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          description: content,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedEvent = await response.json();
+        setEvent(updatedEvent);
+        closeDescriptionModal();
+      }
+    } catch (error) {
+      console.error('Failed to update description:', error);
+    } finally {
+      setDescriptionLoading(false);
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -220,9 +256,18 @@ export default function EventPage({
         <Stack gap="md">
           <Group justify="space-between">
             <Title order={2}>{event.name}</Title>
-            <Button variant="light" onClick={openPurchaseLinkModal}>
-              Create Purchase Link
-            </Button>
+            <Group>
+              <Button 
+                variant="light" 
+                leftSection={<IconEdit size={16} />}
+                onClick={openDescriptionModal}
+              >
+                Edit Description
+              </Button>
+              <Button variant="light" onClick={openPurchaseLinkModal}>
+                Create Purchase Link
+              </Button>
+            </Group>
           </Group>
           <Group>
             <Badge size="lg" variant="light">
@@ -236,9 +281,7 @@ export default function EventPage({
             )}
           </Group>
           {event.description && (
-            <Text size="lg" c="dimmed">
-              {event.description}
-            </Text>
+            <div dangerouslySetInnerHTML={{ __html: event.description }} />
           )}
           <Text size="lg">
             {dayjs(event.startsAt).format("MMM D, YYYY h:mm A")} -{" "}
@@ -394,6 +437,14 @@ export default function EventPage({
           ))}
         </Table.Tbody>
       </Table>
+
+      <DescriptionEditor
+        opened={descriptionModalOpened}
+        onClose={closeDescriptionModal}
+        description={event?.description || ''}
+        eventId={event?.id || ''}
+        onUpdate={setEvent}
+      />
 
       <Modal
         opened={ticketModalOpened}
