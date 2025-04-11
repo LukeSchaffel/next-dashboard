@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import type { NextRequest } from "next/server";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import QRCode from "qrcode";
+import { prisma } from "@/lib/prisma";
+import { getAuthSession } from "@/lib/auth";
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-
   try {
+    const { id } = await params;
+    const { workspaceId } = await getAuthSession();
+
     const ticket = await prisma.ticket.findUnique({
       where: { id },
       include: {
@@ -25,9 +28,10 @@ export async function GET(
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     }
 
+
     // Create a new PDF document
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([400, 600]);
+    const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
 
     // Load the standard font
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -35,7 +39,7 @@ export async function GET(
     // Add ticket information
     page.drawText(`Ticket for ${ticket.Event.name}`, {
       x: 50,
-      y: 550,
+      y: 800,
       size: 20,
       font,
     });
@@ -62,7 +66,7 @@ export async function GET(
     });
 
     page.drawText(
-      `Date: ${new Date(ticket.Event.startsAt).toLocaleDateString()}`,
+      `Date: ${ticket.Event.startsAt ? new Date(ticket.Event.startsAt).toLocaleDateString() : 'TBD'}`,
       {
         x: 50,
         y: 440,

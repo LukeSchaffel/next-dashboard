@@ -37,9 +37,10 @@ async function getPurchaseLink(id: string) {
 export default async function PurchasePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string; ticketId: string }>;
 }) {
-  const purchaseLink = await getPurchaseLink(params.id);
+  const { id } = await params;
+  const purchaseLink = await getPurchaseLink(id);
 
   if (!purchaseLink) {
     notFound();

@@ -10,19 +10,59 @@ import {
 } from "@mantine/core";
 import Link from "next/link";
 import { useEffect } from "react";
+import { notFound } from "next/navigation";
+import dayjs from "dayjs";
+import { prisma } from "@/lib/prisma";
 
-interface PageProps {
-  searchParams: {
-    ticketId?: string;
+interface Ticket {
+  id: string;
+  name: string;
+  email: string;
+  price: number;
+  status: string;
+  Event: {
+    name: string;
+    description: string | null;
+    startsAt: Date;
+    endsAt: Date;
+    Location: {
+      name: string;
+      address: string | null;
+    } | null;
   };
 }
 
-export default function PurchaseSuccessPage({ searchParams }: PageProps) {
-  const { ticketId } = searchParams;
+async function getTicket(id: string) {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id },
+    include: {
+      Event: {
+        include: {
+          Location: true,
+        },
+      },
+    },
+  });
 
-  useEffect(() => {
-    console.log("Ticket ID:", ticketId); // Debug log
-  }, [ticketId]);
+  return ticket;
+}
+
+export default async function SuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ticketId?: string }>;
+}) {
+  const { ticketId } = await searchParams;
+
+  if (!ticketId) {
+    notFound();
+  }
+
+  const ticket = await getTicket(ticketId);
+
+  if (!ticket) {
+    notFound();
+  }
 
   const handleDownload = async () => {
     if (!ticketId) return;
@@ -50,12 +90,64 @@ export default function PurchaseSuccessPage({ searchParams }: PageProps) {
   return (
     <Container size="sm" py="xl">
       <Paper p="xl" withBorder>
-        <Stack gap="xl" align="center">
-          <Title order={2}>Purchase Successful!</Title>
-          <Text size="lg" ta="center">
-            Thank you for your purchase. Your ticket has been sent to your
-            email.
-          </Text>
+        <Stack gap="xl">
+          <Stack gap="xs">
+            <Title order={2}>Thank you for your purchase!</Title>
+            <Text>
+              Your ticket for {ticket.Event.name} has been confirmed. Here are
+              the details:
+            </Text>
+          </Stack>
+
+          <Stack gap="md">
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                Event
+              </Text>
+              <Text>{ticket.Event.name}</Text>
+            </Group>
+
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                Date & Time
+              </Text>
+              <Text>
+                {dayjs(ticket.Event.startsAt).format("MMM D, YYYY h:mm A")} -{" "}
+                {dayjs(ticket.Event.endsAt).format("MMM D, YYYY h:mm A")}
+              </Text>
+            </Group>
+
+            {ticket.Event.Location && (
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  Location
+                </Text>
+                <Text>
+                  {ticket.Event.Location.name}
+                  {ticket.Event.Location.address && (
+                    <> - {ticket.Event.Location.address}</>
+                  )}
+                </Text>
+              </Group>
+            )}
+
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                Ticket Holder
+              </Text>
+              <Text>
+                {ticket.name} ({ticket.email})
+              </Text>
+            </Group>
+
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                Price
+              </Text>
+              <Text>${(ticket.price / 100).toFixed(2)}</Text>
+            </Group>
+          </Stack>
+
           <Group>
             {ticketId && (
               <Button onClick={handleDownload} variant="outline" size="lg">
