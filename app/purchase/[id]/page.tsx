@@ -1,21 +1,8 @@
-"use client";
-import {
-  Container,
-  Title,
-  Text,
-  Paper,
-  Stack,
-  Group,
-  Button,
-  TextInput,
-  NumberInput,
-  LoadingOverlay,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useEffect, useState } from "react";
+import { Container, Title, Text, Paper, Stack, Group } from "@mantine/core";
 import { notFound } from "next/navigation";
 import dayjs from "dayjs";
-import { use } from "react";
+import PurchaseForm from "../_components/PurchaseForm";
+import { prisma } from "@/lib/prisma";
 
 interface PurchaseLink {
   id: string;
@@ -32,70 +19,30 @@ interface PurchaseLink {
   };
 }
 
-export default function PurchasePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
-  const [purchaseLink, setPurchaseLink] = useState<PurchaseLink | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const form = useForm({
-    initialValues: {
-      name: "",
-      email: "",
-    },
-    validate: {
-      name: (value) => (value.length < 1 ? "Name is required" : null),
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
+async function getPurchaseLink(id: string) {
+  const purchaseLink = await prisma.purchaseLink.findUnique({
+    where: { id },
+    include: {
+      Event: {
+        include: {
+          Location: true,
+        },
+      },
     },
   });
 
-  useEffect(() => {
-    const fetchPurchaseLink = async () => {
-      try {
-        const res = await fetch(`/api/purchase-links/${id}`);
-        if (!res.ok) {
-          notFound();
-        }
-        const data = await res.json();
-        setPurchaseLink(data);
-      } catch (error) {
-        console.error("Failed to fetch purchase link:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  return purchaseLink;
+}
 
-    fetchPurchaseLink();
-  }, [id]);
-
-  const handlePurchase = async (values: typeof form.values) => {
-    try {
-      const response = await fetch(`/api/purchase-links/${id}/purchase`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (response.ok) {
-        // TODO: Handle successful purchase (e.g., redirect to success page)
-        console.log("Purchase successful!");
-      }
-    } catch (error) {
-      console.error("Failed to purchase ticket:", error);
-    }
-  };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+export default async function PurchasePage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const purchaseLink = await getPurchaseLink(params.id);
 
   if (!purchaseLink) {
-    return notFound();
+    notFound();
   }
 
   return (
@@ -105,7 +52,11 @@ export default function PurchasePage({
           <Stack gap="xs">
             <Title order={2}>{purchaseLink.Event.name}</Title>
             {purchaseLink.Event.description && (
-              <Text c="dimmed">{purchaseLink.Event.description}</Text>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: purchaseLink.Event.description,
+                }}
+              />
             )}
             <Text>
               {dayjs(purchaseLink.Event.startsAt).format("MMM D, YYYY h:mm A")}{" "}
@@ -130,25 +81,10 @@ export default function PurchasePage({
             </Stack>
           </Group>
 
-          <form onSubmit={form.onSubmit(handlePurchase)}>
-            <Stack gap="md">
-              <TextInput
-                label="Name"
-                placeholder="Your name"
-                required
-                {...form.getInputProps("name")}
-              />
-              <TextInput
-                label="Email"
-                placeholder="your@email.com"
-                required
-                {...form.getInputProps("email")}
-              />
-              <Button type="submit" size="lg" fullWidth>
-                Purchase Ticket
-              </Button>
-            </Stack>
-          </form>
+          <PurchaseForm
+            price={purchaseLink.price}
+            purchaseLinkId={purchaseLink.id}
+          />
         </Stack>
       </Paper>
     </Container>
