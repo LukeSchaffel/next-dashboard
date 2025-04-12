@@ -7,12 +7,12 @@ import {
   Stack,
   Button,
   Group,
+  Loader,
 } from "@mantine/core";
 import Link from "next/link";
-import { useEffect } from "react";
-import { notFound } from "next/navigation";
+import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
-import { prisma } from "@/lib/prisma";
+import { use, useEffect, useState } from "react";
 
 interface Ticket {
   id: string;
@@ -32,37 +32,41 @@ interface Ticket {
   };
 }
 
-async function getTicket(id: string) {
-  const ticket = await prisma.ticket.findUnique({
-    where: { id },
-    include: {
-      Event: {
-        include: {
-          Location: true,
-        },
-      },
-    },
-  });
-
-  return ticket;
-}
-
-export default async function SuccessPage({
+export default function SuccessPage({
   searchParams,
 }: {
   searchParams: Promise<{ ticketId?: string }>;
 }) {
-  const { ticketId } = await searchParams;
+  const router = useRouter();
+  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { ticketId } = use(searchParams);
 
-  if (!ticketId) {
-    notFound();
-  }
+  useEffect(() => {
+    if (!ticketId) {
+      router.push("/404");
+      return;
+    }
 
-  const ticket = await getTicket(ticketId);
+    const fetchTicket = async () => {
+      try {
+        const response = await fetch(`/api/tickets/${ticketId}`);
+        console.log(response);
+        if (!response.ok) {
+          throw new Error("Failed to fetch ticket");
+        }
+        const data = await response.json();
+        setTicket(data);
+      } catch (error) {
+        console.error("Error fetching ticket:", error);
+        router.push("/404");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!ticket) {
-    notFound();
-  }
+    fetchTicket();
+  }, [ticketId, router]);
 
   const handleDownload = async () => {
     if (!ticketId) return;
@@ -86,6 +90,23 @@ export default async function SuccessPage({
       console.error("Failed to download ticket:", error);
     }
   };
+
+  if (loading) {
+    return (
+      <Container size="sm" py="xl">
+        <Paper p="xl" withBorder>
+          <Stack align="center" gap="xl">
+            <Loader size="xl" />
+            <Text>Loading your ticket information...</Text>
+          </Stack>
+        </Paper>
+      </Container>
+    );
+  }
+
+  if (!ticket) {
+    return null;
+  }
 
   return (
     <Container size="sm" py="xl">
