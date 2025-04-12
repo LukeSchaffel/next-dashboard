@@ -1,0 +1,30 @@
+
+.calendarContainer :global(.fc-button) {
+  background-color: var(--mantine-color-blue-filled);
+  border-color: var(--mantine-color-blue-filled);
+  color: var(--mantine-color-white);
+  font-weight: 500;
+  font-family: var(--mantine-font-family);
+  font-size: var(--mantine-font-size-sm);
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--mantine-radius-default);
+  border: none;
+  box-shadow: none;
+}
+
+.calendarContainer :global(.fc-button:hover) {
+  background-color: var(--mantine-color-blue-7);
+  border-color: var(--mantine-color-blue-7);
+}
+
+.calendarContainer :global(.fc-button:not(:disabled).fc-button-active) {
+  background-color: var(--mantine-color-blue-8);
+  border-color: var(--mantine-color-blue-8);
+}
+
+.calendarContainer :global(.fc-button:disabled) {
+  background-color: var(--mantine-color-gray-3);
+  border-color: var(--mantine-color-gray-3);
+  color: var(--mantine-color-gray-5);
+} 

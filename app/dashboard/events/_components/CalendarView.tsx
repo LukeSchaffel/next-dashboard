@@ -6,6 +6,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import { EventWithLocation } from "@/lib/prisma";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
+import styles from "./CalendarView.module.css";
 
 interface CalendarViewProps {
   events: EventWithLocation[];
@@ -23,7 +24,7 @@ export default function CalendarView({ events }: CalendarViewProps) {
   }));
 
   return (
-    <div className="h-[600px]">
+    <div className={styles.calendarContainer}>
       <FullCalendar
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin]}
