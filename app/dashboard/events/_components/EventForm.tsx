@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { DateInput } from "@mantine/dates";
+import { DateTimePicker } from "@mantine/dates";
 import dayjs from "dayjs";
 
 import { EventWithLocation } from "@/lib/prisma";
@@ -40,13 +40,16 @@ const EventForm = ({
     initialValues: {
       name: "",
       startsAt: dayjs().toDate(),
-      endsAt: dayjs().toDate(),
+      endsAt: dayjs().add(1, 'hour').toDate(),
       description: "",
       locationId: "",
     },
 
     validate: {
-      // email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
+      endsAt: (value, values) => 
+        dayjs(value).isAfter(dayjs(values.startsAt)) 
+          ? null 
+          : "End time must be after start time",
     },
   });
 
@@ -119,16 +122,18 @@ const EventForm = ({
               required
               {...form.getInputProps("name")}
             />
-            <DateInput
-              label="Start date"
-              placeholder="Start date"
+            <DateTimePicker
+              label="Start date and time"
+              placeholder="Start date and time"
               required
+              valueFormat="MM/DD/YY hh:mm A"
               {...form.getInputProps("startsAt")}
             />
-            <DateInput
-              label="End date"
-              placeholder="Start date"
+            <DateTimePicker
+              label="End date and time"
+              placeholder="End date and time"
               required
+              valueFormat="MM/DD/YY hh:mm A"
               {...form.getInputProps("endsAt")}
             />
             <TextInput
