@@ -34,6 +34,7 @@ interface DashboardStats {
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetched, setFetched] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -41,15 +42,17 @@ export default function DashboardPage() {
         const res = await fetch("/api/dashboard/stats");
         const data = await res.json();
         setStats(data);
+        setFetched(true);
       } catch (error) {
         console.error("Failed to fetch dashboard stats:", error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchStats();
-  }, []);
+    if (!fetched) {
+      fetchStats();
+    }
+  }, [fetched]);
 
   if (loading || !stats) {
     return <div>Loading...</div>;
