@@ -18,7 +18,7 @@ import {
   Tooltip,
   ActionIcon,
 } from "@mantine/core";
-import { Event, Ticket, TicketStatus } from "@prisma/client";
+import { Event, Ticket, TicketStatus, TicketType } from "@prisma/client";
 import { notFound } from "next/navigation";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
@@ -31,6 +31,7 @@ import {
   IconCheck,
   IconDownload,
   IconEdit,
+  IconTrash,
 } from "@tabler/icons-react";
 import DescriptionEditor from "../_components/DescriptionEditor";
 import { useEventStore } from "@/stores/useEventStore";
@@ -66,9 +67,19 @@ export default function EventPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
-  const [event, setEvent] = useState<EventWithTickets | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { updateEvent } = useEventStore();
+  const {
+    currentEvent,
+    loading,
+    fetchEvent,
+    addTicketType,
+    addTicket,
+    updateTicket,
+    updateEvent,
+    ticketTypes,
+    ticketTypesLoading,
+    fetchTicketTypes,
+    deleteTicketType,
+  } = useEventStore();
 
   const [
     ticketTypeModalOpened,
@@ -95,7 +106,8 @@ export default function EventPage({
     validate: {
       name: (value) => (value.length < 1 ? "Name is required" : null),
       price: (value) => (value < 0 ? "Price must be positive" : null),
-      quantity: (value) => (value !== null && value < 0 ? "Quantity must be positive" : null),
+      quantity: (value) =>
+        value !== null && value < 0 ? "Quantity must be positive" : null,
     },
   });
 
@@ -105,83 +117,77 @@ export default function EventPage({
       email: "",
       ticketTypeId: "",
       status: "PENDING" as TicketStatus,
+      price: 0,
     },
     validate: {
       name: (value) => (value.length < 1 ? "Name is required" : null),
       email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
-      ticketTypeId: (value) => (value.length < 1 ? "Ticket type is required" : null),
+      ticketTypeId: (value) =>
+        value.length < 1 ? "Ticket type is required" : null,
+      price: (value) => (value < 0 ? "Price must be positive" : null),
     },
   });
 
   useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        const res = await fetch(`/api/events/${slug}`);
-        if (!res.ok) {
-          notFound();
-        }
-        const data = await res.json();
-        setEvent(data);
-      } catch (error) {
-        console.error("Failed to fetch event:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchEvent(slug).catch(() => {
+      notFound();
+    });
+    fetchTicketTypes(slug).catch(console.error);
+  }, [slug, fetchEvent, fetchTicketTypes]);
 
-    fetchEvent();
-  }, [slug]);
-
-  const handleCreateTicketType = async (values: typeof ticketTypeForm.values) => {
+  const handleCreateTicketType = async (
+    values: typeof ticketTypeForm.values
+  ) => {
     try {
-      const response = await fetch(`/api/events/${slug}/ticket-types`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (response.ok) {
-        const newTicketType = await response.json();
-        setEvent((prev) => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            TicketTypes: [...prev.TicketTypes, newTicketType],
-          };
-        });
-        closeTicketTypeModal();
-        ticketTypeForm.reset();
-      }
+      await addTicketType(slug, values);
+      closeTicketTypeModal();
+      ticketTypeForm.reset();
     } catch (error) {
       console.error("Failed to create ticket type:", error);
+    }
+  };
+
+  const handleEditTicketType = async (ticketTypeId: string) => {
+    const ticketType = ticketTypes.find((tt) => tt.id === ticketTypeId);
+    if (!ticketType) return;
+
+    ticketTypeForm.setValues({
+      name: ticketType.name,
+      description: ticketType.description || "",
+      price: ticketType.price / 100,
+      quantity: ticketType.quantity,
+    });
+
+    openTicketTypeModal();
+  };
+
+  const handleDeleteTicketType = async (ticketTypeId: string) => {
+    if (!confirm("Are you sure you want to delete this ticket type?")) return;
+
+    try {
+      await deleteTicketType(slug, ticketTypeId);
+    } catch (error) {
+      console.error("Failed to delete ticket type:", error);
     }
   };
 
   const handleAddTicket = async (values: typeof ticketForm.values) => {
     setTicketLoading(true);
     try {
-      const response = await fetch(`/api/events/${slug}/tickets`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
+      const selectedTicketType = currentEvent?.TicketTypes.find(
+        (type) => type.id === values.ticketTypeId
+      );
 
-      if (response.ok) {
-        const newTicket = await response.json();
-        setEvent((prev) => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            Tickets: [...prev.Tickets, newTicket],
-          };
-        });
-        closeTicketModal();
-        ticketForm.reset();
+      if (!selectedTicketType) {
+        throw new Error("Selected ticket type not found");
       }
+
+      await addTicket(slug, {
+        ...values,
+        price: selectedTicketType.price,
+      });
+      closeTicketModal();
+      ticketForm.reset();
     } catch (error) {
       console.error("Failed to add ticket:", error);
     } finally {
@@ -194,64 +200,28 @@ export default function EventPage({
     status: TicketStatus
   ) => {
     try {
-      const response = await fetch(`/api/events/${slug}/tickets/${ticketId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status }),
-      });
-
-      if (response.ok) {
-        const updatedTicket = await response.json();
-        setEvent((prev) => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            Tickets: prev.Tickets.map((ticket) =>
-              ticket.id === ticketId ? updatedTicket : ticket
-            ),
-          };
-        });
-      }
+      await updateTicket(slug, ticketId, { status });
     } catch (error) {
       console.error("Failed to update ticket:", error);
     }
   };
 
   const handleUpdateDescription = async (content: string) => {
-    if (!event) return;
-    
+    if (!currentEvent) return;
+
     setDescriptionLoading(true);
     try {
-      const response = await fetch(`/api/events/${event.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description: content,
-        }),
-      });
-
-      if (response.ok) {
-        const updatedEvent = await response.json();
-        setEvent(updatedEvent);
-        closeDescriptionModal();
-      }
+      await updateEvent(currentEvent.id, { description: content });
+      closeDescriptionModal();
     } catch (error) {
-      console.error('Failed to update description:', error);
+      console.error("Failed to update description:", error);
     } finally {
       setDescriptionLoading(false);
     }
   };
 
-  if (loading) {
+  if (loading || !currentEvent) {
     return <div>Loading...</div>;
-  }
-
-  if (!event) {
-    return notFound();
   }
 
   const getStatusColor = (status: TicketStatus) => {
@@ -274,10 +244,10 @@ export default function EventPage({
       <Paper p="xl" withBorder>
         <Stack gap="md">
           <Group justify="space-between">
-            <Title order={2}>{event.name}</Title>
+            <Title order={2}>{currentEvent.name}</Title>
             <Group>
-              <Button 
-                variant="light" 
+              <Button
+                variant="light"
                 leftSection={<IconEdit size={16} />}
                 onClick={openDescriptionModal}
               >
@@ -287,25 +257,27 @@ export default function EventPage({
           </Group>
           <Group>
             <Badge size="lg" variant="light">
-              {event.Tickets.length}{" "}
-              {event.Tickets.length === 1 ? "Ticket" : "Tickets"}
+              {currentEvent.Tickets.length}{" "}
+              {currentEvent.Tickets.length === 1 ? "Ticket" : "Tickets"}
             </Badge>
-            {event.Location && (
+            {currentEvent.Location && (
               <Badge size="lg" variant="light">
-                {event.Location.name}
+                {currentEvent.Location.name}
               </Badge>
             )}
           </Group>
-          {event.description && (
-            <div dangerouslySetInnerHTML={{ __html: event.description }} />
+          {currentEvent.description && (
+            <div
+              dangerouslySetInnerHTML={{ __html: currentEvent.description }}
+            />
           )}
           <Text size="lg">
-            {dayjs(event.startsAt).format("MMM D, YYYY h:mm A")} -{" "}
-            {dayjs(event.endsAt).format("MMM D, YYYY h:mm A")}
+            {dayjs(currentEvent.startsAt).format("MMM D, YYYY h:mm A")} -{" "}
+            {dayjs(currentEvent.endsAt).format("MMM D, YYYY h:mm A")}
           </Text>
-          {event.Location?.address && (
+          {currentEvent.Location?.address && (
             <Text size="lg" c="dimmed">
-              {event.Location.address}
+              {currentEvent.Location.address}
             </Text>
           )}
 
@@ -314,7 +286,7 @@ export default function EventPage({
               <Text size="sm" c="dimmed">
                 Total Tickets Sold
               </Text>
-              <Title order={3}>{event.Tickets.length}</Title>
+              <Title order={3}>{currentEvent.Tickets.length}</Title>
             </Stack>
             <Stack gap={0}>
               <Text size="sm" c="dimmed">
@@ -323,29 +295,33 @@ export default function EventPage({
               <Title order={3}>
                 $
                 {(
-                  event.Tickets.reduce((sum, ticket) => sum + ticket.price, 0) /
-                  100
+                  currentEvent.Tickets.reduce(
+                    (sum, ticket) => sum + ticket.price,
+                    0
+                  ) / 100
                 ).toFixed(2)}
               </Title>
             </Stack>
           </Group>
-        </Stack>
-      </Paper>
 
-      <Paper p="xl" withBorder>
-        <Stack gap="md">
-          <Group justify="space-between">
+          <Group justify="space-between" mt="xl">
             <Title order={3}>Ticket Types</Title>
-            <Button variant="light" onClick={openTicketTypeModal}>
-              Create New Ticket Type
+            <Button
+              variant="light"
+              leftSection={<IconPlus size={16} />}
+              onClick={openTicketTypeModal}
+            >
+              Add Ticket Type
             </Button>
           </Group>
-          {event.TicketTypes.length > 0 ? (
+
+          {ticketTypesLoading ? (
+            <LoadingOverlay visible />
+          ) : ticketTypes.length > 0 ? (
             <Table>
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>Name</Table.Th>
-                  <Table.Th>Description</Table.Th>
                   <Table.Th>Price</Table.Th>
                   <Table.Th>Quantity</Table.Th>
                   <Table.Th>Sold</Table.Th>
@@ -353,30 +329,40 @@ export default function EventPage({
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {event.TicketTypes.map((ticketType) => (
+                {ticketTypes.map((ticketType) => (
                   <Table.Tr key={ticketType.id}>
                     <Table.Td>{ticketType.name}</Table.Td>
-                    <Table.Td>{ticketType.description}</Table.Td>
                     <Table.Td>${(ticketType.price / 100).toFixed(2)}</Table.Td>
-                    <Table.Td>{ticketType.quantity || "Unlimited"}</Table.Td>
+                    <Table.Td>
+                      {ticketType.quantity === null
+                        ? "Unlimited"
+                        : ticketType.quantity}
+                    </Table.Td>
                     <Table.Td>{ticketType.Tickets.length}</Table.Td>
                     <Table.Td>
-                      <CopyButton value={`${window.location.origin}/purchase/${ticketType.id}`}>
-                        {({ copied, copy }) => (
-                          <Tooltip label={copied ? "Copied!" : "Copy purchase link"}>
-                            <ActionIcon color={copied ? "teal" : "gray"} onClick={copy}>
-                              {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
-                            </ActionIcon>
-                          </Tooltip>
-                        )}
-                      </CopyButton>
+                      <Group gap="xs">
+                        <ActionIcon
+                          variant="light"
+                          color="blue"
+                          onClick={() => handleEditTicketType(ticketType.id)}
+                        >
+                          <IconEdit size={16} />
+                        </ActionIcon>
+                        <ActionIcon
+                          variant="light"
+                          color="red"
+                          onClick={() => handleDeleteTicketType(ticketType.id)}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Group>
                     </Table.Td>
                   </Table.Tr>
                 ))}
               </Table.Tbody>
             </Table>
           ) : (
-            <Text c="dimmed">No ticket types created yet</Text>
+            <Text c="dimmed">No ticket types yet</Text>
           )}
         </Stack>
       </Paper>
@@ -404,7 +390,7 @@ export default function EventPage({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {event.Tickets.map((ticket) => (
+          {currentEvent.Tickets.map((ticket) => (
             <Table.Tr key={ticket.id}>
               <Table.Td>{ticket.name}</Table.Td>
               <Table.Td>{ticket.email}</Table.Td>
@@ -445,9 +431,13 @@ export default function EventPage({
       <DescriptionEditor
         opened={descriptionModalOpened}
         onClose={closeDescriptionModal}
-        description={event?.description || ''}
-        eventId={event?.id || ''}
-        onUpdate={setEvent}
+        description={currentEvent?.description || ""}
+        eventId={currentEvent?.id || ""}
+        onUpdate={(content) => {
+          if (currentEvent) {
+            updateEvent(currentEvent.id, { description: content });
+          }
+        }}
       />
 
       <Modal
@@ -478,11 +468,15 @@ export default function EventPage({
             <Select
               label="Ticket Type"
               placeholder="Select a ticket type"
-              data={event?.TicketTypes.map((type) => ({
-                value: type.id,
-                label: `${type.name} - $${(type.price / 100).toFixed(2)}`,
-                disabled: type.quantity !== null && type.Tickets.length >= type.quantity,
-              })) || []}
+              data={
+                currentEvent?.TicketTypes.map((type) => ({
+                  value: type.id,
+                  label: `${type.name} - $${(type.price / 100).toFixed(2)}`,
+                  disabled:
+                    type.quantity !== null &&
+                    type.Tickets.length >= type.quantity,
+                })) || []
+              }
               {...ticketForm.getInputProps("ticketTypeId")}
             />
             <Select

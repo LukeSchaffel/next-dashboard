@@ -35,7 +35,6 @@ export async function GET(
     if (event.workspaceId !== workspaceId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
-
     return NextResponse.json(event, { status: 200 });
   } catch (error) {
     return NextResponse.json(
@@ -67,8 +66,8 @@ export async function PATCH(
           locationId: updateData.locationId || null,
         }),
       },
-      include: { 
-        Location: true, 
+      include: {
+        Location: true,
         Tickets: {
           include: {
             TicketType: true,

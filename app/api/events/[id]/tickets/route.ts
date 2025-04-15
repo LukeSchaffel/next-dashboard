@@ -104,6 +104,9 @@ export async function POST(
         eventId: id,
         ticketTypeId: body.ticketTypeId,
       },
+      include: {
+        TicketType: true,
+      },
     });
 
     return NextResponse.json(ticket, { status: 201 });
