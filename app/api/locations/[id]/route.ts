@@ -9,7 +9,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const { name, address } = await request.json();
+    const { name, address, description } = await request.json();
     const { workspaceId } = await getAuthSession();
 
     const location = await prisma.location.findUnique({
@@ -17,21 +17,22 @@ export async function PATCH(
     });
 
     if (!location) {
-      return NextResponse.json({ error: "Location not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Location not found" },
+        { status: 404 }
+      );
     }
 
     if (location.workspaceId !== workspaceId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const updatedLocation = await prisma.location.update({
       where: { id },
       data: {
-        name,
-        address,
+        name: name || location.name,
+        address: address || location.address,
+        description: description || location.description,
       },
     });
 
@@ -57,14 +58,14 @@ export async function DELETE(
     });
 
     if (!location) {
-      return NextResponse.json({ error: "Location not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Location not found" },
+        { status: 404 }
+      );
     }
 
     if (location.workspaceId !== workspaceId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     await prisma.location.delete({
@@ -100,14 +101,14 @@ export async function GET(
     });
 
     if (!location) {
-      return NextResponse.json({ error: "Location not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Location not found" },
+        { status: 404 }
+      );
     }
 
     if (location.workspaceId !== workspaceId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     return NextResponse.json(location, { status: 200 });

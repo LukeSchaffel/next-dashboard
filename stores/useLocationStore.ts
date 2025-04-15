@@ -10,7 +10,7 @@ interface LocationsStore {
   fetchLocations: () => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
   createLocation: (values: any) => Promise<void>;
-  updateLocation: (id: string, values: any) => Promise<void>;
+  updateLocation: (id: string, values: any) => Promise<Location>;
 }
 
 export const useLocationStore = create<LocationsStore>((set, get) => ({
@@ -81,8 +81,11 @@ export const useLocationStore = create<LocationsStore>((set, get) => ({
       set({
         locations: get().locations.map((l) => (l.id === id ? updatedLocation : l)),
       });
+
+      return updatedLocation;
     } catch (err) {
       console.error("Update failed:", err);
+      throw err;
     }
   },
 })); 

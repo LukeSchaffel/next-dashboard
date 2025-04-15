@@ -8,12 +8,18 @@ import {
   Stack,
   Badge,
   Divider,
+  Button,
+  LoadingOverlay,
 } from "@mantine/core";
 import { Location, Event } from "@prisma/client";
 import { notFound } from "next/navigation";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { use } from "react";
+import Link from "next/link";
+import { IconEye, IconEdit } from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
+import DescriptionEditor from "../_components/DescriptionEditor";
 
 interface LocationWithEvents extends Location {
   Events: Event[];
@@ -27,6 +33,11 @@ export default function LocationPage({
   const { slug } = use(params);
   const [location, setLocation] = useState<LocationWithEvents | null>(null);
   const [loading, setLoading] = useState(true);
+  const [
+    descriptionModalOpened,
+    { open: openDescriptionModal, close: closeDescriptionModal },
+  ] = useDisclosure(false);
+  const [descriptionLoading, setDescriptionLoading] = useState(false);
 
   useEffect(() => {
     const fetchLocation = async () => {
@@ -86,6 +97,11 @@ export default function LocationPage({
             </Text>
           )}
         </Stack>
+        <Link href={`/dashboard/events/${event.id}`}>
+          <Button variant="subtle" leftSection={<IconEye size={16} />}>
+            View
+          </Button>
+        </Link>
       </Group>
     </Paper>
   );
@@ -96,15 +112,25 @@ export default function LocationPage({
         <Stack gap="md">
           <Group justify="space-between">
             <Title order={2}>{location.name}</Title>
-            <Badge size="lg" variant="light">
-              {events.length} {events.length === 1 ? "Event" : "Events"}
-            </Badge>
+            <Button
+              variant="light"
+              leftSection={<IconEdit size={16} />}
+              onClick={openDescriptionModal}
+            >
+              Edit Description
+            </Button>
           </Group>
           {location.address && (
             <Text size="lg" c="dimmed">
               {location.address}
             </Text>
           )}
+          {location.description && (
+            <div dangerouslySetInnerHTML={{ __html: location.description }} />
+          )}
+          <Badge size="lg" variant="light">
+            {events.length} {events.length === 1 ? "Event" : "Events"}
+          </Badge>
         </Stack>
       </Paper>
 
@@ -148,6 +174,14 @@ export default function LocationPage({
           </Text>
         </Paper>
       )}
+
+      <DescriptionEditor
+        opened={descriptionModalOpened}
+        onClose={closeDescriptionModal}
+        description={location?.description || ""}
+        locationId={location?.id || ""}
+        onUpdate={setLocation}
+      />
     </Stack>
   );
 }
