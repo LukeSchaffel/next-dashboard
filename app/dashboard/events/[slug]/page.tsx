@@ -31,12 +31,14 @@ import {
   IconDownload,
   IconEdit,
   IconTrash,
+  IconEye,
 } from "@tabler/icons-react";
 import DescriptionEditor from "../_components/DescriptionEditor";
 import TicketTypeForm from "./_components/TicketTypeForm";
 import TicketForm from "./_components/TicketForm";
 import { useEventStore } from "@/stores/useEventStore";
 import { Table } from "@/lib/components";
+import Link from "next/link";
 
 export default function EventPage({
   params,
@@ -128,21 +130,6 @@ export default function EventPage({
     return <div>Loading...</div>;
   }
 
-  const getStatusColor = (status: TicketStatus) => {
-    switch (status) {
-      case "PENDING":
-        return "yellow";
-      case "CONFIRMED":
-        return "green";
-      case "CANCELLED":
-        return "red";
-      case "REFUNDED":
-        return "gray";
-      default:
-        return "blue";
-    }
-  };
-
   return (
     <Stack gap="xl">
       <Paper p="xl" withBorder>
@@ -228,8 +215,16 @@ export default function EventPage({
           <Table
             loading={ticketTypesLoading}
             data={{
-              head: ["Name", "Price", "Quantity", "Sold", "Actions"],
+              head: ["", "Name", "Price", "Quantity", "Sold", "Actions"],
               body: ticketTypes.map((ticketType) => [
+                <Link
+                  key={ticketType.id}
+                  href={`/dashboard/events/${slug}/ticketTypes/${ticketType.id}`}
+                >
+                  <Button variant="subtle" leftSection={<IconEye size={16} />}>
+                    View
+                  </Button>
+                </Link>,
                 ticketType.name,
                 `$${(ticketType.price / 100).toFixed(2)}`,
                 ticketType.quantity === null
@@ -281,61 +276,6 @@ export default function EventPage({
         ) : (
           <Text c="dimmed">No ticket types yet</Text>
         )}
-      </Paper>
-
-      <Paper withBorder p="xl">
-        <Group justify="space-between">
-          <Title order={3}>Tickets</Title>
-          <Button
-            variant="filled"
-            onClick={openTicketModal}
-            leftSection={<IconPlus size={16} />}
-          >
-            Add Ticket
-          </Button>
-        </Group>
-
-        <Table
-          data={{
-            head: [
-              "Name",
-              "Email",
-              "Ticket Type",
-              "Price",
-              "Status",
-              "Actions",
-            ],
-            body: currentEvent.Tickets.map((ticket) => [
-              ticket.name,
-              ticket.email,
-              ticket.TicketType?.name || "No type",
-              `$${(ticket.price / 100).toFixed(2)}`,
-              <Badge key={ticket.id} color={getStatusColor(ticket.status)}>
-                {ticket.status}
-              </Badge>,
-              <Group gap="xs" key={ticket.id}>
-                <Select
-                  value={ticket.status}
-                  data={Object.values(TicketStatus)}
-                  onChange={(value) =>
-                    handleUpdateTicketStatus(ticket.id, value as TicketStatus)
-                  }
-                />
-                <Tooltip label="Download Ticket PDF">
-                  <ActionIcon
-                    variant="subtle"
-                    color="blue"
-                    onClick={() =>
-                      window.open(`/api/tickets/${ticket.id}/pdf`, "_blank")
-                    }
-                  >
-                    <IconDownload size={16} />
-                  </ActionIcon>
-                </Tooltip>
-              </Group>,
-            ]),
-          }}
-        />
       </Paper>
 
       <TicketTypeForm
