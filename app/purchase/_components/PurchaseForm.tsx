@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 
 interface PurchaseFormProps {
   price: number;
-  purchaseLinkId: string;
+  ticketTypeId: string;
 }
 
 export default function PurchaseForm({
   price,
-  purchaseLinkId,
+  ticketTypeId,
 }: PurchaseFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,24 +32,21 @@ export default function PurchaseForm({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        `/api/purchase-links/${purchaseLinkId}/purchase`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(values),
-        }
-      );
+      const response = await fetch(`/api/ticket-types/${ticketTypeId}/purchase`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+        }),
+      });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to purchase ticket");
+      if (response.ok) {
+        const { ticketId } = await response.json();
+        router.push(`/purchase/success?ticketId=${ticketId}`);
       }
-
-      const data = await response.json();
-      router.push(`/purchase/success?ticketId=${data.id}`);
     } catch (error) {
       console.error("Failed to purchase ticket:", error);
       setError(
@@ -62,17 +59,17 @@ export default function PurchaseForm({
 
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
+      <LoadingOverlay
+        visible={loading}
+        zIndex={1000}
+        overlayProps={{ radius: "sm", blur: 2 }}
+      />
+      {error && (
+        <Text c="red" size="sm">
+          {error}
+        </Text>
+      )}
       <Stack gap="md">
-        <LoadingOverlay
-          visible={loading}
-          zIndex={1000}
-          overlayProps={{ radius: "sm", blur: 2 }}
-        />
-        {error && (
-          <Text c="red" size="sm">
-            {error}
-          </Text>
-        )}
         <TextInput
           label="Name"
           placeholder="Your name"
@@ -85,9 +82,7 @@ export default function PurchaseForm({
           required
           {...form.getInputProps("email")}
         />
-        <Button type="submit" size="lg" fullWidth>
-          Purchase Ticket for ${(price / 100).toFixed(2)}
-        </Button>
+        <Button type="submit">Purchase for ${(price / 100).toFixed(2)}</Button>
       </Stack>
     </form>
   );

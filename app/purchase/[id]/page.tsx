@@ -1,13 +1,17 @@
-import { Container, Title, Text, Paper, Stack, Group } from "@mantine/core";
+import { Container, Title, Text, Paper, Stack, Group, Badge } from "@mantine/core";
 import { notFound } from "next/navigation";
 import dayjs from "dayjs";
 import PurchaseForm from "../_components/PurchaseForm";
 import { prisma } from "@/lib/prisma";
 
-interface PurchaseLink {
+interface TicketType {
   id: string;
+  name: string;
+  description: string | null;
   price: number;
+  quantity: number | null;
   Event: {
+    id: string;
     name: string;
     description: string | null;
     startsAt: Date;
@@ -17,10 +21,13 @@ interface PurchaseLink {
       address: string | null;
     } | null;
   };
+  Tickets: {
+    id: string;
+  }[];
 }
 
-async function getPurchaseLink(id: string) {
-  const purchaseLink = await prisma.purchaseLink.findUnique({
+async function getTicketType(id: string) {
+  const ticketType = await prisma.ticketType.findUnique({
     where: { id },
     include: {
       Event: {
@@ -28,64 +35,80 @@ async function getPurchaseLink(id: string) {
           Location: true,
         },
       },
+      Tickets: {
+        select: {
+          id: true,
+        },
+      },
     },
   });
 
-  return purchaseLink;
+  return ticketType;
 }
 
 export default async function PurchasePage({
   params,
 }: {
-  params: Promise<{ id: string; ticketId: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
-  const purchaseLink = await getPurchaseLink(id);
+  const { id } = params;
+  const ticketType = await getTicketType(id);
 
-  if (!purchaseLink) {
+  if (!ticketType) {
     notFound();
   }
+
+  // Check if ticket type is sold out
+  const isSoldOut = ticketType.quantity !== null && ticketType.Tickets.length >= ticketType.quantity;
 
   return (
     <Container size="sm" py="xl">
       <Paper p="xl" withBorder>
-        <Stack gap="xl">
-          <Stack gap="xs">
-            <Title order={2}>{purchaseLink.Event.name}</Title>
-            {purchaseLink.Event.description && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: purchaseLink.Event.description,
-                }}
-              />
-            )}
-            <Text>
-              {dayjs(purchaseLink.Event.startsAt).format("MMM D, YYYY h:mm A")}{" "}
-              - {dayjs(purchaseLink.Event.endsAt).format("MMM D, YYYY h:mm A")}
+        <Stack gap="md">
+          <Title order={2}>{ticketType.Event.name}</Title>
+          {ticketType.Event.description && (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: ticketType.Event.description,
+              }}
+            />
+          )}
+          <Text size="lg">
+            {dayjs(ticketType.Event.startsAt).format("MMM D, YYYY h:mm A")}{" "}
+            - {dayjs(ticketType.Event.endsAt).format("MMM D, YYYY h:mm A")}
+          </Text>
+          {ticketType.Event.Location && (
+            <Text size="lg" c="dimmed">
+              {ticketType.Event.Location.name}
+              {ticketType.Event.Location.address && (
+                <> - {ticketType.Event.Location.address}</>
+              )}
             </Text>
-            {purchaseLink.Event.Location && (
-              <Text c="dimmed">
-                {purchaseLink.Event.Location.name}
-                {purchaseLink.Event.Location.address && (
-                  <> - {purchaseLink.Event.Location.address}</>
-                )}
-              </Text>
-            )}
-          </Stack>
+          )}
+        </Stack>
+      </Paper>
 
-          <Group justify="space-between" align="flex-end">
-            <Stack gap={0}>
-              <Text size="sm" c="dimmed">
-                Price
-              </Text>
-              <Title order={3}>${(purchaseLink.price / 100).toFixed(2)}</Title>
-            </Stack>
-          </Group>
-
-          <PurchaseForm
-            price={purchaseLink.price}
-            purchaseLinkId={purchaseLink.id}
-          />
+      <Paper p="xl" withBorder>
+        <Stack gap="md">
+          <Title order={3}>Ticket Details</Title>
+          <Text size="lg" fw={500}>{ticketType.name}</Text>
+          {ticketType.description && (
+            <Text c="dimmed">{ticketType.description}</Text>
+          )}
+          <Title order={3}>${(ticketType.price / 100).toFixed(2)}</Title>
+          {ticketType.quantity && (
+            <Text size="sm" c="dimmed">
+              {ticketType.Tickets.length} / {ticketType.quantity} tickets sold
+            </Text>
+          )}
+          {isSoldOut ? (
+            <Badge color="red" size="xl">Sold Out</Badge>
+          ) : (
+            <PurchaseForm
+              price={ticketType.price}
+              ticketTypeId={ticketType.id}
+            />
+          )}
         </Stack>
       </Paper>
     </Container>

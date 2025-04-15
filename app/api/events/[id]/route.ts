@@ -15,8 +15,16 @@ export async function GET(
       where: { id },
       include: {
         Location: true,
-        Tickets: true,
-        PurchaseLinks: true,
+        Tickets: {
+          include: {
+            TicketType: true,
+          },
+        },
+        TicketTypes: {
+          include: {
+            Tickets: true,
+          },
+        },
       },
     });
 
@@ -59,7 +67,19 @@ export async function PATCH(
           locationId: updateData.locationId || null,
         }),
       },
-      include: { Location: true, Tickets: true, PurchaseLinks: true },
+      include: { 
+        Location: true, 
+        Tickets: {
+          include: {
+            TicketType: true,
+          },
+        },
+        TicketTypes: {
+          include: {
+            Tickets: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(event, { status: 200 });

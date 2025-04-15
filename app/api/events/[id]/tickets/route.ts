@@ -14,9 +14,7 @@ export async function GET(
 
     const event = await prisma.event.findUnique({
       where: { id },
-      include: {
-        Tickets: true,
-      },
+      select: { workspaceId: true },
     });
 
     if (!event) {
@@ -24,13 +22,17 @@ export async function GET(
     }
 
     if (event.workspaceId !== workspaceId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    return NextResponse.json(event.Tickets, { status: 200 });
+    const tickets = await prisma.ticket.findMany({
+      where: { eventId: id },
+      include: {
+        TicketType: true,
+      },
+    });
+
+    return NextResponse.json(tickets, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch tickets:", error);
     return NextResponse.json(
@@ -46,12 +48,12 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
-    const { name, email, price, status } = body;
     const { workspaceId } = await getAuthSession();
+    const body = await request.json();
 
     const event = await prisma.event.findUnique({
       where: { id },
+      select: { workspaceId: true },
     });
 
     if (!event) {
@@ -59,19 +61,48 @@ export async function POST(
     }
 
     if (event.workspaceId !== workspaceId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    if (body.ticketTypeId) {
+      const ticketType = await prisma.ticketType.findUnique({
+        where: { id: body.ticketTypeId },
+        select: { eventId: true, quantity: true, Tickets: true },
+      });
+
+      if (!ticketType) {
+        return NextResponse.json(
+          { error: "Ticket type not found" },
+          { status: 404 }
+        );
+      }
+
+      if (ticketType.eventId !== id) {
+        return NextResponse.json(
+          { error: "Ticket type does not belong to this event" },
+          { status: 400 }
+        );
+      }
+
+      if (
+        ticketType.quantity !== null &&
+        ticketType.Tickets.length >= ticketType.quantity
+      ) {
+        return NextResponse.json(
+          { error: "Ticket type is sold out" },
+          { status: 400 }
+        );
+      }
     }
 
     const ticket = await prisma.ticket.create({
       data: {
-        name,
-        email,
-        price,
-        status: status || TicketStatus.PENDING,
+        name: body.name,
+        email: body.email,
+        price: body.price,
+        status: body.status,
         eventId: id,
+        ticketTypeId: body.ticketTypeId,
       },
     });
 

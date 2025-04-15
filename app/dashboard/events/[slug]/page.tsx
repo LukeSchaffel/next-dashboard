@@ -36,15 +36,27 @@ import DescriptionEditor from "../_components/DescriptionEditor";
 import { useEventStore } from "@/stores/useEventStore";
 
 interface EventWithTickets extends Event {
-  Tickets: Ticket[];
+  Tickets: (Ticket & {
+    TicketType: {
+      id: string;
+      name: string;
+      description: string | null;
+      price: number;
+      quantity: number | null;
+    } | null;
+  })[];
   Location: {
     name: string;
     address: string | null;
   } | null;
-  PurchaseLinks: {
+  TicketTypes: {
     id: string;
+    name: string;
+    description: string | null;
     price: number;
+    quantity: number | null;
     createdAt: Date;
+    Tickets: Ticket[];
   }[];
 }
 
@@ -56,16 +68,15 @@ export default function EventPage({
   const { slug } = use(params);
   const [event, setEvent] = useState<EventWithTickets | null>(null);
   const [loading, setLoading] = useState(true);
-  const [purchaseLink, setPurchaseLink] = useState<string | null>(null);
   const { updateEvent } = useEventStore();
 
   const [
-    ticketModalOpened,
-    { open: openTicketModal, close: closeTicketModal },
+    ticketTypeModalOpened,
+    { open: openTicketTypeModal, close: closeTicketTypeModal },
   ] = useDisclosure(false);
   const [
-    purchaseLinkModalOpened,
-    { open: openPurchaseLinkModal, close: closePurchaseLinkModal },
+    ticketModalOpened,
+    { open: openTicketModal, close: closeTicketModal },
   ] = useDisclosure(false);
   const [
     descriptionModalOpened,
@@ -73,6 +84,34 @@ export default function EventPage({
   ] = useDisclosure(false);
   const [ticketLoading, setTicketLoading] = useState(false);
   const [descriptionLoading, setDescriptionLoading] = useState(false);
+
+  const ticketTypeForm = useForm({
+    initialValues: {
+      name: "",
+      description: "",
+      price: 0,
+      quantity: null as number | null,
+    },
+    validate: {
+      name: (value) => (value.length < 1 ? "Name is required" : null),
+      price: (value) => (value < 0 ? "Price must be positive" : null),
+      quantity: (value) => (value !== null && value < 0 ? "Quantity must be positive" : null),
+    },
+  });
+
+  const ticketForm = useForm({
+    initialValues: {
+      name: "",
+      email: "",
+      ticketTypeId: "",
+      status: "PENDING" as TicketStatus,
+    },
+    validate: {
+      name: (value) => (value.length < 1 ? "Name is required" : null),
+      email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
+      ticketTypeId: (value) => (value.length < 1 ? "Ticket type is required" : null),
+    },
+  });
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -93,28 +132,32 @@ export default function EventPage({
     fetchEvent();
   }, [slug]);
 
-  const ticketForm = useForm({
-    initialValues: {
-      name: "",
-      email: "",
-      price: 0,
-      status: "PENDING" as TicketStatus,
-    },
-    validate: {
-      name: (value) => (value.length < 1 ? "Name is required" : null),
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
-      price: (value) => (value < 0 ? "Price must be positive" : null),
-    },
-  });
+  const handleCreateTicketType = async (values: typeof ticketTypeForm.values) => {
+    try {
+      const response = await fetch(`/api/events/${slug}/ticket-types`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
 
-  const purchaseLinkForm = useForm({
-    initialValues: {
-      price: 0,
-    },
-    validate: {
-      price: (value) => (value < 0 ? "Price must be positive" : null),
-    },
-  });
+      if (response.ok) {
+        const newTicketType = await response.json();
+        setEvent((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            TicketTypes: [...prev.TicketTypes, newTicketType],
+          };
+        });
+        closeTicketTypeModal();
+        ticketTypeForm.reset();
+      }
+    } catch (error) {
+      console.error("Failed to create ticket type:", error);
+    }
+  };
 
   const handleAddTicket = async (values: typeof ticketForm.values) => {
     setTicketLoading(true);
@@ -173,30 +216,6 @@ export default function EventPage({
       }
     } catch (error) {
       console.error("Failed to update ticket:", error);
-    }
-  };
-
-  const handleCreatePurchaseLink = async (
-    values: typeof purchaseLinkForm.values
-  ) => {
-    try {
-      const response = await fetch(`/api/events/${slug}/purchase-links`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          price: values.price,
-        }),
-      });
-
-      if (response.ok) {
-        const { id } = await response.json();
-        const link = `${window.location.origin}/purchase/${id}`;
-        setPurchaseLink(link);
-      }
-    } catch (error) {
-      console.error("Failed to create purchase link:", error);
     }
   };
 
@@ -264,9 +283,6 @@ export default function EventPage({
               >
                 Edit Description
               </Button>
-              <Button variant="light" onClick={openPurchaseLinkModal}>
-                Create Purchase Link
-              </Button>
             </Group>
           </Group>
           <Group>
@@ -319,60 +335,48 @@ export default function EventPage({
       <Paper p="xl" withBorder>
         <Stack gap="md">
           <Group justify="space-between">
-            <Title order={3}>Purchase Links</Title>
-            <Button variant="light" onClick={openPurchaseLinkModal}>
-              Create New Link
+            <Title order={3}>Ticket Types</Title>
+            <Button variant="light" onClick={openTicketTypeModal}>
+              Create New Ticket Type
             </Button>
           </Group>
-
-          {(event.PurchaseLinks || []).length > 0 ? (
+          {event.TicketTypes.length > 0 ? (
             <Table>
               <Table.Thead>
                 <Table.Tr>
+                  <Table.Th>Name</Table.Th>
+                  <Table.Th>Description</Table.Th>
                   <Table.Th>Price</Table.Th>
-                  <Table.Th>Created</Table.Th>
-                  <Table.Th>Link</Table.Th>
+                  <Table.Th>Quantity</Table.Th>
+                  <Table.Th>Sold</Table.Th>
+                  <Table.Th>Actions</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {(event.PurchaseLinks || []).map((link) => (
-                  <Table.Tr key={link.id}>
-                    <Table.Td>${(link.price / 100).toFixed(2)}</Table.Td>
+                {event.TicketTypes.map((ticketType) => (
+                  <Table.Tr key={ticketType.id}>
+                    <Table.Td>{ticketType.name}</Table.Td>
+                    <Table.Td>{ticketType.description}</Table.Td>
+                    <Table.Td>${(ticketType.price / 100).toFixed(2)}</Table.Td>
+                    <Table.Td>{ticketType.quantity || "Unlimited"}</Table.Td>
+                    <Table.Td>{ticketType.Tickets.length}</Table.Td>
                     <Table.Td>
-                      {dayjs(link.createdAt).format("MMM D, YYYY h:mm A")}
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <Text size="sm" c="dimmed">
-                          {`${window.location.origin}/purchase/${link.id}`}
-                        </Text>
-                        <CopyButton
-                          value={`${window.location.origin}/purchase/${link.id}`}
-                        >
-                          {({ copied, copy }) => (
-                            <Tooltip label={copied ? "Copied!" : "Copy link"}>
-                              <ActionIcon
-                                variant="subtle"
-                                color={copied ? "teal" : "gray"}
-                                onClick={copy}
-                              >
-                                {copied ? (
-                                  <IconCheck size={16} />
-                                ) : (
-                                  <IconCopy size={16} />
-                                )}
-                              </ActionIcon>
-                            </Tooltip>
-                          )}
-                        </CopyButton>
-                      </Group>
+                      <CopyButton value={`${window.location.origin}/purchase/${ticketType.id}`}>
+                        {({ copied, copy }) => (
+                          <Tooltip label={copied ? "Copied!" : "Copy purchase link"}>
+                            <ActionIcon color={copied ? "teal" : "gray"} onClick={copy}>
+                              {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+                            </ActionIcon>
+                          </Tooltip>
+                        )}
+                      </CopyButton>
                     </Table.Td>
                   </Table.Tr>
                 ))}
               </Table.Tbody>
             </Table>
           ) : (
-            <Text c="dimmed">No purchase links created yet</Text>
+            <Text c="dimmed">No ticket types created yet</Text>
           )}
         </Stack>
       </Paper>
@@ -393,6 +397,7 @@ export default function EventPage({
           <Table.Tr>
             <Table.Th>Name</Table.Th>
             <Table.Th>Email</Table.Th>
+            <Table.Th>Ticket Type</Table.Th>
             <Table.Th>Price</Table.Th>
             <Table.Th>Status</Table.Th>
             <Table.Th>Actions</Table.Th>
@@ -403,6 +408,7 @@ export default function EventPage({
             <Table.Tr key={ticket.id}>
               <Table.Td>{ticket.name}</Table.Td>
               <Table.Td>{ticket.email}</Table.Td>
+              <Table.Td>{ticket.TicketType?.name || "No type"}</Table.Td>
               <Table.Td>${(ticket.price / 100).toFixed(2)}</Table.Td>
               <Table.Td>
                 <Badge color={getStatusColor(ticket.status)}>
@@ -413,12 +419,10 @@ export default function EventPage({
                 <Group gap="xs">
                   <Select
                     value={ticket.status}
+                    data={Object.values(TicketStatus)}
                     onChange={(value) =>
                       handleUpdateTicketStatus(ticket.id, value as TicketStatus)
                     }
-                    data={Object.values(TicketStatus)}
-                    size="xs"
-                    w={120}
                   />
                   <Tooltip label="Download Ticket PDF">
                     <ActionIcon
@@ -471,12 +475,15 @@ export default function EventPage({
               required
               {...ticketForm.getInputProps("email")}
             />
-            <NumberInput
-              label="Price (in cents)"
-              placeholder="1000"
-              required
-              min={0}
-              {...ticketForm.getInputProps("price")}
+            <Select
+              label="Ticket Type"
+              placeholder="Select a ticket type"
+              data={event?.TicketTypes.map((type) => ({
+                value: type.id,
+                label: `${type.name} - $${(type.price / 100).toFixed(2)}`,
+                disabled: type.quantity !== null && type.Tickets.length >= type.quantity,
+              })) || []}
+              {...ticketForm.getInputProps("ticketTypeId")}
             />
             <Select
               label="Status"
@@ -490,49 +497,40 @@ export default function EventPage({
       </Modal>
 
       <Modal
-        opened={purchaseLinkModalOpened}
-        onClose={closePurchaseLinkModal}
-        title="Create Purchase Link"
+        opened={ticketTypeModalOpened}
+        onClose={closeTicketTypeModal}
+        title="Create New Ticket Type"
         centered
       >
-        <form onSubmit={purchaseLinkForm.onSubmit(handleCreatePurchaseLink)}>
+        <form onSubmit={ticketTypeForm.onSubmit(handleCreateTicketType)}>
           <Stack gap="md">
+            <TextInput
+              label="Name"
+              placeholder="General Admission"
+              required
+              {...ticketTypeForm.getInputProps("name")}
+            />
+            <TextInput
+              label="Description"
+              placeholder="Description of this ticket type"
+              {...ticketTypeForm.getInputProps("description")}
+            />
             <NumberInput
               label="Price (in cents)"
               placeholder="1000"
               required
               min={0}
-              {...purchaseLinkForm.getInputProps("price")}
+              {...ticketTypeForm.getInputProps("price")}
             />
-            <Button type="submit">Generate Link</Button>
+            <NumberInput
+              label="Quantity (leave empty for unlimited)"
+              placeholder="100"
+              min={0}
+              {...ticketTypeForm.getInputProps("quantity")}
+            />
+            <Button type="submit">Create Ticket Type</Button>
           </Stack>
         </form>
-
-        {purchaseLink && (
-          <Stack gap="sm" mt="md">
-            <Text size="sm" fw={500}>
-              Purchase Link:
-            </Text>
-            <Group>
-              <Text size="sm" style={{ flex: 1 }} truncate>
-                {purchaseLink}
-              </Text>
-              <CopyButton value={purchaseLink} timeout={2000}>
-                {({ copied, copy }) => (
-                  <Tooltip label={copied ? "Copied!" : "Copy"}>
-                    <ActionIcon color={copied ? "teal" : "gray"} onClick={copy}>
-                      {copied ? (
-                        <IconCheck size={16} />
-                      ) : (
-                        <IconCopy size={16} />
-                      )}
-                    </ActionIcon>
-                  </Tooltip>
-                )}
-              </CopyButton>
-            </Group>
-          </Stack>
-        )}
       </Modal>
     </Stack>
   );

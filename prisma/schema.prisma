@@ -32,7 +32,6 @@ model Workspace {
   Roles        UserRole[]
   createdAt    DateTime       @default(now())
   Events       Event[]
-  PurchaseLink PurchaseLink[]
 }
 
 model UserRole {
@@ -78,32 +77,37 @@ model Event {
   workspaceId   String
   Workspace     Workspace      @relation(fields: [workspaceId], references: [id])
   Tickets       Ticket[]
-  PurchaseLinks PurchaseLink[]
+  TicketTypes   TicketType[]
 }
 
 model Ticket {
-  id        String       @id @default(cuid())
-  name      String
-  email     String
-  price     Int // Price in cents
-  status    TicketStatus @default(PENDING)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  eventId   String
-  Event     Event        @relation(fields: [eventId], references: [id])
+  id          String       @id @default(cuid())
+  name        String
+  email       String
+  price       Int // Price in cents
+  status      TicketStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  eventId     String
+  Event       Event        @relation(fields: [eventId], references: [id])
+  ticketTypeId String
+  TicketType  TicketType   @relation(fields: [ticketTypeId], references: [id])
 
   @@index([email])
   @@index([status])
 }
 
-model PurchaseLink {
+model TicketType {
   id          String    @id @default(cuid())
-  price       Int
+  name        String
+  description String?
+  price       Int       // Price in cents
+  quantity    Int?      // Optional quantity limit
   eventId     String
   Event       Event     @relation(fields: [eventId], references: [id])
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  Tickets     Ticket[]
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 enum TicketStatus {
