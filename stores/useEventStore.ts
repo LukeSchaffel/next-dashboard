@@ -29,7 +29,7 @@ interface EventsStore {
   updateEvent: (id: string, values: any) => Promise<EventWithLocation>;
 
   // Ticket Types actions
-  fetchTicketTypes: (eventId: string) => Promise<void>;
+  fetchTicketTypes: (slug: string) => Promise<void>;
   addTicketType: (
     eventId: string,
     ticketType: Omit<TicketType, "id" | "eventId" | "createdAt" | "updatedAt">
@@ -163,16 +163,17 @@ export const useEventStore = create<EventsStore>((set, get) => ({
   },
 
   // Ticket Types actions
-  fetchTicketTypes: async (eventId: string) => {
-    set({ ticketTypesLoading: true, ticketTypesError: null });
+  fetchTicketTypes: async (slug: string) => {
+    set({ ticketTypesLoading: true });
     try {
-      const res = await fetch(`/api/events/${eventId}/ticket-types`);
-      if (!res.ok) throw new Error("Failed to fetch ticket types");
-      const ticketTypes = await res.json();
-      set({ ticketTypes });
-    } catch (err: any) {
-      set({ ticketTypesError: err.message });
-      throw err;
+      const response = await fetch(`/api/events/${slug}/ticket-types`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch ticket types");
+      }
+      const data = await response.json();
+      set({ ticketTypes: data });
+    } catch (error) {
+      console.error("Error fetching ticket types:", error);
     } finally {
       set({ ticketTypesLoading: false });
     }
