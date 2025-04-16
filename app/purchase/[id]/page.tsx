@@ -1,4 +1,15 @@
-import { Container, Title, Text, Paper, Stack, Group, Badge } from "@mantine/core";
+import {
+  Container,
+  Title,
+  Text,
+  Paper,
+  Stack,
+  Group,
+  Badge,
+  Grid,
+  GridCol,
+  Flex,
+} from "@mantine/core";
 import { notFound } from "next/navigation";
 import dayjs from "dayjs";
 import PurchaseForm from "../_components/PurchaseForm";
@@ -59,58 +70,66 @@ export default async function PurchasePage({
   }
 
   // Check if ticket type is sold out
-  const isSoldOut = ticketType.quantity !== null && ticketType.Tickets.length >= ticketType.quantity;
+  const isSoldOut =
+    ticketType.quantity !== null &&
+    ticketType.Tickets.length >= ticketType.quantity;
 
   return (
-    <Container size="sm" py="xl">
-      <Paper p="xl" withBorder>
-        <Stack gap="md">
-          <Title order={2}>{ticketType.Event.name}</Title>
-          {ticketType.Event.description && (
-            <div
-              dangerouslySetInnerHTML={{
-                __html: ticketType.Event.description,
-              }}
-            />
-          )}
-          <Text size="lg">
-            {dayjs(ticketType.Event.startsAt).format("MMM D, YYYY h:mm A")}{" "}
-            - {dayjs(ticketType.Event.endsAt).format("MMM D, YYYY h:mm A")}
-          </Text>
-          {ticketType.Event.Location && (
-            <Text size="lg" c="dimmed">
-              {ticketType.Event.Location.name}
-              {ticketType.Event.Location.address && (
-                <> - {ticketType.Event.Location.address}</>
-              )}
+    <Flex h={"100vh"} w={"100vw"} p={"xl"}>
+      <Group align="middle" flex={1}>
+        <Paper p="xl" withBorder flex={1}>
+          <Stack gap="md">
+            <Title order={2}>{ticketType.Event.name}</Title>
+            {ticketType.Event.description && (
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: ticketType.Event.description,
+                }}
+              />
+            )}
+            <Text size="lg">
+              {dayjs(ticketType.Event.startsAt).format("MMM D, YYYY h:mm A")} -{" "}
+              {dayjs(ticketType.Event.endsAt).format("MMM D, YYYY h:mm A")}
             </Text>
-          )}
-        </Stack>
-      </Paper>
+            {ticketType.Event.Location && (
+              <Text size="lg" c="dimmed">
+                {ticketType.Event.Location.name}
+                {ticketType.Event.Location.address && (
+                  <> - {ticketType.Event.Location.address}</>
+                )}
+              </Text>
+            )}
+          </Stack>
+        </Paper>
 
-      <Paper p="xl" withBorder>
-        <Stack gap="md">
-          <Title order={3}>Ticket Details</Title>
-          <Text size="lg" fw={500}>{ticketType.name}</Text>
-          {ticketType.description && (
-            <Text c="dimmed">{ticketType.description}</Text>
-          )}
-          <Title order={3}>${(ticketType.price / 100).toFixed(2)}</Title>
-          {ticketType.quantity && (
-            <Text size="sm" c="dimmed">
-              {ticketType.Tickets.length} / {ticketType.quantity} tickets sold
+        <Paper p="xl" withBorder flex={1}>
+          <Stack gap="md">
+            <Title order={3}>Ticket Details</Title>
+            <Text size="lg" fw={500}>
+              {ticketType.name}
             </Text>
-          )}
-          {isSoldOut ? (
-            <Badge color="red" size="xl">Sold Out</Badge>
-          ) : (
-            <PurchaseForm
-              price={ticketType.price}
-              ticketTypeId={ticketType.id}
-            />
-          )}
-        </Stack>
-      </Paper>
-    </Container>
+            {ticketType.description && (
+              <Text c="dimmed">{ticketType.description}</Text>
+            )}
+            <Title order={3}>${(ticketType.price / 100).toFixed(2)}</Title>
+            {ticketType.quantity && (
+              <Text size="sm" c="dimmed">
+                {ticketType.Tickets.length} / {ticketType.quantity} tickets sold
+              </Text>
+            )}
+            {isSoldOut ? (
+              <Badge color="red" size="xl">
+                Sold Out
+              </Badge>
+            ) : (
+              <PurchaseForm
+                price={ticketType.price}
+                ticketTypeId={ticketType.id}
+              />
+            )}
+          </Stack>
+        </Paper>
+      </Group>
+    </Flex>
   );
 }

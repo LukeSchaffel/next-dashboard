@@ -1,7 +1,9 @@
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
-import '@mantine/tiptap/styles.css';
-import '@mantine/charts/styles.css';
+import "@mantine/tiptap/styles.css";
+import "@mantine/charts/styles.css";
+
+import styles from "./_app.module.css";
 import {
   ClerkProvider,
   SignInButton,
@@ -35,7 +37,7 @@ export default function RootLayout({ children }: { children: any }) {
             content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
           />
         </head>
-        <body>
+        <body className={styles.body}>
           <MantineProvider theme={theme}>{children}</MantineProvider>
         </body>
       </html>
