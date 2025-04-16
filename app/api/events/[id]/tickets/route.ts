@@ -64,11 +64,16 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
+    let ticketPrice = body.price;
     if (body.ticketTypeId) {
       const ticketType = await prisma.ticketType.findUnique({
         where: { id: body.ticketTypeId },
-        select: { eventId: true, quantity: true, Tickets: true },
+        select: { eventId: true, quantity: true, Tickets: true, price: true },
       });
+
+      if (ticketType?.price) {
+        ticketPrice = ticketType.price;
+      }
 
       if (!ticketType) {
         return NextResponse.json(
@@ -99,7 +104,7 @@ export async function POST(
       data: {
         name: body.name,
         email: body.email,
-        price: body.price,
+        price: ticketPrice,
         status: body.status,
         eventId: id,
         ticketTypeId: body.ticketTypeId,
