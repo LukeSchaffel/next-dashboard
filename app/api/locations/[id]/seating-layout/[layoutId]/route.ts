@@ -84,6 +84,17 @@ export async function PATCH(
 
     const seatingLayout = await prisma.seatingLayout.findUnique({
       where: { id: layoutId },
+      include: {
+        sections: {
+          include: {
+            rows: {
+              include: {
+                seats: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!seatingLayout) {
@@ -93,14 +104,40 @@ export async function PATCH(
       );
     }
 
-    // Update the seating layout and its related data
+    // First, delete all existing seats
+    await prisma.seat.deleteMany({
+      where: {
+        Row: {
+          Section: {
+            seatingLayoutId: layoutId,
+          },
+        },
+      },
+    });
+
+    // Then, delete all existing rows
+    await prisma.row.deleteMany({
+      where: {
+        Section: {
+          seatingLayoutId: layoutId,
+        },
+      },
+    });
+
+    // Then, delete all existing sections
+    await prisma.section.deleteMany({
+      where: {
+        seatingLayoutId: layoutId,
+      },
+    });
+
+    // Finally, update the seating layout and create new sections, rows, and seats
     const updatedLayout = await prisma.seatingLayout.update({
       where: { id: layoutId },
       data: {
         name,
         description,
         sections: {
-          deleteMany: {},
           create: sections.map((section: any) => ({
             name: section.name,
             description: section.description,
