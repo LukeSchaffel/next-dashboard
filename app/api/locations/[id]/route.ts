@@ -97,6 +97,7 @@ export async function GET(
             startsAt: "asc",
           },
         },
+        defaultLayout: true,
       },
     });
 

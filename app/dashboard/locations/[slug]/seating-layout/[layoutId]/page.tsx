@@ -1,0 +1,99 @@
+"use client";
+
+import { Stack, Group, Button } from "@mantine/core";
+import { useRouter } from "next/navigation";
+import { use } from "react";
+import { IconArrowLeft } from "@tabler/icons-react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import SeatingLayoutEditor, {
+  SeatingLayout,
+} from "../../../_components/SeatingLayoutEditor";
+
+export default function EditSeatingLayoutPage({
+  params,
+}: {
+  params: Promise<{ slug: string; layoutId: string }>;
+}) {
+  const { slug, layoutId } = use(params);
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [layout, setLayout] = useState<SeatingLayout | null>(null);
+
+  useEffect(() => {
+    const fetchLayout = async () => {
+      try {
+        const res = await fetch(
+          `/api/locations/${slug}/seating-layout/${layoutId}`
+        );
+        if (!res.ok) {
+          throw new Error("Failed to fetch seating layout");
+        }
+        const data = await res.json();
+        setLayout(data);
+      } catch (error) {
+        console.error("Failed to fetch seating layout:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLayout();
+  }, [slug, layoutId]);
+
+  const handleSubmit = async (values: any) => {
+    setSaving(true);
+    try {
+      const res = await fetch(
+        `/api/locations/${slug}/seating-layout/${layoutId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(values),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update seating layout");
+      }
+
+      const data = await res.json();
+      setLayout(data);
+    } catch (error) {
+      console.error("Failed to update seating layout:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return null;
+  }
+
+  if (!layout) {
+    return null;
+  }
+
+  return (
+    <Stack gap="xl">
+      <Group>
+        <Link href={`/dashboard/locations/${slug}`}>
+          <Button variant="subtle" leftSection={<IconArrowLeft size={16} />}>
+            Back to Location
+          </Button>
+        </Link>
+      </Group>
+
+      <SeatingLayoutEditor
+        initialLayout={layout}
+        loading={loading}
+        saving={saving}
+        onSubmit={handleSubmit}
+        submitLabel="Save Changes"
+      />
+    </Stack>
+  );
+}

@@ -56,6 +56,5 @@
     "postcss-simple-vars": "^7.0.1",
     "prisma": "^6.5.0",
     "typescript": "5.8.2"
-  },
-  "packageManager": "yarn@4.7.0"
+  }
 }

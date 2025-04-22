@@ -17,7 +17,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { use } from "react";
 import Link from "next/link";
-import { IconEye, IconEdit } from "@tabler/icons-react";
+import { IconEye, IconEdit, IconTable } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import DescriptionEditor from "../_components/DescriptionEditor";
 
@@ -112,13 +112,32 @@ export default function LocationPage({
         <Stack gap="md">
           <Group justify="space-between">
             <Title order={2}>{location.name}</Title>
-            <Button
-              variant="light"
-              leftSection={<IconEdit size={16} />}
-              onClick={openDescriptionModal}
-            >
-              Edit Description
-            </Button>
+            <Group>
+              <Button
+                variant="light"
+                leftSection={<IconEdit size={16} />}
+                onClick={openDescriptionModal}
+              >
+                Edit Description
+              </Button>
+              {location.defaultLayout ? (
+                <Link
+                  href={`/dashboard/locations/${location.id}/seating-layout/${location.defaultLayout.id}`}
+                >
+                  <Button variant="light" leftSection={<IconTable size={16} />}>
+                    View Seating Layout
+                  </Button>
+                </Link>
+              ) : (
+                <Link
+                  href={`/dashboard/locations/${location.id}/seating-layout`}
+                >
+                  <Button variant="light" leftSection={<IconTable size={16} />}>
+                    Create Seating Layout
+                  </Button>
+                </Link>
+              )}
+            </Group>
           </Group>
           {location.address && (
             <Text size="lg" c="dimmed">
