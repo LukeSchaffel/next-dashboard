@@ -14,6 +14,9 @@ export async function POST(request: NextRequest) {
         address,
         workspaceId,
       },
+      include: {
+        templateLayout: true,
+      },
     });
     return NextResponse.json(location, { status: 201 });
   } catch (error) {
@@ -31,6 +34,9 @@ export async function GET(request: NextRequest) {
     const locations = await prisma.location.findMany({
       where: {
         workspaceId,
+      },
+      include: {
+        templateLayout: true,
       },
       orderBy: {
         name: "asc",

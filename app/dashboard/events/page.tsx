@@ -16,7 +16,6 @@ import {
 import { EventWithLocation } from "@/lib/prisma";
 
 import { Table } from "@/lib/components";
-import EventForm from "./_components/EventForm";
 import { useContext, useEffect, useState } from "react";
 import { DashboardContext } from "../_components/client-layout";
 import Link from "next/link";
@@ -25,6 +24,7 @@ import {
   IconRefresh,
   IconCalendar,
   IconTable,
+  IconPlus,
 } from "@tabler/icons-react";
 import { useEventStore } from "@/stores/useEventStore";
 import CalendarView from "./_components/CalendarView";
@@ -69,11 +69,9 @@ export default function EventsPage() {
               { label: <IconCalendar size={16} />, value: "calendar" },
             ]}
           />
-          <EventForm
-            userRole={userRole}
-            selectedEvent={selectedEvent}
-            setSelectedEvent={setSelectedEvent}
-          />
+          <Link href="/dashboard/events/create">
+            <Button leftSection={<IconPlus size={16} />}>New Event</Button>
+          </Link>
         </Group>
       </Flex>
 

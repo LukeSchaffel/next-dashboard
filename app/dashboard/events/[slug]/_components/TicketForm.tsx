@@ -2,19 +2,13 @@ import { Modal, TextInput, Select, Stack, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useEffect } from "react";
 import { useEventStore } from "@/stores/useEventStore";
-import { TicketStatus } from "@prisma/client";
+import { TicketStatus, TicketType } from "@prisma/client";
 
 interface TicketFormProps {
   opened: boolean;
   onClose: () => void;
   eventSlug: string;
-  ticketTypes: Array<{
-    id: string;
-    name: string;
-    price: number;
-    quantity: number | null;
-    Tickets: Array<{ id: string }>;
-  }>;
+  ticketTypes: TicketType[];
   loading?: boolean;
 }
 
@@ -37,7 +31,8 @@ export default function TicketForm({
     validate: {
       name: (value) => (value.length < 1 ? "Name is required" : null),
       email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
-      ticketTypeId: (value) => (value.length < 1 ? "Ticket type is required" : null),
+      ticketTypeId: (value) =>
+        value.length < 1 ? "Ticket type is required" : null,
     },
   });
 
@@ -81,8 +76,7 @@ export default function TicketForm({
               value: type.id,
               label: `${type.name} - $${(type.price / 100).toFixed(2)}`,
               disabled:
-                type.quantity !== null &&
-                type.Tickets.length >= type.quantity,
+                type.quantity !== null && type.Tickets.length >= type.quantity,
             }))}
             {...form.getInputProps("ticketTypeId")}
           />
@@ -99,4 +93,4 @@ export default function TicketForm({
       </form>
     </Modal>
   );
-} 
+}

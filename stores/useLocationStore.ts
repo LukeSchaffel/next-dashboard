@@ -1,16 +1,24 @@
 import { create } from "zustand";
 import { Location } from "@prisma/client";
 
+interface LocationWithTemplate extends Location {
+  templateLayout?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
+}
+
 interface LocationsStore {
-  locations: Location[];
+  locations: LocationWithTemplate[];
   loading: boolean;
   error: string | null;
   hasFetched: boolean;
-  setLocations: (locations: Location[]) => void;
+  setLocations: (locations: LocationWithTemplate[]) => void;
   fetchLocations: () => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
   createLocation: (values: any) => Promise<void>;
-  updateLocation: (id: string, values: any) => Promise<Location>;
+  updateLocation: (id: string, values: any) => Promise<LocationWithTemplate>;
 }
 
 export const useLocationStore = create<LocationsStore>((set, get) => ({
@@ -33,7 +41,9 @@ export const useLocationStore = create<LocationsStore>((set, get) => ({
   },
   deleteLocation: async (locationId: string) => {
     try {
-      const res = await fetch(`/api/locations/${locationId}`, { method: "DELETE" });
+      const res = await fetch(`/api/locations/${locationId}`, {
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error("Failed to delete location");
 
       set({
@@ -55,7 +65,7 @@ export const useLocationStore = create<LocationsStore>((set, get) => ({
 
       if (!res.ok) throw new Error("Failed to create location");
 
-      const newLocation: Location = await res.json();
+      const newLocation: LocationWithTemplate = await res.json();
 
       set({
         locations: [...get().locations, newLocation],
@@ -76,10 +86,12 @@ export const useLocationStore = create<LocationsStore>((set, get) => ({
 
       if (!res.ok) throw new Error("Failed to update location");
 
-      const updatedLocation: Location = await res.json();
+      const updatedLocation: LocationWithTemplate = await res.json();
 
       set({
-        locations: get().locations.map((l) => (l.id === id ? updatedLocation : l)),
+        locations: get().locations.map((l) =>
+          l.id === id ? updatedLocation : l
+        ),
       });
 
       return updatedLocation;
@@ -88,4 +100,4 @@ export const useLocationStore = create<LocationsStore>((set, get) => ({
       throw err;
     }
   },
-})); 
+}));

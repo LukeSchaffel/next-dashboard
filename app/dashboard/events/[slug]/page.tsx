@@ -187,7 +187,7 @@ export default function EventPage({
                 $
                 {(
                   currentEvent.Tickets.reduce(
-                    (sum, ticket) => sum + ticket.price,
+                    (sum: number, ticket: Ticket) => sum + ticket.price,
                     0
                   ) / 100
                 ).toFixed(2)}
@@ -230,7 +230,9 @@ export default function EventPage({
                 ticketType.quantity === null
                   ? "Unlimited"
                   : ticketType.quantity,
-                ticketType.Tickets.length,
+                currentEvent?.Tickets.filter(
+                  (t) => t.ticketTypeId === ticketType.id
+                ).length || 0,
                 <Group gap="xs" key={ticketType.id}>
                   <CopyButton
                     value={`${window.location.origin}/purchase/${ticketType.id}`}
