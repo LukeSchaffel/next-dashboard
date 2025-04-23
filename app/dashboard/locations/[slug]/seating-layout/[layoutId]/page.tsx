@@ -1,14 +1,12 @@
 "use client";
 
-import { Stack, Group, Button } from "@mantine/core";
+import { Group, Button } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import { use } from "react";
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import SeatingLayoutEditor, {
-  SeatingLayout,
-} from "../../../_components/SeatingLayoutEditor";
+import { SeatingLayoutEditor, SeatingLayout } from "@/lib/components";
 
 export default function EditSeatingLayoutPage({
   params,
@@ -77,23 +75,25 @@ export default function EditSeatingLayoutPage({
     return null;
   }
 
-  return (
-    <Stack gap="xl">
-      <Group>
-        <Link href={`/dashboard/locations/${slug}`}>
-          <Button variant="subtle" leftSection={<IconArrowLeft size={16} />}>
-            Back to Location
-          </Button>
-        </Link>
-      </Group>
+  const backButton = (
+    <Group>
+      <Link href={`/dashboard/locations/${slug}`}>
+        <Button variant="subtle" leftSection={<IconArrowLeft size={16} />}>
+          Back to Location
+        </Button>
+      </Link>
+    </Group>
+  );
 
-      <SeatingLayoutEditor
-        initialLayout={layout}
-        loading={loading}
-        saving={saving}
-        onSubmit={handleSubmit}
-        submitLabel="Save Changes"
-      />
-    </Stack>
+  return (
+    <SeatingLayoutEditor
+      initialLayout={layout}
+      loading={loading}
+      saving={saving}
+      onSubmit={handleSubmit}
+      submitLabel="Save Changes"
+      title="Edit Seating Layout"
+      backButton={backButton}
+    />
   );
 }

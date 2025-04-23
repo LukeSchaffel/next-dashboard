@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { use } from "react";
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
-import SeatingLayoutEditor from "../../_components/SeatingLayoutEditor";
+import { SeatingLayoutEditor } from "@/lib/components";
 
 export default function CreateSeatingLayoutPage({
   params,
@@ -36,17 +36,21 @@ export default function CreateSeatingLayoutPage({
     }
   };
 
-  return (
-    <Stack gap="xl">
-      <Group>
-        <Link href={`/dashboard/locations/${slug}`}>
-          <Button variant="subtle" leftSection={<IconArrowLeft size={16} />}>
-            Back to Location
-          </Button>
-        </Link>
-      </Group>
+  const backButton = (
+    <Group>
+      <Link href={`/dashboard/locations/${slug}`}>
+        <Button variant="subtle" leftSection={<IconArrowLeft size={16} />}>
+          Back to Location
+        </Button>
+      </Link>
+    </Group>
+  );
 
-      <SeatingLayoutEditor onSubmit={handleSubmit} />
-    </Stack>
+  return (
+    <SeatingLayoutEditor
+      onSubmit={handleSubmit}
+      backButton={backButton}
+      title="Create Seating Layout"
+    />
   );
 }

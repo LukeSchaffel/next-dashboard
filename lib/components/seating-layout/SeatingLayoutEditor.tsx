@@ -57,6 +57,8 @@ interface SeatingLayoutEditorProps {
     sections: Section[];
   }) => Promise<void>;
   submitLabel?: string;
+  title?: string;
+  backButton?: React.ReactNode;
 }
 
 export default function SeatingLayoutEditor({
@@ -65,6 +67,8 @@ export default function SeatingLayoutEditor({
   saving = false,
   onSubmit,
   submitLabel = "Create Layout",
+  title = "Create Seating Layout",
+  backButton,
 }: SeatingLayoutEditorProps) {
   const [sections, setSections] = useState<Section[]>(
     initialLayout?.sections || []
@@ -189,9 +193,8 @@ export default function SeatingLayoutEditor({
     <Stack gap="xl">
       <Paper p="xl" withBorder>
         <Stack gap="md">
-          <Title order={2}>
-            {initialLayout ? "Edit Seating Layout" : "Create Seating Layout"}
-          </Title>
+          {backButton}
+          <Title order={2}>{title}</Title>
 
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <LoadingOverlay
