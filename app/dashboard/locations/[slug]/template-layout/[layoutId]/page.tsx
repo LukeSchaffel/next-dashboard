@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { SeatingLayoutEditor, SeatingLayout } from "@/lib/components";
 
-export default function EditSeatingLayoutPage({
+export default function EditTemplateLayoutPage({
   params,
 }: {
   params: Promise<{ slug: string; layoutId: string }>;
@@ -23,15 +23,15 @@ export default function EditSeatingLayoutPage({
     const fetchLayout = async () => {
       try {
         const res = await fetch(
-          `/api/locations/${slug}/seating-layout/${layoutId}`
+          `/api/locations/${slug}/template-layout/${layoutId}`
         );
         if (!res.ok) {
-          throw new Error("Failed to fetch seating layout");
+          throw new Error("Failed to fetch template layout");
         }
         const data = await res.json();
         setLayout(data);
       } catch (error) {
-        console.error("Failed to fetch seating layout:", error);
+        console.error("Failed to fetch template layout:", error);
       } finally {
         setLoading(false);
       }
@@ -44,7 +44,7 @@ export default function EditSeatingLayoutPage({
     setSaving(true);
     try {
       const res = await fetch(
-        `/api/locations/${slug}/seating-layout/${layoutId}`,
+        `/api/locations/${slug}/template-layout/${layoutId}`,
         {
           method: "PATCH",
           headers: {
@@ -55,13 +55,13 @@ export default function EditSeatingLayoutPage({
       );
 
       if (!res.ok) {
-        throw new Error("Failed to update seating layout");
+        throw new Error("Failed to update template layout");
       }
 
       const data = await res.json();
       setLayout(data);
     } catch (error) {
-      console.error("Failed to update seating layout:", error);
+      console.error("Failed to update template layout:", error);
     } finally {
       setSaving(false);
     }
@@ -92,7 +92,7 @@ export default function EditSeatingLayoutPage({
       saving={saving}
       onSubmit={handleSubmit}
       submitLabel="Save Changes"
-      title="Edit Seating Layout"
+      title="Edit Template Layout"
       backButton={backButton}
     />
   );

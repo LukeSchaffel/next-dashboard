@@ -10,5 +10,5 @@ alwaysApply: true
 - Always refer to my [schema.prisma](mdc:prisma/schema.prisma) when working with my data.
 - All API routes inside /app/api need to be authorized like this const { workspaceId, userRoleId } = await getAuthSession();, unless not needed
 - Global Client side State is stored using Zustand, you can refer to [useEventStore.ts](mdc:stores/useEventStore.ts) to see how i like it structured 
-
+- When changing schemas in [schema.prisma](mdc:prisma/schema.prisma), do not make unnecessary changes to existing modles, unless relevent to what we discuss
 

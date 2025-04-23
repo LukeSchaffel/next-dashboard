@@ -7,7 +7,7 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { SeatingLayoutEditor } from "@/lib/components";
 
-export default function CreateSeatingLayoutPage({
+export default function CreateTemplateLayoutPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -17,7 +17,7 @@ export default function CreateSeatingLayoutPage({
 
   const handleSubmit = async (values: any) => {
     try {
-      const res = await fetch(`/api/locations/${slug}/seating-layout`, {
+      const res = await fetch(`/api/locations/${slug}/template-layout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,13 +26,15 @@ export default function CreateSeatingLayoutPage({
       });
 
       if (!res.ok) {
-        throw new Error("Failed to create seating layout");
+        throw new Error("Failed to create template layout");
       }
 
       const data = await res.json();
-      router.push(`/dashboard/locations/${slug}/seating-layout/${data.id}`);
+      console.log("Template layout created:", data);
+
+      router.push(`/dashboard/locations/${slug}`);
     } catch (error) {
-      console.error("Failed to create seating layout:", error);
+      console.error("Failed to create template layout:", error);
     }
   };
 
@@ -50,7 +52,7 @@ export default function CreateSeatingLayoutPage({
     <SeatingLayoutEditor
       onSubmit={handleSubmit}
       backButton={backButton}
-      title="Create Seating Layout"
+      title="Create Template Layout"
     />
   );
 }

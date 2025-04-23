@@ -24,14 +24,16 @@ model User {
 }
 
 model Workspace {
-  id        String     @id @default(cuid())
-  name      String
-  ownerId   String
-  Owner     User       @relation(fields: [ownerId], references: [id])
-  Locations Location[]
-  Roles     UserRole[]
-  createdAt DateTime   @default(now())
-  Events    Event[]
+  id             String           @id @default(cuid())
+  name           String
+  ownerId        String
+  Owner          User             @relation(fields: [ownerId], references: [id])
+  Locations      Location[]
+  Roles          UserRole[]
+  createdAt      DateTime         @default(now())
+  Events         Event[]
+  TemplateLayout TemplateLayout[]
+  EventLayout    EventLayout[]
 }
 
 model UserRole {
@@ -55,31 +57,31 @@ enum Role {
 }
 
 model Location {
-  id            String         @id @default(cuid())
-  name          String
-  address       String?
-  description   String?
-  workspaceId   String
-  Workspace     Workspace      @relation(fields: [workspaceId], references: [id])
-  Events        Event[]
-  defaultLayout SeatingLayout? @relation("LocationDefaultLayout")
+  id             String          @id @default(cuid())
+  name           String
+  address        String?
+  description    String?
+  workspaceId    String
+  Workspace      Workspace       @relation(fields: [workspaceId], references: [id])
+  Events         Event[]
+  templateLayout TemplateLayout? @relation("LocationTemplateLayout")
 }
 
 model Event {
-  id           String         @id @default(cuid())
-  name         String
-  description  String?
-  startsAt     DateTime?
-  endsAt       DateTime?
-  locationId   String?
-  Location     Location?      @relation(fields: [locationId], references: [id])
-  userRoleId   String
-  CreatedBy    UserRole       @relation(fields: [userRoleId], references: [id])
-  workspaceId  String
-  Workspace    Workspace      @relation(fields: [workspaceId], references: [id])
-  Tickets      Ticket[]
-  TicketTypes  TicketType[]
-  customLayout SeatingLayout? @relation("EventCustomLayout")
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  locationId  String?
+  Location    Location?    @relation(fields: [locationId], references: [id])
+  userRoleId  String
+  CreatedBy   UserRole     @relation(fields: [userRoleId], references: [id])
+  workspaceId String
+  Workspace   Workspace    @relation(fields: [workspaceId], references: [id])
+  Tickets     Ticket[]
+  TicketTypes TicketType[]
+  eventLayout EventLayout? @relation("EventCustomLayout")
 }
 
 model Ticket {
@@ -95,7 +97,7 @@ model Ticket {
   ticketTypeId String
   TicketType   TicketType   @relation(fields: [ticketTypeId], references: [id])
   seatId       String?      @unique
-  seat         Seat?
+  seat         EventSeat?
 
   @@index([email])
   @@index([status])
@@ -121,51 +123,101 @@ enum TicketStatus {
   REFUNDED
 }
 
-model SeatingLayout {
-  id          String    @id @default(cuid())
+model TemplateLayout {
+  id          String            @id @default(cuid())
   name        String
   description String?
-  // Location relation (for default layouts)
-  locationId  String?   @unique
-  Location    Location? @relation("LocationDefaultLayout", fields: [locationId], references: [id])
-  // Event relation (for custom layouts)
-  eventId     String?   @unique
-  Event       Event?    @relation("EventCustomLayout", fields: [eventId], references: [id])
-  sections    Section[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  locationId  String?           @unique
+  Location    Location?         @relation("LocationTemplateLayout", fields: [locationId], references: [id])
+  workspaceId String
+  Workspace   Workspace         @relation(fields: [workspaceId], references: [id])
+  sections    TemplateSection[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  EventLayout EventLayout[]
 }
 
-model Section {
-  id              String        @id @default(cuid())
+model EventLayout {
+  id          String          @id @default(cuid())
+  name        String
+  description String?
+  eventId     String          @unique
+  Event       Event           @relation("EventCustomLayout", fields: [eventId], references: [id])
+  templateId  String?
+  template    TemplateLayout? @relation(fields: [templateId], references: [id])
+  workspaceId String
+  Workspace   Workspace       @relation(fields: [workspaceId], references: [id])
+  sections    EventSection[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model TemplateSection {
+  id               String         @id @default(cuid())
+  name             String
+  description      String?
+  templateLayoutId String
+  TemplateLayout   TemplateLayout @relation(fields: [templateLayoutId], references: [id])
+  rows             TemplateRow[]
+  priceMultiplier  Float          @default(1.0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model EventSection {
+  id              String      @id @default(cuid())
   name            String
   description     String?
-  seatingLayoutId String
-  SeatingLayout   SeatingLayout @relation(fields: [seatingLayoutId], references: [id])
-  rows            Row[]
-  priceMultiplier Float         @default(1.0) // For section-specific pricing
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  eventLayoutId   String
+  EventLayout     EventLayout @relation(fields: [eventLayoutId], references: [id])
+  rows            EventRow[]
+  priceMultiplier Float       @default(1.0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
-model Row {
-  id        String   @id @default(cuid())
-  name      String // e.g., "A", "B", "1", "2"
+model TemplateRow {
+  id        String          @id @default(cuid())
+  name      String
   sectionId String
-  Section   Section  @relation(fields: [sectionId], references: [id])
-  seats     Seat[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  Section   TemplateSection @relation(fields: [sectionId], references: [id])
+  seats     TemplateSeat[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
   @@unique([sectionId, name])
 }
 
-model Seat {
+model EventRow {
+  id        String       @id @default(cuid())
+  name      String
+  sectionId String
+  Section   EventSection @relation(fields: [sectionId], references: [id])
+  seats     EventSeat[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([sectionId, name])
+}
+
+model TemplateSeat {
+  id        String      @id @default(cuid())
+  number    String
+  status    SeatStatus  @default(AVAILABLE)
+  rowId     String
+  Row       TemplateRow @relation(fields: [rowId], references: [id])
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([rowId, number])
+}
+
+model EventSeat {
   id        String     @id @default(cuid())
-  number    String // e.g., "1", "2", "3"
+  number    String
   status    SeatStatus @default(AVAILABLE)
   rowId     String
-  Row       Row        @relation(fields: [rowId], references: [id])
+  Row       EventRow   @relation(fields: [rowId], references: [id])
   ticketId  String?    @unique
   ticket    Ticket?    @relation(fields: [ticketId], references: [id])
   createdAt DateTime   @default(now())

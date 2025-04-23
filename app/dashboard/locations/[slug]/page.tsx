@@ -23,6 +23,11 @@ import DescriptionEditor from "../_components/DescriptionEditor";
 
 interface LocationWithEvents extends Location {
   Events: Event[];
+  templateLayout?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
 }
 
 export default function LocationPage({
@@ -120,20 +125,20 @@ export default function LocationPage({
               >
                 Edit Description
               </Button>
-              {location.defaultLayout ? (
+              {location.templateLayout ? (
                 <Link
-                  href={`/dashboard/locations/${location.id}/seating-layout/${location.defaultLayout.id}`}
+                  href={`/dashboard/locations/${location.id}/template-layout/${location.templateLayout.id}`}
                 >
                   <Button variant="light" leftSection={<IconTable size={16} />}>
-                    View Seating Layout
+                    View Template Layout
                   </Button>
                 </Link>
               ) : (
                 <Link
-                  href={`/dashboard/locations/${location.id}/seating-layout`}
+                  href={`/dashboard/locations/${location.id}/template-layout`}
                 >
                   <Button variant="light" leftSection={<IconTable size={16} />}>
-                    Create Seating Layout
+                    Create Template Layout
                   </Button>
                 </Link>
               )}

@@ -26,7 +26,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const seatingLayout = await prisma.seatingLayout.findUnique({
+    const templateLayout = await prisma.templateLayout.findUnique({
       where: { id: layoutId },
       include: {
         sections: {
@@ -41,18 +41,18 @@ export async function GET(
       },
     });
 
-    if (!seatingLayout) {
+    if (!templateLayout) {
       return NextResponse.json(
-        { error: "Seating layout not found" },
+        { error: "Template layout not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(seatingLayout, { status: 200 });
+    return NextResponse.json(templateLayout, { status: 200 });
   } catch (error) {
-    console.error("Failed to fetch seating layout:", error);
+    console.error("Failed to fetch template layout:", error);
     return NextResponse.json(
-      { error: "Failed to fetch seating layout" },
+      { error: "Failed to fetch template layout" },
       { status: 500 }
     );
   }
@@ -82,7 +82,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const seatingLayout = await prisma.seatingLayout.findUnique({
+    const templateLayout = await prisma.templateLayout.findUnique({
       where: { id: layoutId },
       include: {
         sections: {
@@ -97,42 +97,42 @@ export async function PATCH(
       },
     });
 
-    if (!seatingLayout) {
+    if (!templateLayout) {
       return NextResponse.json(
-        { error: "Seating layout not found" },
+        { error: "Template layout not found" },
         { status: 404 }
       );
     }
 
     // First, delete all existing seats
-    await prisma.seat.deleteMany({
+    await prisma.templateSeat.deleteMany({
       where: {
         Row: {
           Section: {
-            seatingLayoutId: layoutId,
+            templateLayoutId: layoutId,
           },
         },
       },
     });
 
     // Then, delete all existing rows
-    await prisma.row.deleteMany({
+    await prisma.templateRow.deleteMany({
       where: {
         Section: {
-          seatingLayoutId: layoutId,
+          templateLayoutId: layoutId,
         },
       },
     });
 
     // Then, delete all existing sections
-    await prisma.section.deleteMany({
+    await prisma.templateSection.deleteMany({
       where: {
-        seatingLayoutId: layoutId,
+        templateLayoutId: layoutId,
       },
     });
 
-    // Finally, update the seating layout and create new sections, rows, and seats
-    const updatedLayout = await prisma.seatingLayout.update({
+    // Finally, update the template layout and create new sections, rows, and seats
+    const updatedLayout = await prisma.templateLayout.update({
       where: { id: layoutId },
       data: {
         name,
@@ -171,9 +171,9 @@ export async function PATCH(
 
     return NextResponse.json(updatedLayout, { status: 200 });
   } catch (error) {
-    console.error("Failed to update seating layout:", error);
+    console.error("Failed to update template layout:", error);
     return NextResponse.json(
-      { error: "Failed to update seating layout" },
+      { error: "Failed to update template layout" },
       { status: 500 }
     );
   }
