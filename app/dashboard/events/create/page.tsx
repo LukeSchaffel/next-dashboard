@@ -15,6 +15,7 @@ import {
   Divider,
   Text,
   Box,
+  Checkbox,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { DateTimePicker } from "@mantine/dates";
@@ -31,6 +32,7 @@ interface EventFormValues {
   locationId: string;
   startsAt: Date;
   endsAt: Date;
+  use_layout_template: boolean;
 }
 
 export default function CreateEventPage() {
@@ -56,6 +58,7 @@ export default function CreateEventPage() {
       locationId: "",
       startsAt: new Date(),
       endsAt: new Date(),
+      use_layout_template: false,
     },
     validate: {
       name: (value) => (!value ? "Name is required" : null),
@@ -178,18 +181,16 @@ export default function CreateEventPage() {
               <Stack gap="md">
                 <Title order={3}>Seating Layout</Title>
                 <Text>
-                  A template layout is available for this location. You can use
-                  it as a starting point for your event's seating layout.
+                  This location has a template seating layout available. You can
+                  use it as a starting point for your event's seating
+                  arrangement.
                 </Text>
-                <Button
-                  variant="light"
-                  onClick={() => {
-                    // TODO: Implement template layout copying
-                    console.log("Copy template layout");
-                  }}
-                >
-                  Use Template Layout
-                </Button>
+                <Checkbox
+                  label="Use template seating layout"
+                  {...form.getInputProps("use_layout_template", {
+                    type: "checkbox",
+                  })}
+                />
               </Stack>
             </Paper>
           )}

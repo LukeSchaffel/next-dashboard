@@ -5,14 +5,37 @@ import { getAuthSession } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, description, locationId, startsAt, endsAt, ticketTypes } =
-      await request.json();
+    const {
+      name,
+      description,
+      locationId,
+      startsAt,
+      endsAt,
+      ticketTypes,
+      use_layout_template,
+    } = await request.json();
     const { workspaceId, userRoleId } = await getAuthSession();
 
     // Only check location if one is provided
+    let location = null;
     if (locationId) {
-      const location = await prisma.location.findUnique({
+      location = await prisma.location.findUnique({
         where: { id: locationId },
+        include: {
+          templateLayout: {
+            include: {
+              sections: {
+                include: {
+                  rows: {
+                    include: {
+                      seats: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!location) {
@@ -46,6 +69,37 @@ export async function POST(request: NextRequest) {
               })),
             }
           : undefined,
+        // Create event layout if template is requested and available
+        ...(use_layout_template && location?.templateLayout
+          ? {
+              eventLayout: {
+                create: {
+                  name: `${name} Seating Layout`,
+                  description: `Seating layout for ${name}`,
+                  workspaceId,
+                  templateId: location.templateLayout.id,
+                  sections: {
+                    create: location.templateLayout.sections.map((section) => ({
+                      name: section.name,
+                      description: section.description,
+                      priceMultiplier: section.priceMultiplier,
+                      rows: {
+                        create: section.rows.map((row) => ({
+                          name: row.name,
+                          seats: {
+                            create: row.seats.map((seat) => ({
+                              number: seat.number,
+                              status: seat.status,
+                            })),
+                          },
+                        })),
+                      },
+                    })),
+                  },
+                },
+              },
+            }
+          : {}),
       },
       include: {
         Location: {
@@ -55,6 +109,19 @@ export async function POST(request: NextRequest) {
           },
         },
         TicketTypes: true,
+        eventLayout: {
+          include: {
+            sections: {
+              include: {
+                rows: {
+                  include: {
+                    seats: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
