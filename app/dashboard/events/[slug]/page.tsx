@@ -39,6 +39,7 @@ import TicketForm from "./_components/TicketForm";
 import { useEventStore } from "@/stores/useEventStore";
 import { Table } from "@/lib/components";
 import Link from "next/link";
+import DescriptionEditorModal from "../_components/DescriptionEditorModal";
 
 export default function EventPage({
   params,
@@ -78,6 +79,9 @@ export default function EventPage({
   ] = useDisclosure(false);
   const [ticketLoading, setTicketLoading] = useState(false);
   const [descriptionLoading, setDescriptionLoading] = useState(false);
+  const [descriptionContent, setDescriptionContent] = useState(
+    currentEvent?.description || ""
+  );
 
   useEffect(() => {
     fetchEvent(slug).catch(() => {
@@ -112,12 +116,12 @@ export default function EventPage({
     }
   };
 
-  const handleUpdateDescription = async (content: string) => {
+  const handleUpdateDescription = async () => {
     if (!currentEvent) return;
 
     setDescriptionLoading(true);
     try {
-      await updateEvent(currentEvent.id, { description: content });
+      await updateEvent(currentEvent.id, { description: descriptionContent });
       closeDescriptionModal();
     } catch (error) {
       console.error("Failed to update description:", error);
@@ -298,14 +302,13 @@ export default function EventPage({
         eventSlug={slug}
       />
 
-      <DescriptionEditor
+      <DescriptionEditorModal
         opened={descriptionModalOpened}
         onClose={closeDescriptionModal}
-        description={currentEvent.description || ""}
-        eventId={currentEvent.id}
-        onUpdate={(content) => {
-          updateEvent(currentEvent.id, { description: content });
-        }}
+        value={descriptionContent}
+        onChange={setDescriptionContent}
+        onSave={handleUpdateDescription}
+        loading={descriptionLoading}
       />
     </Stack>
   );
