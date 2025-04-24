@@ -6,7 +6,6 @@ import {
   Stack,
   Title,
   TextInput,
-  Textarea,
   Button,
   Group,
   Select,
@@ -22,8 +21,9 @@ import { DateTimePicker } from "@mantine/dates";
 import { useLocationStore } from "@/stores/useLocationStore";
 import { useEventStore } from "@/stores/useEventStore";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconEdit } from "@tabler/icons-react";
 import Link from "next/link";
+import DescriptionEditor from "../_components/DescriptionEditor";
 
 interface EventFormValues {
   name: string;
@@ -59,7 +59,6 @@ export default function CreateEventPage() {
     },
     validate: {
       name: (value) => (!value ? "Name is required" : null),
-      locationId: (value) => (!value ? "Location is required" : null),
       startsAt: (value) => (!value ? "Start date is required" : null),
       endsAt: (value) => (!value ? "End date is required" : null),
     },
@@ -68,7 +67,7 @@ export default function CreateEventPage() {
   const handleLocationChange = async (locationId: string) => {
     setSelectedLocation(locationId);
     const selectedLocation = locations.find((l) => l.id === locationId);
-    console.log(selectedLocation?.templateLayout);
+
     if (selectedLocation?.templateLayout) {
       setTemplateLayout(selectedLocation.templateLayout);
     } else {
@@ -78,11 +77,19 @@ export default function CreateEventPage() {
 
   const handleSubmit = async (values: EventFormValues) => {
     try {
-      const event = await createEvent(values);
+      const eventData = {
+        ...values,
+        locationId: values.locationId || undefined, // Convert empty string to undefined
+      };
+      const event = await createEvent(eventData);
       router.push(`/dashboard/events/${event.id}`);
     } catch (error) {
       console.error("Failed to create event:", error);
     }
+  };
+
+  const handleDescriptionUpdate = (event: any) => {
+    form.setFieldValue("description", event.description);
   };
 
   const backButton = (
@@ -122,7 +129,6 @@ export default function CreateEventPage() {
                       value: location.id,
                       label: location.name,
                     }))}
-                    required
                     value={form.values.locationId}
                     onChange={(value) => {
                       if (value) {
@@ -133,12 +139,17 @@ export default function CreateEventPage() {
                   />
                 </Grid.Col>
                 <Grid.Col span={12}>
-                  <Textarea
-                    label="Description"
-                    placeholder="Enter event description"
-                    minRows={3}
-                    {...form.getInputProps("description")}
-                  />
+                  <Stack gap="xs">
+                    <Text size="sm" fw={500}>
+                      Description
+                    </Text>
+                    <DescriptionEditor
+                      value={form.values.description}
+                      onChange={(value) =>
+                        form.setFieldValue("description", value)
+                      }
+                    />
+                  </Stack>
                 </Grid.Col>
                 <Grid.Col span={6}>
                   <DateTimePicker

@@ -9,26 +9,29 @@ export async function POST(request: NextRequest) {
       await request.json();
     const { workspaceId, userRoleId } = await getAuthSession();
 
-    const location = await prisma.location.findUnique({
-      where: { id: locationId },
-    });
+    // Only check location if one is provided
+    if (locationId) {
+      const location = await prisma.location.findUnique({
+        where: { id: locationId },
+      });
 
-    if (!location) {
-      return NextResponse.json(
-        { error: "Location not found" },
-        { status: 404 }
-      );
-    }
+      if (!location) {
+        return NextResponse.json(
+          { error: "Location not found" },
+          { status: 404 }
+        );
+      }
 
-    if (location.workspaceId !== workspaceId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      if (location.workspaceId !== workspaceId) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
     }
 
     const event = await prisma.event.create({
       data: {
         name,
         description,
-        locationId,
+        locationId: locationId || null,
         startsAt: new Date(startsAt),
         endsAt: new Date(endsAt),
         userRoleId,
