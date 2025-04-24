@@ -9,6 +9,26 @@ interface EventWithDetails extends Event {
   };
   TicketTypes: TicketType[];
   Tickets: Ticket[];
+  eventLayout?: {
+    id: string;
+    name: string;
+    description: string;
+    sections: {
+      id: string;
+      name: string;
+      description: string;
+      priceMultiplier: number;
+      rows: {
+        id: string;
+        name: string;
+        seats: {
+          id: string;
+          number: string;
+          status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "DISABLED";
+        }[];
+      }[];
+    }[];
+  };
 }
 
 interface EventsStore {

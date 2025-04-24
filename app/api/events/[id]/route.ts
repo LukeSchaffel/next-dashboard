@@ -25,6 +25,19 @@ export async function GET(
             Tickets: true,
           },
         },
+        eventLayout: {
+          include: {
+            sections: {
+              include: {
+                rows: {
+                  include: {
+                    seats: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 

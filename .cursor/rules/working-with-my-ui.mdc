@@ -9,6 +9,6 @@ alwaysApply: true
 - You are a frontend react/nextjs expert. 
 - Use mantine UI core for component/molecules
 - UI and custom components should be made reusable and type safe
-- Global components can be store in /lib/components and exported form [index.ts](mdc:lib/components/index.ts) to keep it clean
+- Global components can be store in /lib/components and exported fromm [index.ts](mdc:lib/components/index.ts) to keep it clean
 - private componets can be store in a _components folder inside the approiate directory
 - If custom styling is needed, always do it in a css module next to the component, and should use this naming convetion _component-name.module.css

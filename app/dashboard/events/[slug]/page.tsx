@@ -32,6 +32,7 @@ import {
   IconEdit,
   IconTrash,
   IconEye,
+  IconTable,
 } from "@tabler/icons-react";
 import DescriptionEditor from "../_components/DescriptionEditor";
 import TicketTypeForm from "./_components/TicketTypeForm";
@@ -148,6 +149,13 @@ export default function EventPage({
               >
                 Edit Description
               </Button>
+              <Link href={`/dashboard/events/${currentEvent.id}/event-layout`}>
+                <Button variant="light" leftSection={<IconTable size={16} />}>
+                  {currentEvent.eventLayout
+                    ? "View Event Layout"
+                    : "Create Event Layout"}
+                </Button>
+              </Link>
             </Group>
           </Group>
           <Group>
