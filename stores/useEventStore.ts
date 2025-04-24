@@ -184,7 +184,7 @@ export const useEventStore = create<EventsStore>((set, get) => ({
   },
   addTicketType: async (eventId: string, values: any) => {
     try {
-      const res = await fetch(`/api/events/${eventId}/ticketTypes`, {
+      const res = await fetch(`/api/events/${eventId}/ticket-types`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

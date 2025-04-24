@@ -1,7 +1,28 @@
-import { Modal, TextInput, NumberInput, Stack, Button } from "@mantine/core";
+import {
+  Modal,
+  TextInput,
+  NumberInput,
+  Stack,
+  Button,
+  MultiSelect,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useEffect } from "react";
 import { useEventStore } from "@/stores/useEventStore";
+
+interface Section {
+  id: string;
+  name: string;
+}
+
+interface TicketType {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  quantity: number | null;
+  allowedSections?: Section[];
+}
 
 interface TicketTypeFormProps {
   opened: boolean;
@@ -16,13 +37,15 @@ export default function TicketTypeForm({
   eventSlug,
   editingTicketTypeId,
 }: TicketTypeFormProps) {
-  const { addTicketType, updateTicketType, ticketTypes } = useEventStore();
+  const { addTicketType, updateTicketType, ticketTypes, currentEvent } =
+    useEventStore();
   const form = useForm({
     initialValues: {
       name: "",
       description: "",
       price: 0,
       quantity: null as number | null,
+      allowedSections: [] as string[],
     },
     validate: {
       name: (value) => (value.length < 1 ? "Name is required" : null),
@@ -38,13 +61,15 @@ export default function TicketTypeForm({
       if (editingTicketTypeId) {
         const ticketType = ticketTypes.find(
           (tt) => tt.id === editingTicketTypeId
-        );
+        ) as TicketType | undefined;
         if (ticketType) {
           form.setValues({
             name: ticketType.name,
             description: ticketType.description || "",
             price: ticketType.price / 100,
             quantity: ticketType.quantity,
+            allowedSections:
+              ticketType.allowedSections?.map((section) => section.id) || [],
           });
         }
       } else {
@@ -66,6 +91,12 @@ export default function TicketTypeForm({
       console.error("Failed to create/update ticket type:", error);
     }
   };
+
+  const sectionOptions =
+    currentEvent?.eventLayout?.sections.map((section) => ({
+      value: section.id,
+      label: section.name,
+    })) || [];
 
   return (
     <Modal
@@ -97,6 +128,12 @@ export default function TicketTypeForm({
             placeholder="Leave empty for unlimited"
             min={0}
             {...form.getInputProps("quantity")}
+          />
+          <MultiSelect
+            label="Allowed Sections"
+            placeholder="Select sections this ticket type can be used for"
+            data={sectionOptions}
+            {...form.getInputProps("allowedSections")}
           />
           <Button type="submit">Save</Button>
         </Stack>

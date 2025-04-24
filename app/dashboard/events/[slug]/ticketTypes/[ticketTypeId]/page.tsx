@@ -29,6 +29,24 @@ import { Table } from "@/lib/components";
 import TicketForm from "../../_components/TicketForm";
 import Link from "next/link";
 
+interface Section {
+  id: string;
+  name: string;
+  priceMultiplier: number;
+}
+
+interface TicketType {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  quantity: number | null;
+  eventId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  allowedSections?: Section[];
+}
+
 export default function TicketTypePage({
   params,
 }: {
@@ -41,13 +59,14 @@ export default function TicketTypePage({
     fetchEvent,
     addTicket,
     updateTicket,
-    deleteTicket,
     ticketTypes,
     fetchTicketTypes,
   } = useEventStore();
 
-  const [ticketModalOpened, { open: openTicketModal, close: closeTicketModal }] =
-    useDisclosure(false);
+  const [
+    ticketModalOpened,
+    { open: openTicketModal, close: closeTicketModal },
+  ] = useDisclosure(false);
   const [ticketLoading, setTicketLoading] = useState(false);
 
   useEffect(() => {
@@ -57,10 +76,13 @@ export default function TicketTypePage({
     fetchTicketTypes(slug).catch(console.error);
   }, [slug, fetchEvent, fetchTicketTypes]);
 
-  const currentTicketType = ticketTypes.find((tt) => tt.id === ticketTypeId);
-  const tickets = currentEvent?.Tickets.filter(
-    (ticket) => ticket.ticketTypeId === ticketTypeId
-  ) || [];
+  const currentTicketType = ticketTypes.find((tt) => tt.id === ticketTypeId) as
+    | TicketType
+    | undefined;
+  const tickets =
+    currentEvent?.Tickets.filter(
+      (ticket) => ticket.ticketTypeId === ticketTypeId
+    ) || [];
 
   const handleUpdateTicketStatus = async (
     ticketId: string,
@@ -77,7 +99,11 @@ export default function TicketTypePage({
     if (!confirm("Are you sure you want to delete this ticket?")) return;
 
     try {
-      await deleteTicket(slug, ticketId);
+      await fetch(`/api/events/${slug}/tickets/${ticketId}`, {
+        method: "DELETE",
+      });
+      // Refresh the event data to update the tickets list
+      await fetchEvent(slug);
     } catch (error) {
       console.error("Failed to delete ticket:", error);
     }
@@ -110,7 +136,8 @@ export default function TicketTypePage({
             <Stack gap={0}>
               <Title order={1}>{currentTicketType.name}</Title>
               <Text c="dimmed">
-                {currentEvent.name} - ${(currentTicketType.price / 100).toFixed(2)}
+                {currentEvent.name} - $
+                {(currentTicketType.price / 100).toFixed(2)}
               </Text>
             </Stack>
             <Group>
@@ -152,6 +179,25 @@ export default function TicketTypePage({
           {currentTicketType.description && (
             <Text>{currentTicketType.description}</Text>
           )}
+
+          {currentTicketType.allowedSections &&
+            currentTicketType.allowedSections.length > 0 && (
+              <Stack gap="xs">
+                <Text fw={500}>Allowed Sections:</Text>
+                <Group>
+                  {currentTicketType.allowedSections.map((section) => (
+                    <Badge key={section.id} size="lg" variant="light">
+                      {section.name}
+                      {section.priceMultiplier !== 1 && (
+                        <Text span c="dimmed" ml={4}>
+                          ({(section.priceMultiplier * 100).toFixed(0)}% price)
+                        </Text>
+                      )}
+                    </Badge>
+                  ))}
+                </Group>
+              </Stack>
+            )}
         </Stack>
       </Paper>
 
@@ -210,4 +256,4 @@ export default function TicketTypePage({
       />
     </Stack>
   );
-} 
+}

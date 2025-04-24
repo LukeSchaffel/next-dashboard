@@ -104,16 +104,17 @@ model Ticket {
 }
 
 model TicketType {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  price       Int // Price in cents
-  quantity    Int? // Optional quantity limit
-  eventId     String
-  Event       Event    @relation(fields: [eventId], references: [id])
-  Tickets     Ticket[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String         @id @default(cuid())
+  name            String
+  description     String?
+  price           Int // Price in cents
+  quantity        Int? // Optional quantity limit
+  eventId         String
+  Event           Event          @relation(fields: [eventId], references: [id])
+  Tickets         Ticket[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  allowedSections EventSection[] @relation("TicketTypeSections")
 }
 
 enum TicketStatus {
@@ -165,15 +166,16 @@ model TemplateSection {
 }
 
 model EventSection {
-  id              String      @id @default(cuid())
-  name            String
-  description     String?
-  eventLayoutId   String
-  EventLayout     EventLayout @relation(fields: [eventLayoutId], references: [id])
-  rows            EventRow[]
-  priceMultiplier Float       @default(1.0)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id                 String       @id @default(cuid())
+  name               String
+  description        String?
+  eventLayoutId      String
+  EventLayout        EventLayout  @relation(fields: [eventLayoutId], references: [id])
+  rows               EventRow[]
+  priceMultiplier    Float        @default(1.0)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  allowedTicketTypes TicketType[] @relation("TicketTypeSections")
 }
 
 model TemplateRow {

@@ -15,7 +15,13 @@ export async function POST(
     // Verify event exists and belongs to workspace
     const event = await prisma.event.findUnique({
       where: { id },
-      select: { workspaceId: true },
+      include: {
+        eventLayout: {
+          include: {
+            sections: true,
+          },
+        },
+      },
     });
 
     if (!event) {
@@ -26,6 +32,22 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
+    // Validate sections if provided
+    if (body.allowedSections && body.allowedSections.length > 0) {
+      const validSectionIds =
+        event.eventLayout?.sections.map((section) => section.id) || [];
+      const invalidSections = body.allowedSections.filter(
+        (sectionId: string) => !validSectionIds.includes(sectionId)
+      );
+
+      if (invalidSections.length > 0) {
+        return NextResponse.json(
+          { error: "Invalid section IDs provided" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Create ticket type
     const ticketType = await prisma.ticketType.create({
       data: {
@@ -34,14 +56,23 @@ export async function POST(
         price: body.price,
         quantity: body.quantity,
         eventId: id,
+        allowedSections: body.allowedSections
+          ? {
+              connect: body.allowedSections.map((sectionId: string) => ({
+                id: sectionId,
+              })),
+            }
+          : undefined,
       },
       include: {
         Tickets: true,
+        allowedSections: true,
       },
     });
 
     return NextResponse.json(ticketType, { status: 201 });
   } catch (error) {
+    console.error("Failed to create ticket type:", error);
     return NextResponse.json(
       { error: "Failed to create ticket type" },
       { status: 500 }
@@ -60,6 +91,7 @@ export async function GET(
       },
       include: {
         Tickets: true,
+        allowedSections: true,
       },
     });
 
@@ -71,4 +103,4 @@ export async function GET(
       { status: 500 }
     );
   }
-} 
+}
