@@ -13,7 +13,7 @@ import {
   Select,
   Tooltip,
 } from "@mantine/core";
-import { TicketStatus } from "@prisma/client";
+import { TicketStatus, Ticket } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import { use } from "react";
@@ -45,6 +45,14 @@ interface TicketType {
   createdAt: Date;
   updatedAt: Date;
   allowedSections?: Section[];
+}
+
+interface TicketWithSeat extends Ticket {
+  seat?: {
+    id: string;
+    number: string;
+    status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "DISABLED";
+  } | null;
 }
 
 export default function TicketTypePage({
@@ -80,9 +88,9 @@ export default function TicketTypePage({
     | TicketType
     | undefined;
   const tickets =
-    currentEvent?.Tickets.filter(
+    (currentEvent?.Tickets.filter(
       (ticket) => ticket.ticketTypeId === ticketTypeId
-    ) || [];
+    ) as TicketWithSeat[]) || [];
 
   const handleUpdateTicketStatus = async (
     ticketId: string,
@@ -208,10 +216,19 @@ export default function TicketTypePage({
 
         <Table
           data={{
-            head: ["Name", "Email", "Status", "Actions"],
+            head: ["Name", "Email", "Seat", "Status", "Actions"],
             body: tickets.map((ticket) => [
               ticket.name,
               ticket.email,
+              ticket.seat ? (
+                <Badge variant="light" color="blue">
+                  {ticket.seat.number}
+                </Badge>
+              ) : (
+                <Text c="dimmed" size="sm">
+                  No seat
+                </Text>
+              ),
               <Badge key={ticket.id} color={getStatusColor(ticket.status)}>
                 {ticket.status}
               </Badge>,

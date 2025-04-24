@@ -13,6 +13,7 @@ import {
 import { notFound } from "next/navigation";
 import dayjs from "dayjs";
 import PurchaseForm from "../_components/PurchaseForm";
+import TicketPurchaseContainer from "../_components/TicketPurchaseContainer";
 import { prisma } from "@/lib/prisma";
 
 interface TicketType {
@@ -31,8 +32,16 @@ interface TicketType {
       name: string;
       address: string | null;
     } | null;
+    eventLayout: {
+      sections: {
+        id: string;
+      }[];
+    } | null;
   };
   Tickets: {
+    id: string;
+  }[];
+  allowedSections: {
     id: string;
   }[];
 }
@@ -44,13 +53,28 @@ async function getTicketType(id: string) {
       Event: {
         include: {
           Location: true,
+          eventLayout: {
+            include: {
+              sections: {
+                include: {
+                  rows: {
+                    include: {
+                      seats: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       Tickets: {
         select: {
           id: true,
+          seatId: true,
         },
       },
+      allowedSections: true,
     },
   });
 
@@ -73,6 +97,9 @@ export default async function PurchasePage({
   const isSoldOut =
     ticketType.quantity !== null &&
     ticketType.Tickets.length >= ticketType.quantity;
+
+  const hasLayout = ticketType.Event.eventLayout !== null;
+  const allowedSections = ticketType.allowedSections;
 
   return (
     <Flex h={"100vh"} w={"100vw"} p={"xl"}>
@@ -121,6 +148,15 @@ export default async function PurchasePage({
               <Badge color="red" size="xl">
                 Sold Out
               </Badge>
+            ) : hasLayout && ticketType.Event.eventLayout ? (
+              <TicketPurchaseContainer
+                sections={ticketType.Event.eventLayout.sections.filter(
+                  (section) =>
+                    allowedSections.some((allowed) => allowed.id === section.id)
+                )}
+                basePrice={ticketType.price}
+                ticketTypeId={ticketType.id}
+              />
             ) : (
               <PurchaseForm
                 price={ticketType.price}

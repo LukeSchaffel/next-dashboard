@@ -8,7 +8,13 @@ interface EventWithDetails extends Event {
     address: string | null;
   };
   TicketTypes: TicketType[];
-  Tickets: Ticket[];
+  Tickets: (Ticket & {
+    seat?: {
+      id: string;
+      number: string;
+      status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "DISABLED";
+    } | null;
+  })[];
   eventLayout?: {
     id: string;
     name: string;

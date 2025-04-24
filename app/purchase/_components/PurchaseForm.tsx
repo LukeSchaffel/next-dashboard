@@ -7,11 +7,15 @@ import { useRouter } from "next/navigation";
 interface PurchaseFormProps {
   price: number;
   ticketTypeId: string;
+  selectedSeatId?: string;
+  onSeatSelect?: (seatId: string, finalPrice: number) => void;
 }
 
 export default function PurchaseForm({
   price,
   ticketTypeId,
+  selectedSeatId,
+  onSeatSelect,
 }: PurchaseFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,23 +33,35 @@ export default function PurchaseForm({
   });
 
   const handleSubmit = async (values: typeof form.values) => {
+    if (onSeatSelect && !selectedSeatId) {
+      setError("Please select a seat first");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/ticket-types/${ticketTypeId}/purchase`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: values.name,
-          email: values.email,
-        }),
-      });
+      const response = await fetch(
+        `/api/ticket-types/${ticketTypeId}/purchase`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: values.name,
+            email: values.email,
+            seatId: selectedSeatId,
+          }),
+        }
+      );
 
       if (response.ok) {
         const { ticketId } = await response.json();
         router.push(`/purchase/success?ticketId=${ticketId}`);
+      } else {
+        const data = await response.json();
+        setError(data.error || "Failed to purchase ticket");
       }
     } catch (error) {
       console.error("Failed to purchase ticket:", error);
