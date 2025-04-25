@@ -15,10 +15,12 @@ import {
   Box,
   Badge,
   Tooltip,
+  ScrollArea,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
 import { IconPlus, IconTrash, IconX } from "@tabler/icons-react";
+import { useFullscreen } from "@mantine/hooks";
 
 export interface Section {
   id: string;
@@ -189,13 +191,14 @@ export default function SeatingLayoutEditor({
     });
   };
 
+  const { ref, toggle, fullscreen } = useFullscreen();
+
   return (
     <Stack gap="xl">
       <Paper p="xl" withBorder>
         <Stack gap="md">
           {backButton}
           <Title order={2}>{title}</Title>
-
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <LoadingOverlay
               visible={loading || saving}
@@ -215,189 +218,203 @@ export default function SeatingLayoutEditor({
                 {...form.getInputProps("description")}
               />
 
-              <Title order={3} mt="xl">
-                Sections
-              </Title>
-              <Button
-                variant="light"
-                leftSection={<IconPlus size={16} />}
-                onClick={addSection}
-              >
-                Add Section
-              </Button>
-
-              <Grid>
-                {sections.map((section) => (
-                  <Grid.Col key={section.id} span={4}>
-                    <Paper
-                      p="md"
-                      withBorder
-                      style={{
-                        borderColor:
-                          selectedSection?.id === section.id
-                            ? "var(--mantine-color-blue-6)"
-                            : undefined,
-                        cursor: "pointer",
-                      }}
-                      onClick={() => setSelectedSection(section)}
+              <ScrollArea ref={ref}>
+                <Stack gap="md">
+                  <Group justify="space-between" align="center">
+                    <Title order={3}>Sections</Title>
+                    <Button
+                      onClick={toggle}
+                      color={fullscreen ? "red" : "blue"}
                     >
-                      <Stack gap="xs">
-                        <Group justify="space-between">
-                          <Text fw={500}>{section.name}</Text>
-                          <ActionIcon
-                            color="red"
-                            variant="subtle"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteSection(section.id);
-                            }}
-                          >
-                            <IconTrash size={16} />
-                          </ActionIcon>
-                        </Group>
-                        <TextInput
-                          label="Section Name"
-                          value={section.name}
-                          onChange={(e) =>
-                            updateSection(section.id, { name: e.target.value })
-                          }
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <TextInput
-                          label="Description"
-                          value={section.description}
-                          onChange={(e) =>
-                            updateSection(section.id, {
-                              description: e.target.value,
-                            })
-                          }
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <NumberInput
-                          label="Price Multiplier"
-                          value={section.priceMultiplier}
-                          onChange={(value) =>
-                            updateSection(section.id, {
-                              priceMultiplier:
-                                typeof value === "number" ? value : 1.0,
-                            })
-                          }
-                          min={0.1}
-                          step={0.1}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <Button
-                          variant="light"
-                          leftSection={<IconPlus size={16} />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addRow(section.id);
+                      {fullscreen ? "Exit Fullscreen" : "Full screen editor"}
+                    </Button>
+                  </Group>
+                  <Button
+                    variant="light"
+                    leftSection={<IconPlus size={16} />}
+                    onClick={addSection}
+                  >
+                    Add Section
+                  </Button>
+
+                  <Grid>
+                    {sections.map((section) => (
+                      <Grid.Col key={section.id} span={4}>
+                        <Paper
+                          p="md"
+                          withBorder
+                          style={{
+                            borderColor:
+                              selectedSection?.id === section.id
+                                ? "var(--mantine-color-blue-6)"
+                                : undefined,
+                            cursor: "pointer",
                           }}
+                          onClick={() => setSelectedSection(section)}
                         >
-                          Add Row
-                        </Button>
-                        {section.rows.map((row) => (
-                          <Box key={row.id} pl="md">
-                            <Group>
-                              <Group>
-                                <Text fw={500}>Row {row.name}</Text>
-                                <ActionIcon
-                                  size="xs"
-                                  color="red"
-                                  variant="subtle"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    removeRow(section.id, row.id);
-                                  }}
-                                >
-                                  <IconTrash size={14} />
-                                </ActionIcon>
-                              </Group>
-                              <Group>
-                                <NumberInput
-                                  size="xs"
-                                  min={1}
-                                  max={100}
-                                  value={seatCounts[row.id] || 1}
-                                  onChange={(value) =>
-                                    setSeatCounts({
-                                      ...seatCounts,
-                                      [row.id]:
-                                        typeof value === "number" ? value : 1,
-                                    })
-                                  }
-                                  onClick={(e) => e.stopPropagation()}
-                                  style={{ width: "80px" }}
-                                />
-                                <Button
-                                  size="xs"
-                                  variant="light"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    addSeats(
-                                      section.id,
-                                      row.id,
-                                      seatCounts[row.id] || 1
-                                    );
-                                  }}
-                                >
-                                  Add Seats
-                                </Button>
-                              </Group>
+                          <Stack gap="xs">
+                            <Group justify="space-between">
+                              <Text fw={500}>{section.name}</Text>
+                              <ActionIcon
+                                color="red"
+                                variant="subtle"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteSection(section.id);
+                                }}
+                              >
+                                <IconTrash size={16} />
+                              </ActionIcon>
                             </Group>
-                            <Group gap="xs" mt="xs">
-                              {row.seats.map((seat) => (
-                                <Tooltip
-                                  key={seat.id}
-                                  label={`Seat ${seat.number}`}
-                                  position="top"
-                                >
-                                  <Badge
-                                    size="lg"
-                                    variant={
-                                      seat.status === "DISABLED"
-                                        ? "outline"
-                                        : "filled"
-                                    }
-                                    color={
-                                      seat.status === "AVAILABLE"
-                                        ? "green"
-                                        : seat.status === "RESERVED"
-                                        ? "yellow"
-                                        : seat.status === "OCCUPIED"
-                                        ? "red"
-                                        : "gray"
-                                    }
-                                    rightSection={
-                                      <ActionIcon
-                                        size="xs"
-                                        variant="transparent"
-                                        color="gray"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          removeSeat(
-                                            section.id,
-                                            row.id,
-                                            seat.id
-                                          );
-                                        }}
+                            <TextInput
+                              label="Section Name"
+                              value={section.name}
+                              onChange={(e) =>
+                                updateSection(section.id, {
+                                  name: e.target.value,
+                                })
+                              }
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <TextInput
+                              label="Description"
+                              value={section.description}
+                              onChange={(e) =>
+                                updateSection(section.id, {
+                                  description: e.target.value,
+                                })
+                              }
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <NumberInput
+                              label="Price Multiplier"
+                              value={section.priceMultiplier}
+                              onChange={(value) =>
+                                updateSection(section.id, {
+                                  priceMultiplier:
+                                    typeof value === "number" ? value : 1.0,
+                                })
+                              }
+                              min={0.1}
+                              step={0.1}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <Button
+                              variant="light"
+                              leftSection={<IconPlus size={16} />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addRow(section.id);
+                              }}
+                            >
+                              Add Row
+                            </Button>
+                            {section.rows.map((row) => (
+                              <Box key={row.id} pl="md">
+                                <Group>
+                                  <Group>
+                                    <Text fw={500}>Row {row.name}</Text>
+                                    <ActionIcon
+                                      size="xs"
+                                      color="red"
+                                      variant="subtle"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        removeRow(section.id, row.id);
+                                      }}
+                                    >
+                                      <IconTrash size={14} />
+                                    </ActionIcon>
+                                  </Group>
+                                  <Group>
+                                    <NumberInput
+                                      size="xs"
+                                      min={1}
+                                      max={100}
+                                      value={seatCounts[row.id] || 1}
+                                      onChange={(value) =>
+                                        setSeatCounts({
+                                          ...seatCounts,
+                                          [row.id]:
+                                            typeof value === "number"
+                                              ? value
+                                              : 1,
+                                        })
+                                      }
+                                      onClick={(e) => e.stopPropagation()}
+                                      style={{ width: "80px" }}
+                                    />
+                                    <Button
+                                      size="xs"
+                                      variant="light"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        addSeats(
+                                          section.id,
+                                          row.id,
+                                          seatCounts[row.id] || 1
+                                        );
+                                      }}
+                                    >
+                                      Add Seats
+                                    </Button>
+                                  </Group>
+                                </Group>
+                                <Group gap="xs" mt="xs">
+                                  {row.seats.map((seat) => (
+                                    <Tooltip
+                                      key={seat.id}
+                                      label={`Seat ${seat.number}`}
+                                      position="top"
+                                    >
+                                      <Badge
+                                        size="lg"
+                                        variant={
+                                          seat.status === "DISABLED"
+                                            ? "outline"
+                                            : "filled"
+                                        }
+                                        color={
+                                          seat.status === "AVAILABLE"
+                                            ? "green"
+                                            : seat.status === "RESERVED"
+                                            ? "yellow"
+                                            : seat.status === "OCCUPIED"
+                                            ? "red"
+                                            : "gray"
+                                        }
+                                        rightSection={
+                                          <ActionIcon
+                                            size="xs"
+                                            variant="transparent"
+                                            color="gray"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              removeSeat(
+                                                section.id,
+                                                row.id,
+                                                seat.id
+                                              );
+                                            }}
+                                          >
+                                            <IconX size={12} />
+                                          </ActionIcon>
+                                        }
                                       >
-                                        <IconX size={12} />
-                                      </ActionIcon>
-                                    }
-                                  >
-                                    {seat.number}
-                                  </Badge>
-                                </Tooltip>
-                              ))}
-                            </Group>
-                          </Box>
-                        ))}
-                      </Stack>
-                    </Paper>
-                  </Grid.Col>
-                ))}
-              </Grid>
+                                        {seat.number}
+                                      </Badge>
+                                    </Tooltip>
+                                  ))}
+                                </Group>
+                              </Box>
+                            ))}
+                          </Stack>
+                        </Paper>
+                      </Grid.Col>
+                    ))}
+                  </Grid>
+                </Stack>
+              </ScrollArea>
 
               <Button type="submit" mt="xl">
                 {submitLabel}
