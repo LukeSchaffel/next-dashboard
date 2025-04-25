@@ -90,7 +90,13 @@ export async function GET(
         eventId: params.id,
       },
       include: {
-        Tickets: true,
+        Tickets: {
+          include: {
+            seat: {
+              include: { Row: true },
+            },
+          },
+        },
         allowedSections: true,
       },
     });

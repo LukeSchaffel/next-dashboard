@@ -52,6 +52,14 @@ interface TicketWithSeat extends Ticket {
     id: string;
     number: string;
     status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "DISABLED";
+    Row?: {
+      id: string;
+      name: string;
+      Section?: {
+        id: string;
+        name: string;
+      };
+    };
   } | null;
 }
 
@@ -222,7 +230,7 @@ export default function TicketTypePage({
               ticket.email,
               ticket.seat ? (
                 <Badge variant="light" color="blue">
-                  {ticket.seat.number}
+                  {ticket?.seat?.Row?.name}{ticket.seat.number}
                 </Badge>
               ) : (
                 <Text c="dimmed" size="sm">

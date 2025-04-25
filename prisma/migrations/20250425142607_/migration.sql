@@ -195,6 +195,14 @@ CREATE TABLE "EventSeat" (
     CONSTRAINT "EventSeat_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "_TicketTypeSections" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL,
+
+    CONSTRAINT "_TicketTypeSections_AB_pkey" PRIMARY KEY ("A","B")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -233,6 +241,9 @@ CREATE UNIQUE INDEX "EventSeat_ticketId_key" ON "EventSeat"("ticketId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "EventSeat_rowId_number_key" ON "EventSeat"("rowId", "number");
+
+-- CreateIndex
+CREATE INDEX "_TicketTypeSections_B_index" ON "_TicketTypeSections"("B");
 
 -- AddForeignKey
 ALTER TABLE "Workspace" ADD CONSTRAINT "Workspace_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -299,3 +310,9 @@ ALTER TABLE "EventSeat" ADD CONSTRAINT "EventSeat_rowId_fkey" FOREIGN KEY ("rowI
 
 -- AddForeignKey
 ALTER TABLE "EventSeat" ADD CONSTRAINT "EventSeat_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "Ticket"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_TicketTypeSections" ADD CONSTRAINT "_TicketTypeSections_A_fkey" FOREIGN KEY ("A") REFERENCES "EventSection"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_TicketTypeSections" ADD CONSTRAINT "_TicketTypeSections_B_fkey" FOREIGN KEY ("B") REFERENCES "TicketType"("id") ON DELETE CASCADE ON UPDATE CASCADE;

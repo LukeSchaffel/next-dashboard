@@ -18,7 +18,7 @@ export async function GET(
         Tickets: {
           include: {
             TicketType: true,
-            seat: true,
+            seat: { include: { Row: true } },
           },
         },
         TicketTypes: {

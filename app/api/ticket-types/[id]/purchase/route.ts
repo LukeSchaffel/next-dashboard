@@ -112,10 +112,13 @@ export async function POST(
         },
       });
 
-      // Update the seat status
+      // Update the seat status and link it to the ticket
       await prisma.eventSeat.update({
         where: { id: seat.id },
-        data: { status: "OCCUPIED" },
+        data: {
+          status: "OCCUPIED",
+          ticketId: ticket.id,
+        },
       });
 
       return NextResponse.json({ ticketId: ticket.id }, { status: 201 });
