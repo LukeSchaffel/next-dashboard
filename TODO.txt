@@ -1,0 +1,12 @@
+1. Multi ticket purchasing system
+2. Layout enhancements
+  - Drag and drop seats
+  - re arange seats
+  - drag and drop sections
+  - Layout spacing
+  - Better viewing 
+3. Event enhancements
+  - Event instances
+    1. Each event can occur multiple times accross its timeframe, create specific instances by date-time 
+4. Stripe integration
+5. Add users and ushers into workspace

@@ -69,30 +69,32 @@ export default function SeatSelection({
                     Row {row.name}
                   </Text>
                   <Group gap="xs">
-                    {row.seats.map((seat) => (
-                      <Button
-                        key={seat.id}
-                        variant={
-                          seat.id === selectedSeat
-                            ? "filled"
-                            : seat.status === "AVAILABLE"
-                            ? "outline"
-                            : "subtle"
-                        }
-                        color={
-                          seat.status === "AVAILABLE"
-                            ? "blue"
-                            : seat.status === "OCCUPIED"
-                            ? "red"
-                            : "gray"
-                        }
-                        size="xs"
-                        onClick={() => handleSeatClick(seat, section)}
-                        disabled={seat.status !== "AVAILABLE"}
-                      >
-                        {seat.number}
-                      </Button>
-                    ))}
+                    {[...row.seats]
+                      .sort((a, b) => parseInt(a.number) - parseInt(b.number))
+                      .map((seat) => (
+                        <Button
+                          key={seat.id}
+                          variant={
+                            seat.id === selectedSeat
+                              ? "filled"
+                              : seat.status === "AVAILABLE"
+                              ? "outline"
+                              : "subtle"
+                          }
+                          color={
+                            seat.status === "AVAILABLE"
+                              ? "blue"
+                              : seat.status === "OCCUPIED"
+                              ? "red"
+                              : "gray"
+                          }
+                          size="xs"
+                          onClick={() => handleSeatClick(seat, section)}
+                          disabled={seat.status !== "AVAILABLE"}
+                        >
+                          {seat.number}
+                        </Button>
+                      ))}
                   </Group>
                 </Box>
               ))}
