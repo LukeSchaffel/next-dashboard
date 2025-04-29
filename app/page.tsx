@@ -31,13 +31,12 @@ export default async function HomePage() {
             to resource management
           </Title>
           <Text c="dimmed" mt="md">
-            An Event Management System (EMS) designed to streamline the
-            planning, organization, and execution of events. It helps event
-            planners manage tasks such as registration, scheduling, ticketing,
-            guest lists, vendor coordination, and communication in one
-            centralized platform. The system enhances efficiency, reduces manual
-            errors, and provides real-time updates to ensure events run smoothly
-            from start to finish.
+            A comprehensive Event Management System designed to streamline every aspect of your events. 
+            From planning to execution, our platform helps you manage event details, ticketing, seating layouts, 
+            and locations all in one place. Create beautiful event pages, handle ticket sales, design custom 
+            seating arrangements, and track your event's success with real-time analytics. Whether you're 
+            organizing a conference, concert, or corporate event, our system provides the tools you need to 
+            deliver exceptional experiences.
           </Text>
 
           <List
@@ -51,16 +50,13 @@ export default async function HomePage() {
             }
           >
             <ListItem>
-              <b>TypeScript based</b> – build type safe applications, all
-              components and hooks export types
+              <b>Smart Event Management</b> – Create and manage events with detailed information, locations, and custom seating layouts
             </ListItem>
             <ListItem>
-              <b>Free and open source</b> – all packages have MIT license, you
-              can use Mantine in any project
+              <b>Advanced Ticketing System</b> – Handle ticket sales, track attendance, and manage different ticket types with ease
             </ListItem>
             <ListItem>
-              <b>No annoying focus ring</b> – focus ring will appear only when
-              user navigates with keyboard
+              <b>Real-time Analytics</b> – Monitor ticket sales, revenue, and event performance with comprehensive dashboards
             </ListItem>
           </List>
 

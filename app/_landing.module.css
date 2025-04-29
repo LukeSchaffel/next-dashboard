@@ -41,10 +41,10 @@
     display: none;
   }
 }
-
 .highlight {
   position: relative;
   background-color: var(--mantine-color-blue-light);
   border-radius: var(--mantine-radius-sm);
   padding: 4px 12px;
 }
+
