@@ -5,6 +5,7 @@ alwaysApply: true
 ---
 # Your rule content
 
+- Always use YARN as the package manager
 - This is Nextjs app router
 - When nesting routes that require mutliple slugs, use this convetion /api/event/[id]/tickets/[ticketId], where the first slug will be named id for the resource, and following id will be more specific
 - always use async parms in my api routs and awit them like this " export async function POST(

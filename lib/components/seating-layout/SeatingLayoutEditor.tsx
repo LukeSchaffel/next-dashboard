@@ -21,6 +21,7 @@ import { useForm } from "@mantine/form";
 import { useState } from "react";
 import { IconPlus, IconTrash, IconX } from "@tabler/icons-react";
 import { useFullscreen } from "@mantine/hooks";
+import { Rnd } from "react-rnd";
 
 export interface Section {
   id: string;
@@ -237,9 +238,24 @@ export default function SeatingLayoutEditor({
                     Add Section
                   </Button>
 
-                  <Grid>
+                  <div
+                    style={{
+                      width: "1920px",
+                      height: "1080px",
+                    }}
+                  >
                     {sections.map((section) => (
-                      <Grid.Col key={section.id} span={4}>
+                      <Rnd
+                        default={{
+                          x: 150,
+                          y: 205,
+                          width: 500,
+                          height: 190,
+                        }}
+                        minWidth={'fit-content'}
+                        minHeight={190}
+                        bounds="parent"
+                      >
                         <Paper
                           p="md"
                           withBorder
@@ -410,9 +426,9 @@ export default function SeatingLayoutEditor({
                             ))}
                           </Stack>
                         </Paper>
-                      </Grid.Col>
+                      </Rnd>
                     ))}
-                  </Grid>
+                  </div>
                 </Stack>
               </ScrollArea>
 
