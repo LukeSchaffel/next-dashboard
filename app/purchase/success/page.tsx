@@ -84,10 +84,14 @@ export default function SuccessPage({
   }, [purchaseId, router]);
 
   const handleDownload = async () => {
-    if (!purchaseId) return;
+    if (!purchase?.tickets.length) return;
 
     try {
-      const response = await fetch(`/api/purchases/${purchaseId}/pdf`);
+      // Create query string with all ticket IDs
+      const ticketIds = purchase.tickets.map((ticket) => ticket.id);
+      const queryString = ticketIds.map((id) => `ticketIds=${id}`).join("&");
+
+      const response = await fetch(`/api/tickets/download?${queryString}`);
       if (!response.ok) {
         throw new Error("Failed to download tickets");
       }
@@ -213,7 +217,8 @@ export default function SuccessPage({
             ))}
 
             <Button onClick={handleDownload} fullWidth>
-              Download All Tickets
+              Download{" "}
+              {purchase.tickets.length === 1 ? "Ticket" : "All Tickets"}
             </Button>
           </Stack>
         </Stack>
