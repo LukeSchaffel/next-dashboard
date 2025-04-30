@@ -13,7 +13,12 @@ import {
   Select,
   Tooltip,
 } from "@mantine/core";
-import { TicketStatus, Ticket } from "@prisma/client";
+import {
+  TicketStatus,
+  PurchaseStatus,
+  Ticket,
+  TicketType,
+} from "@prisma/client";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import { use } from "react";
@@ -28,6 +33,7 @@ import { useEventStore } from "@/stores/useEventStore";
 import { Table } from "@/lib/components";
 import TicketForm from "../../_components/TicketForm";
 import Link from "next/link";
+import dayjs from "dayjs";
 
 interface Section {
   id: string;
@@ -35,32 +41,14 @@ interface Section {
   priceMultiplier: number;
 }
 
-interface TicketType {
+interface Purchase {
   id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  quantity: number | null;
-  eventId: string;
+  totalAmount: number;
+  status: PurchaseStatus;
+  customerEmail: string;
+  customerName: string | null;
   createdAt: Date;
-  updatedAt: Date;
-  allowedSections?: Section[];
-}
-
-interface TicketWithSeat extends Ticket {
-  seat?: {
-    id: string;
-    number: string;
-    status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "DISABLED";
-    Row?: {
-      id: string;
-      name: string;
-      Section?: {
-        id: string;
-        name: string;
-      };
-    };
-  } | null;
+  tickets: Ticket[];
 }
 
 export default function TicketTypePage({
@@ -95,33 +83,70 @@ export default function TicketTypePage({
   const currentTicketType = ticketTypes.find((tt) => tt.id === ticketTypeId) as
     | TicketType
     | undefined;
+
   const tickets =
     (currentEvent?.Tickets.filter(
       (ticket) => ticket.ticketTypeId === ticketTypeId
-    ) as TicketWithSeat[]) || [];
+    ) as (Ticket & { purchase: Purchase })[]) || [];
 
-  const handleUpdateTicketStatus = async (
-    ticketId: string,
-    status: TicketStatus
+  // Group tickets by purchase
+  const purchases = tickets.reduce((acc, ticket) => {
+    const purchase = ticket.purchase;
+    if (!acc[purchase.id]) {
+      acc[purchase.id] = {
+        ...purchase,
+        tickets: [],
+      };
+    }
+    acc[purchase.id].tickets.push(ticket);
+    return acc;
+  }, {} as Record<string, Purchase>);
+
+  const handleUpdatePurchaseStatus = async (
+    purchaseId: string,
+    status: PurchaseStatus
   ) => {
     try {
-      await updateTicket(slug, ticketId, { status });
+      const response = await fetch(`/api/purchases/${purchaseId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update purchase status");
+      }
+
+      // Refresh the event data to get the updated purchase status
+      await fetchEvent(slug);
     } catch (error) {
-      console.error("Failed to update ticket:", error);
+      console.error("Failed to update purchase status:", error);
     }
   };
 
-  const handleDeleteTicket = async (ticketId: string) => {
-    if (!confirm("Are you sure you want to delete this ticket?")) return;
-
+  const handleDownloadTickets = async (purchase: Purchase) => {
     try {
-      await fetch(`/api/events/${slug}/tickets/${ticketId}`, {
-        method: "DELETE",
-      });
-      // Refresh the event data to update the tickets list
-      await fetchEvent(slug);
+      const ticketIds = purchase.tickets.map((ticket) => ticket.id);
+      const queryString = ticketIds.map((id) => `ticketIds=${id}`).join("&");
+      const response = await fetch(`/api/tickets/download?${queryString}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to download tickets");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `tickets-${purchase.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (error) {
-      console.error("Failed to delete ticket:", error);
+      console.error("Failed to download tickets:", error);
     }
   };
 
@@ -129,143 +154,86 @@ export default function TicketTypePage({
     return <div>Loading...</div>;
   }
 
-  const getStatusColor = (status: TicketStatus) => {
-    switch (status) {
-      case "PENDING":
-        return "yellow";
-      case "CONFIRMED":
-        return "green";
-      case "CANCELLED":
-        return "red";
-      case "REFUNDED":
-        return "gray";
-      default:
-        return "blue";
-    }
-  };
+  const totalTicketsSold = Object.values(purchases).reduce(
+    (sum, purchase) => sum + purchase.tickets.length,
+    0
+  );
+
+  const totalRevenue = Object.values(purchases).reduce(
+    (sum, purchase) => sum + purchase.totalAmount,
+    0
+  );
 
   return (
-    <Stack gap="xl">
-      <Paper p="xl" withBorder>
-        <Stack gap="md">
-          <Group justify="space-between">
-            <Stack gap={0}>
-              <Title order={1}>{currentTicketType.name}</Title>
-              <Text c="dimmed">
-                {currentEvent.name} - $
-                {(currentTicketType.price / 100).toFixed(2)}
-              </Text>
-            </Stack>
-            <Group>
-              <Button
-                variant="light"
-                component={Link}
-                href={`/dashboard/events/${slug}`}
-              >
-                Back to Event
-              </Button>
-              <Button
-                variant="light"
-                onClick={openTicketModal}
-                leftSection={<IconPlus size={16} />}
-              >
-                Add Ticket
-              </Button>
-            </Group>
-          </Group>
-
-          <Group>
-            <Badge size="lg" variant="light">
-              {tickets.length} Tickets Sold
-            </Badge>
-            <Badge size="lg" variant="light">
-              {currentTicketType.quantity === null
-                ? "Unlimited"
-                : `${currentTicketType.quantity - tickets.length} Remaining`}
-            </Badge>
-            <Badge size="lg" variant="light">
-              $
-              {(
-                tickets.reduce((sum, ticket) => sum + ticket.price, 0) / 100
-              ).toFixed(2)}{" "}
-              Revenue
-            </Badge>
-          </Group>
-
-          {currentTicketType.description && (
-            <Text>{currentTicketType.description}</Text>
-          )}
-
-          {currentTicketType.allowedSections &&
-            currentTicketType.allowedSections.length > 0 && (
-              <Stack gap="xs">
-                <Text fw={500}>Allowed Sections:</Text>
-                <Group>
-                  {currentTicketType.allowedSections.map((section) => (
-                    <Badge key={section.id} size="lg" variant="light">
-                      {section.name}
-                      {section.priceMultiplier !== 1 && (
-                        <Text span c="dimmed" ml={4}>
-                          ({(section.priceMultiplier * 100).toFixed(0)}% price)
-                        </Text>
-                      )}
-                    </Badge>
-                  ))}
-                </Group>
-              </Stack>
-            )}
+    <Stack>
+      <Group justify="space-between">
+        <Stack gap={0}>
+          <Title order={4}>{currentTicketType.name}</Title>
+          <Text size="sm" c="dimmed">
+            {currentTicketType.description}
+          </Text>
         </Stack>
-      </Paper>
+        <Group>
+          <Badge size="lg" variant="light">
+            {totalTicketsSold} tickets sold
+          </Badge>
+          <Badge size="lg" variant="light" color="green">
+            ${totalRevenue.toFixed(2)} revenue
+          </Badge>
+        </Group>
+      </Group>
 
-      <Paper p="xl" withBorder>
-        <Title order={3} mb="md">
-          Tickets
-        </Title>
-
+      <Paper withBorder p="xl">
         <Table
+          loading={loading}
           data={{
-            head: ["Name", "Email", "Seat", "Status", "Actions"],
-            body: tickets.map((ticket) => [
-              ticket.name,
-              ticket.email,
-              ticket.seat ? (
-                <Badge variant="light" color="blue">
-                  {ticket?.seat?.Row?.name}{ticket.seat.number}
-                </Badge>
-              ) : (
-                <Text c="dimmed" size="sm">
-                  No seat
+            head: [
+              "Date",
+              "Customer",
+              "Tickets",
+              "Amount",
+              "Status",
+              "Actions",
+            ],
+            body: Object.values(purchases).map((purchase) => [
+              dayjs(purchase.createdAt).format("MMM D, YYYY h:mm A"),
+              <Stack key={purchase.id} gap={0}>
+                <Text size="sm">{purchase.customerName || "N/A"}</Text>
+                <Text size="xs" c="dimmed">
+                  {purchase.customerEmail}
                 </Text>
-              ),
-              <Badge key={ticket.id} color={getStatusColor(ticket.status)}>
-                {ticket.status}
-              </Badge>,
-              <Group gap="xs" key={ticket.id}>
-                <Select
-                  value={ticket.status}
-                  data={Object.values(TicketStatus)}
-                  onChange={(value) =>
-                    handleUpdateTicketStatus(ticket.id, value as TicketStatus)
-                  }
-                />
-                <Tooltip label="Download Ticket PDF">
+              </Stack>,
+              <Text key={purchase.id} size="sm">
+                {purchase.tickets.length}
+              </Text>,
+              <Text key={purchase.id} size="sm">
+                ${purchase.totalAmount.toFixed(2)}
+              </Text>,
+              <Select
+                key={purchase.id}
+                value={purchase.status}
+                onChange={(value) =>
+                  handleUpdatePurchaseStatus(
+                    purchase.id,
+                    value as PurchaseStatus
+                  )
+                }
+                data={[
+                  { value: "PENDING", label: "Pending" },
+                  { value: "COMPLETED", label: "Completed" },
+                  { value: "CANCELLED", label: "Cancelled" },
+                ]}
+                size="xs"
+              />,
+              <Group key={purchase.id} gap="xs">
+                <Tooltip label="Download Tickets">
                   <ActionIcon
-                    variant="subtle"
-                    color="blue"
-                    onClick={() =>
-                      window.open(`/api/tickets/${ticket.id}/pdf`, "_blank")
-                    }
+                    variant="light"
+                    onClick={() => handleDownloadTickets(purchase)}
                   >
                     <IconDownload size={16} />
                   </ActionIcon>
                 </Tooltip>
-                <ActionIcon
-                  variant="subtle"
-                  color="red"
-                  onClick={() => handleDeleteTicket(ticket.id)}
-                >
-                  <IconTrash size={16} />
-                </ActionIcon>
               </Group>,
             ]),
           }}
@@ -275,9 +243,9 @@ export default function TicketTypePage({
       <TicketForm
         opened={ticketModalOpened}
         onClose={closeTicketModal}
-        eventSlug={slug}
-        ticketTypes={[currentTicketType]}
+        ticketTypes={ticketTypes}
         loading={ticketLoading}
+        eventSlug={slug}
       />
     </Stack>
   );

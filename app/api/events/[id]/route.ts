@@ -19,6 +19,7 @@ export async function GET(
           include: {
             TicketType: true,
             seat: { include: { Row: true } },
+            purchase: true,
           },
         },
         TicketTypes: {
@@ -86,6 +87,7 @@ export async function PATCH(
           include: {
             TicketType: true,
             seat: true,
+            purchase: true,
           },
         },
         TicketTypes: {
