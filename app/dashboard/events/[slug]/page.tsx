@@ -16,6 +16,7 @@ import {
   CopyButton,
   Tooltip,
   ActionIcon,
+  Box,
 } from "@mantine/core";
 import { Event, Ticket, TicketStatus, TicketType } from "@prisma/client";
 import { notFound } from "next/navigation";
@@ -23,7 +24,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { use } from "react";
 import { useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useFullscreen } from "@mantine/hooks";
 import {
   IconPlus,
   IconCopy,
@@ -33,12 +34,15 @@ import {
   IconTrash,
   IconEye,
   IconTable,
+  IconMaximize,
+  IconMinimize,
+  IconX,
 } from "@tabler/icons-react";
 import DescriptionEditor from "../_components/DescriptionEditor";
 import TicketTypeForm from "./_components/TicketTypeForm";
 import TicketForm from "./_components/TicketForm";
 import { useEventStore } from "@/stores/useEventStore";
-import { Table } from "@/lib/components";
+import { Table, SeatSelection } from "@/lib/components";
 import Link from "next/link";
 import DescriptionEditorModal from "../_components/DescriptionEditorModal";
 
@@ -48,6 +52,7 @@ export default function EventPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
+  const { ref, toggle, fullscreen } = useFullscreen();
   const {
     currentEvent,
     loading,
@@ -83,6 +88,8 @@ export default function EventPage({
   const [descriptionContent, setDescriptionContent] = useState(
     currentEvent?.description || ""
   );
+  const [showFullscreenSeating, setShowFullscreenSeating] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
   useEffect(() => {
     fetchEvent(slug).catch(() => {
@@ -131,6 +138,13 @@ export default function EventPage({
     }
   };
 
+  const handleSeatClick = (seat: { id: string }, section: any) => {
+    const ticket = currentEvent?.Tickets.find((t) => t.seat?.id === seat.id);
+    if (ticket) {
+      setSelectedTicket(ticket);
+    }
+  };
+
   if (loading || !currentEvent) {
     return <div>Loading...</div>;
   }
@@ -156,6 +170,24 @@ export default function EventPage({
                     : "Create Event Layout"}
                 </Button>
               </Link>
+              {currentEvent.eventLayout && (
+                <Button
+                  variant="light"
+                  leftSection={
+                    fullscreen ? (
+                      <IconMinimize size={16} />
+                    ) : (
+                      <IconMaximize size={16} />
+                    )
+                  }
+                  onClick={() => {
+                    setShowFullscreenSeating(true);
+                    toggle();
+                  }}
+                >
+                  View Seating Chart
+                </Button>
+              )}
             </Group>
           </Group>
           <Group>
@@ -318,6 +350,120 @@ export default function EventPage({
         onSave={handleUpdateDescription}
         loading={descriptionLoading}
       />
+
+      {showFullscreenSeating && currentEvent.eventLayout && (
+        <Box
+          ref={ref}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "white",
+            zIndex: 1000,
+            padding: "2rem",
+            overflow: "auto",
+          }}
+        >
+          {selectedTicket && (
+            <Box
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                zIndex: 2000,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onClick={() => setSelectedTicket(null)}
+            >
+              <Paper
+                p="xl"
+                radius="md"
+                style={{
+                  maxWidth: "400px",
+                  width: "100%",
+                  zIndex: 2001,
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Stack>
+                  <Group justify="space-between">
+                    <Title order={3}>Ticket Information</Title>
+                    <ActionIcon
+                      variant="subtle"
+                      onClick={() => setSelectedTicket(null)}
+                    >
+                      <IconX size={16} />
+                    </ActionIcon>
+                  </Group>
+                  <Text>
+                    <Text span fw={500}>
+                      Purchaser:
+                    </Text>{" "}
+                    {selectedTicket.name}
+                  </Text>
+                  <Text>
+                    <Text span fw={500}>
+                      Email:
+                    </Text>{" "}
+                    {selectedTicket.email}
+                  </Text>
+                  <Text>
+                    <Text span fw={500}>
+                      Purchase Date:
+                    </Text>{" "}
+                    {new Date(selectedTicket.createdAt).toLocaleDateString()}
+                  </Text>
+                  <Text>
+                    <Text span fw={500}>
+                      Price:
+                    </Text>{" "}
+                    ${(selectedTicket.price / 100).toFixed(2)}
+                  </Text>
+                </Stack>
+              </Paper>
+            </Box>
+          )}
+          <Stack>
+            <Group justify="space-between">
+              <Title order={2}>Seating Chart</Title>
+              <Button
+                variant="light"
+                leftSection={
+                  fullscreen ? (
+                    <IconMinimize size={16} />
+                  ) : (
+                    <IconMaximize size={16} />
+                  )
+                }
+                onClick={() => {
+                  toggle();
+                  if (fullscreen) {
+                    setShowFullscreenSeating(false);
+                  }
+                }}
+              >
+                {fullscreen ? "Exit Fullscreen" : "Close"}
+              </Button>
+            </Group>
+            <SeatSelection
+              sections={currentEvent.eventLayout.sections}
+              basePrice={0}
+              selectedSeatId={null}
+              readOnly
+              buttonSize="md"
+              showPrices={false}
+              onSeatClick={handleSeatClick}
+            />
+          </Stack>
+        </Box>
+      )}
     </Stack>
   );
 }

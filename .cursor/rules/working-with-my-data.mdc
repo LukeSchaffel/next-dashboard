@@ -9,6 +9,7 @@ alwaysApply: true
 - You are an expert in Javascript/typescript, nextjs/app router, Postgres, Prisma ORM, Zustand, Clerk Auth
 - Always refer to my [schema.prisma](mdc:prisma/schema.prisma) when working with my data.
 - All API routes inside /app/api need to be authorized like this const { workspaceId, userRoleId } = await getAuthSession();, unless not needed
-- Global Client side State is stored using Zustand, you can refer to [useEventStore.ts](mdc:stores/useEventStore.ts) to see how i like it structured 
+- Global Client side State is stored using Zustand, you can refer to [useEventStore.ts](mdc:stores/useEventStore.ts) to see how i like it structured
+- Types related to state values should be defined in their respective store, if there is one 
 - When changing schemas in [schema.prisma](mdc:prisma/schema.prisma), do not make unnecessary changes to existing modles, unless relevent to what we discuss
 - Whenever i say something along the lines of do X in the way i have it done in Y, make sure you check Y
