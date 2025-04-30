@@ -1,5 +1,12 @@
 "use client";
-import { Stack, TextInput, Button, LoadingOverlay, Text } from "@mantine/core";
+import {
+  Stack,
+  TextInput,
+  Button,
+  LoadingOverlay,
+  Text,
+  NumberInput,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -7,15 +14,15 @@ import { useRouter } from "next/navigation";
 interface PurchaseFormProps {
   price: number;
   ticketTypeId: string;
-  selectedSeatId?: string;
-  onSeatSelect?: (seatId: string, finalPrice: number) => void;
+  selectedSeatIds: string[];
+  quantity: number;
 }
 
 export default function PurchaseForm({
   price,
   ticketTypeId,
-  selectedSeatId,
-  onSeatSelect,
+  selectedSeatIds,
+  quantity,
 }: PurchaseFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +40,8 @@ export default function PurchaseForm({
   });
 
   const handleSubmit = async (values: typeof form.values) => {
-    if (onSeatSelect && !selectedSeatId) {
-      setError("Please select a seat first");
+    if (selectedSeatIds.length === 0) {
+      setError("Please select at least one seat");
       return;
     }
 
@@ -51,20 +58,21 @@ export default function PurchaseForm({
           body: JSON.stringify({
             name: values.name,
             email: values.email,
-            seatId: selectedSeatId,
+            seatIds: selectedSeatIds,
+            quantity: quantity,
           }),
         }
       );
 
       if (response.ok) {
-        const { ticketId } = await response.json();
-        router.push(`/purchase/success?ticketId=${ticketId}`);
+        const { purchaseId } = await response.json();
+        router.push(`/purchase/success?purchaseId=${purchaseId}`);
       } else {
         const data = await response.json();
-        setError(data.error || "Failed to purchase ticket");
+        setError(data.error || "Failed to purchase tickets");
       }
     } catch (error) {
-      console.error("Failed to purchase ticket:", error);
+      console.error("Failed to purchase tickets:", error);
       setError(
         error instanceof Error ? error.message : "An unexpected error occurred"
       );
@@ -98,7 +106,10 @@ export default function PurchaseForm({
           required
           {...form.getInputProps("email")}
         />
-        <Button type="submit">Purchase for ${(price / 100).toFixed(2)}</Button>
+        <Button type="submit">
+          Purchase {quantity} {quantity === 1 ? "Ticket" : "Tickets"} for $
+          {(price / 100).toFixed(2)}
+        </Button>
       </Stack>
     </form>
   );

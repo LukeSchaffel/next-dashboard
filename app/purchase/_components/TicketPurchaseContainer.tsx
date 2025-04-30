@@ -30,12 +30,24 @@ export default function TicketPurchaseContainer({
   basePrice,
   ticketTypeId,
 }: TicketPurchaseContainerProps) {
-  const [selectedSeatId, setSelectedSeatId] = useState<string | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<
+    Array<{ id: string; price: number }>
+  >([]);
   const [finalPrice, setFinalPrice] = useState(basePrice);
 
   const handleSeatSelect = (seatId: string, price: number) => {
-    setSelectedSeatId(seatId);
-    setFinalPrice(price);
+    setSelectedSeats((prev) => {
+      const isSelected = prev.some((seat) => seat.id === seatId);
+      if (isSelected) {
+        const newSeats = prev.filter((seat) => seat.id !== seatId);
+        setFinalPrice(newSeats.reduce((sum, seat) => sum + seat.price, 0));
+        return newSeats;
+      } else {
+        const newSeats = [...prev, { id: seatId, price }];
+        setFinalPrice(newSeats.reduce((sum, seat) => sum + seat.price, 0));
+        return newSeats;
+      }
+    });
   };
 
   return (
@@ -43,12 +55,14 @@ export default function TicketPurchaseContainer({
       <SeatSelection
         sections={sections}
         basePrice={basePrice}
+        selectedSeatIds={selectedSeats.map((seat) => seat.id)}
         onSeatSelect={handleSeatSelect}
       />
       <PurchaseForm
         price={finalPrice}
         ticketTypeId={ticketTypeId}
-        selectedSeatId={selectedSeatId}
+        selectedSeatIds={selectedSeats.map((seat) => seat.id)}
+        quantity={selectedSeats.length}
       />
     </>
   );

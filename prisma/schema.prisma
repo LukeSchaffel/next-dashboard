@@ -85,19 +85,21 @@ model Event {
 }
 
 model Ticket {
-  id           String       @id @default(cuid())
+  id           String         @id @default(cuid())
   name         String
   email        String
   price        Int // Price in cents
-  status       TicketStatus @default(PENDING)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  status       TicketStatus   @default(PENDING)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   eventId      String
-  Event        Event        @relation(fields: [eventId], references: [id])
+  Event        Event          @relation(fields: [eventId], references: [id])
   ticketTypeId String
-  TicketType   TicketType   @relation(fields: [ticketTypeId], references: [id])
-  seatId       String?      @unique
+  TicketType   TicketType     @relation(fields: [ticketTypeId], references: [id])
+  seatId       String?        @unique
   seat         EventSeat?
+  purchaseId   String
+  purchase     TicketPurchase @relation(fields: [purchaseId], references: [id])
 
   @@index([email])
   @@index([status])
@@ -233,4 +235,25 @@ enum SeatStatus {
   RESERVED
   OCCUPIED
   DISABLED
+}
+
+model TicketPurchase {
+  id            String         @id @default(cuid())
+  totalAmount   Int // Total amount in cents
+  status        PurchaseStatus @default(PENDING)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  tickets       Ticket[]
+  customerEmail String
+  customerName  String?
+
+  @@index([customerEmail])
+  @@index([status])
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  REFUNDED
 }

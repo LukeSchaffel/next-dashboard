@@ -7,6 +7,9 @@ CREATE TYPE "TicketStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED', 'REFUND
 -- CreateEnum
 CREATE TYPE "SeatStatus" AS ENUM ('AVAILABLE', 'RESERVED', 'OCCUPIED', 'DISABLED');
 
+-- CreateEnum
+CREATE TYPE "PurchaseStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED', 'REFUNDED');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -77,6 +80,7 @@ CREATE TABLE "Ticket" (
     "eventId" TEXT NOT NULL,
     "ticketTypeId" TEXT NOT NULL,
     "seatId" TEXT,
+    "purchaseId" TEXT NOT NULL,
 
     CONSTRAINT "Ticket_pkey" PRIMARY KEY ("id")
 );
@@ -196,6 +200,19 @@ CREATE TABLE "EventSeat" (
 );
 
 -- CreateTable
+CREATE TABLE "TicketPurchase" (
+    "id" TEXT NOT NULL,
+    "totalAmount" INTEGER NOT NULL,
+    "status" "PurchaseStatus" NOT NULL DEFAULT 'PENDING',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "customerEmail" TEXT NOT NULL,
+    "customerName" TEXT,
+
+    CONSTRAINT "TicketPurchase_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_TicketTypeSections" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
@@ -243,6 +260,12 @@ CREATE UNIQUE INDEX "EventSeat_ticketId_key" ON "EventSeat"("ticketId");
 CREATE UNIQUE INDEX "EventSeat_rowId_number_key" ON "EventSeat"("rowId", "number");
 
 -- CreateIndex
+CREATE INDEX "TicketPurchase_customerEmail_idx" ON "TicketPurchase"("customerEmail");
+
+-- CreateIndex
+CREATE INDEX "TicketPurchase_status_idx" ON "TicketPurchase"("status");
+
+-- CreateIndex
 CREATE INDEX "_TicketTypeSections_B_index" ON "_TicketTypeSections"("B");
 
 -- AddForeignKey
@@ -271,6 +294,9 @@ ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_eventId_fkey" FOREIGN KEY ("eventId"
 
 -- AddForeignKey
 ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_ticketTypeId_fkey" FOREIGN KEY ("ticketTypeId") REFERENCES "TicketType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_purchaseId_fkey" FOREIGN KEY ("purchaseId") REFERENCES "TicketPurchase"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TicketType" ADD CONSTRAINT "TicketType_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "Event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

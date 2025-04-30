@@ -455,7 +455,7 @@ export default function EventPage({
             <SeatSelection
               sections={currentEvent.eventLayout.sections}
               basePrice={0}
-              selectedSeatId={null}
+              selectedSeatIds={[]}
               readOnly
               buttonSize="md"
               showPrices={false}

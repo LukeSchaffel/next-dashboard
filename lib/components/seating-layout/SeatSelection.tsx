@@ -35,7 +35,7 @@ export interface Section {
 export interface SeatSelectionProps {
   sections: Section[];
   basePrice: number;
-  selectedSeatId: string | null;
+  selectedSeatIds?: string[];
   onSeatSelect?: (seatId: string, finalPrice: number) => void;
   onSeatClick?: (seat: Seat, section: Section) => void;
   colors?: {
@@ -53,7 +53,7 @@ export interface SeatSelectionProps {
 export function SeatSelection({
   sections,
   basePrice,
-  selectedSeatId,
+  selectedSeatIds = [],
   onSeatSelect,
   onSeatClick,
   colors = {
@@ -78,7 +78,7 @@ export function SeatSelection({
   };
 
   const getSeatColor = (seat: Seat) => {
-    if (seat.id === selectedSeatId) return colors.selected;
+    if (selectedSeatIds.includes(seat.id)) return colors.selected;
     if (readOnly && seat.status === "OCCUPIED") return "green";
     switch (seat.status) {
       case "AVAILABLE":
@@ -91,7 +91,7 @@ export function SeatSelection({
   };
 
   const getSeatVariant = (seat: Seat) => {
-    if (seat.id === selectedSeatId) return "filled";
+    if (selectedSeatIds.includes(seat.id)) return "filled";
     if (readOnly) return "light";
     return seat.status === "AVAILABLE" ? "outline" : "subtle";
   };

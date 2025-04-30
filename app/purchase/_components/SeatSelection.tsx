@@ -15,10 +15,17 @@ export default function PurchaseSeatSelection({
   basePrice,
   onSeatSelect,
 }: SeatSelectionProps) {
-  const [selectedSeatId, setSelectedSeatId] = useState<string | null>(null);
+  const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
 
   const handleSeatSelect = (seatId: string, finalPrice: number) => {
-    setSelectedSeatId(seatId);
+    setSelectedSeatIds((prev) => {
+      const isSelected = prev.includes(seatId);
+      if (isSelected) {
+        return prev.filter((id) => id !== seatId);
+      } else {
+        return [...prev, seatId];
+      }
+    });
     onSeatSelect(seatId, finalPrice);
   };
 
@@ -26,7 +33,7 @@ export default function PurchaseSeatSelection({
     <SeatSelection
       sections={sections}
       basePrice={basePrice}
-      selectedSeatId={selectedSeatId}
+      selectedSeatIds={selectedSeatIds}
       onSeatSelect={handleSeatSelect}
     />
   );
