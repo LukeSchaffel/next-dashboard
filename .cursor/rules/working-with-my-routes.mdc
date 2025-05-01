@@ -14,3 +14,18 @@ alwaysApply: true
   try {
   const { id } = await params;
   const { workspaceId } = await getAuthSession(); "
+- always use async params in components
+- front end routes should follow the same naming convetions /dashboard/events/[id]
+- Dynamic route params on frontend server components should be accessed async "export default async function LocationPage({
+  params,
+  }: {
+  params: Promise<{ id: string }>;
+  }) {
+  const { id } = await params;
+  const location = await getLocation(id);"
+- Dynamic route params and query params in client rendered components should be accessed async with the React.use "export default function EventPage({
+  params,
+  }: {
+  params: Promise<{ slug: string }>;
+  }) {
+  const { slug } = use(params);"

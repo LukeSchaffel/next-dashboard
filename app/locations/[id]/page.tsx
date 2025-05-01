@@ -36,9 +36,10 @@ async function getLocation(id: string): Promise<LocationWithEvents | null> {
 export default async function LocationPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const location = await getLocation(params.id);
+  const { id } = await params;
+  const location = await getLocation(id);
 
   if (!location) {
     notFound();
