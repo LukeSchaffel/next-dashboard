@@ -11,8 +11,17 @@ import {
   Badge,
   Grid,
   Anchor,
+  Container,
+  Divider,
+  Box,
 } from "@mantine/core";
 import Link from "next/link";
+import {
+  IconMapPin,
+  IconPhone,
+  IconMail,
+  IconWorld,
+} from "@tabler/icons-react";
 
 interface LocationWithEvents extends Location {
   Events: Event[];
@@ -57,122 +66,158 @@ export default async function LocationPage({
     .sort((a, b) => dayjs(b.endsAt).diff(dayjs(a.endsAt)));
 
   return (
-    <Stack gap="xl" p="md">
-      <Stack gap="md">
-        <Title order={1}>{location.name}</Title>
-        {location.address && (
-          <Text size="lg" c="dimmed">
-            {location.address}
-          </Text>
+    <Container size="lg" py="xl">
+      <Stack gap="xl">
+        <Paper p="xl" radius="md" withBorder>
+          <Stack gap="lg">
+            <Box>
+              <Title order={1} mb="xs">
+                {location.name}
+              </Title>
+              {location.address && (
+                <Group gap="xs" c="dimmed">
+                  <IconMapPin size={18} />
+                  <Text size="lg">{location.address}</Text>
+                </Group>
+              )}
+            </Box>
+
+            {location.description && (
+              <Box>
+                <Divider mb="md" />
+                <div
+                  dangerouslySetInnerHTML={{ __html: location.description }}
+                />
+              </Box>
+            )}
+          </Stack>
+        </Paper>
+
+        <Paper p="xl" radius="md" withBorder>
+          <Stack gap="lg">
+            <Title order={2} size="h3">
+              Contact Information
+            </Title>
+            <Grid gutter="xl">
+              {location.phoneNumber && (
+                <Grid.Col span={{ base: 12, sm: 6 }}>
+                  <Group gap="xs">
+                    <IconPhone size={18} />
+                    <Text fw={500}>Phone:</Text>
+                    <Text>{location.phoneNumber}</Text>
+                  </Group>
+                </Grid.Col>
+              )}
+              {location.email && (
+                <Grid.Col span={{ base: 12, sm: 6 }}>
+                  <Group gap="xs">
+                    <IconMail size={18} />
+                    <Text fw={500}>Email:</Text>
+                    <Anchor href={`mailto:${location.email}`}>
+                      {location.email}
+                    </Anchor>
+                  </Group>
+                </Grid.Col>
+              )}
+              {location.website && (
+                <Grid.Col span={{ base: 12, sm: 6 }}>
+                  <Group gap="xs">
+                    <IconWorld size={18} />
+                    <Text fw={500}>Website:</Text>
+                    <Anchor
+                      href={location.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {location.website}
+                    </Anchor>
+                  </Group>
+                </Grid.Col>
+              )}
+            </Grid>
+          </Stack>
+        </Paper>
+
+        {upcomingEvents.length > 0 && (
+          <Paper p="xl" radius="md" withBorder>
+            <Stack gap="lg">
+              <Title order={2} size="h3">
+                Upcoming Events
+              </Title>
+              <Stack gap="md">
+                {upcomingEvents.map((event) => (
+                  <Paper key={event.id} p="md" radius="sm" withBorder>
+                    <Stack gap="sm">
+                      <Group justify="space-between" wrap="nowrap">
+                        <Title order={3} size="h4" lineClamp={1}>
+                          {event.name}
+                        </Title>
+                        <Badge size="lg" variant="light">
+                          {dayjs(event.startsAt).format("MMM D, YYYY h:mm A")}
+                        </Badge>
+                      </Group>
+                      {event.description && (
+                        <Box>
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: event.description,
+                            }}
+                          />
+                        </Box>
+                      )}
+                      <Group>
+                        <Link href={`/events/${event.id}`}>
+                          <Anchor fw={500}>View Event Details →</Anchor>
+                        </Link>
+                      </Group>
+                    </Stack>
+                  </Paper>
+                ))}
+              </Stack>
+            </Stack>
+          </Paper>
         )}
-        {location.description && (
-          <div dangerouslySetInnerHTML={{ __html: location.description }} />
+
+        {pastEvents.length > 0 && (
+          <Paper p="xl" radius="md" withBorder>
+            <Stack gap="lg">
+              <Title order={2} size="h3">
+                Past Events
+              </Title>
+              <Stack gap="md">
+                {pastEvents.map((event) => (
+                  <Paper key={event.id} p="md" radius="sm" withBorder>
+                    <Stack gap="sm">
+                      <Group justify="space-between" wrap="nowrap">
+                        <Title order={3} size="h4" lineClamp={1}>
+                          {event.name}
+                        </Title>
+                        <Badge size="lg" variant="light" color="gray">
+                          {dayjs(event.startsAt).format("MMM D, YYYY h:mm A")}
+                        </Badge>
+                      </Group>
+                      {event.description && (
+                        <Box>
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: event.description,
+                            }}
+                          />
+                        </Box>
+                      )}
+                      <Group>
+                        <Link href={`/events/${event.id}`}>
+                          <Anchor fw={500}>View Event Details →</Anchor>
+                        </Link>
+                      </Group>
+                    </Stack>
+                  </Paper>
+                ))}
+              </Stack>
+            </Stack>
+          </Paper>
         )}
       </Stack>
-
-      <Paper p="md" withBorder>
-        <Stack gap="md">
-          <Title order={2}>Contact Information</Title>
-          <Grid>
-            {location.phoneNumber && (
-              <Grid.Col span={6}>
-                <Group>
-                  <Text fw={500}>Phone:</Text>
-                  <Text>{location.phoneNumber}</Text>
-                </Group>
-              </Grid.Col>
-            )}
-            {location.email && (
-              <Grid.Col span={6}>
-                <Group>
-                  <Text fw={500}>Email:</Text>
-                  <Anchor href={`mailto:${location.email}`}>
-                    {location.email}
-                  </Anchor>
-                </Group>
-              </Grid.Col>
-            )}
-            {location.website && (
-              <Grid.Col span={6}>
-                <Group>
-                  <Text fw={500}>Website:</Text>
-                  <Anchor
-                    href={location.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {location.website}
-                  </Anchor>
-                </Group>
-              </Grid.Col>
-            )}
-          </Grid>
-        </Stack>
-      </Paper>
-
-      {upcomingEvents.length > 0 && (
-        <Paper p="md" withBorder>
-          <Stack gap="md">
-            <Title order={2}>Upcoming Events</Title>
-            <Stack gap="sm">
-              {upcomingEvents.map((event) => (
-                <Paper key={event.id} p="sm" withBorder>
-                  <Stack gap="xs">
-                    <Group justify="space-between">
-                      <Title order={3}>{event.name}</Title>
-                      <Badge>
-                        {dayjs(event.startsAt).format("MMM D, YYYY h:mm A")}
-                      </Badge>
-                    </Group>
-                    {event.description && (
-                      <div
-                        dangerouslySetInnerHTML={{ __html: event.description }}
-                      />
-                    )}
-                    <Group>
-                      <Link href={`/events/${event.id}`}>
-                        <Anchor>View Event Details</Anchor>
-                      </Link>
-                    </Group>
-                  </Stack>
-                </Paper>
-              ))}
-            </Stack>
-          </Stack>
-        </Paper>
-      )}
-
-      {pastEvents.length > 0 && (
-        <Paper p="md" withBorder>
-          <Stack gap="md">
-            <Title order={2}>Past Events</Title>
-            <Stack gap="sm">
-              {pastEvents.map((event) => (
-                <Paper key={event.id} p="sm" withBorder>
-                  <Stack gap="xs">
-                    <Group justify="space-between">
-                      <Title order={3}>{event.name}</Title>
-                      <Badge>
-                        {dayjs(event.startsAt).format("MMM D, YYYY h:mm A")}
-                      </Badge>
-                    </Group>
-                    {event.description && (
-                      <div
-                        dangerouslySetInnerHTML={{ __html: event.description }}
-                      />
-                    )}
-                    <Group>
-                      <Link href={`/events/${event.id}`}>
-                        <Anchor>View Event Details</Anchor>
-                      </Link>
-                    </Group>
-                  </Stack>
-                </Paper>
-              ))}
-            </Stack>
-          </Stack>
-        </Paper>
-      )}
-    </Stack>
+    </Container>
   );
 }
