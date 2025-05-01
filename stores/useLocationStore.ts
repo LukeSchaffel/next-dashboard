@@ -17,7 +17,7 @@ interface LocationsStore {
   setLocations: (locations: LocationWithTemplate[]) => void;
   fetchLocations: () => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
-  createLocation: (values: any) => Promise<void>;
+  createLocation: (values: any) => Promise<LocationWithTemplate>;
   updateLocation: (id: string, values: any) => Promise<LocationWithTemplate>;
 }
 
@@ -70,8 +70,10 @@ export const useLocationStore = create<LocationsStore>((set, get) => ({
       set({
         locations: [...get().locations, newLocation],
       });
+      return newLocation;
     } catch (err) {
       console.error("Create failed:", err);
+      throw err;
     }
   },
   updateLocation: async (id: string, values: any) => {

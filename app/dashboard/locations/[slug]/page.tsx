@@ -10,6 +10,7 @@ import {
   Divider,
   Button,
   LoadingOverlay,
+  Anchor,
 } from "@mantine/core";
 import { Location, Event } from "@prisma/client";
 import { notFound } from "next/navigation";
@@ -152,6 +153,94 @@ export default function LocationPage({
           {location.description && (
             <div dangerouslySetInnerHTML={{ __html: location.description }} />
           )}
+
+          <Stack gap="md" mt="md">
+            <Title order={3}>Contact Information</Title>
+            {location.phoneNumber && (
+              <Group>
+                <Text fw={500}>Phone:</Text>
+                <Text>{location.phoneNumber}</Text>
+              </Group>
+            )}
+            {location.email && (
+              <Group>
+                <Text fw={500}>Email:</Text>
+                <Anchor href={`mailto:${location.email}`}>
+                  {location.email}
+                </Anchor>
+              </Group>
+            )}
+            {location.website && (
+              <Group>
+                <Text fw={500}>Website:</Text>
+                <Anchor
+                  href={location.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {location.website}
+                </Anchor>
+              </Group>
+            )}
+
+            {(location.facebookUrl ||
+              location.instagramUrl ||
+              location.twitterUrl ||
+              location.linkedinUrl) && (
+              <>
+                <Title order={3}>Social Media</Title>
+                {location.facebookUrl && (
+                  <Group>
+                    <Text fw={500}>Facebook:</Text>
+                    <Anchor
+                      href={location.facebookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {location.facebookUrl}
+                    </Anchor>
+                  </Group>
+                )}
+                {location.instagramUrl && (
+                  <Group>
+                    <Text fw={500}>Instagram:</Text>
+                    <Anchor
+                      href={location.instagramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {location.instagramUrl}
+                    </Anchor>
+                  </Group>
+                )}
+                {location.twitterUrl && (
+                  <Group>
+                    <Text fw={500}>Twitter:</Text>
+                    <Anchor
+                      href={location.twitterUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {location.twitterUrl}
+                    </Anchor>
+                  </Group>
+                )}
+                {location.linkedinUrl && (
+                  <Group>
+                    <Text fw={500}>LinkedIn:</Text>
+                    <Anchor
+                      href={location.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {location.linkedinUrl}
+                    </Anchor>
+                  </Group>
+                )}
+              </>
+            )}
+          </Stack>
+
           <Badge size="lg" variant="light">
             {events.length} {events.length === 1 ? "Event" : "Events"}
           </Badge>

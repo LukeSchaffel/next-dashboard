@@ -3,29 +3,23 @@ import {
   Flex,
   Title,
   Button,
-  Box,
+  Group,
   Popover,
   Text,
-  ScrollArea,
-  Anchor,
-  Group,
   Badge,
-  SimpleGrid,
 } from "@mantine/core";
 import { Location } from "@prisma/client";
-
-import { Table } from "@/lib/components";
-import LocationForm from "./_components/LocationForm";
 import { useContext, useEffect, useState } from "react";
 import { DashboardContext } from "../_components/client-layout";
 import Link from "next/link";
-import { IconEye, IconRefresh } from "@tabler/icons-react";
+import { IconEye, IconRefresh, IconPlus } from "@tabler/icons-react";
 import { useLocationStore } from "@/stores/useLocationStore";
+import { Table } from "@/lib/components";
 
 export default function LocationsPage() {
   const { userRole } = useContext(DashboardContext);
-  const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(undefined);
-  const { locations, loading, hasFetched, fetchLocations, deleteLocation } = useLocationStore();
+  const { locations, loading, hasFetched, fetchLocations, deleteLocation } =
+    useLocationStore();
 
   useEffect(() => {
     if (!hasFetched) {
@@ -38,20 +32,18 @@ export default function LocationsPage() {
       <Flex justify={"space-between"}>
         <Group>
           <Title order={4}>Locations</Title>
-          <Button 
-            variant="subtle" 
-            leftSection={<IconRefresh size={16} />} 
+          <Button
+            variant="subtle"
+            leftSection={<IconRefresh size={16} />}
             onClick={fetchLocations}
             loading={loading}
           >
             Refresh
           </Button>
         </Group>
-        <LocationForm
-          userRole={userRole}
-          selectedLocation={selectedLocation}
-          setSelectedLocation={setSelectedLocation}
-        />
+        <Link href="/dashboard/locations/create">
+          <Button leftSection={<IconPlus size={16} />}>New Location</Button>
+        </Link>
       </Flex>
 
       <Table
@@ -61,7 +53,10 @@ export default function LocationsPage() {
           head: ["", "Name", "Address", ""],
           body: locations.map((location) => {
             return [
-              <Link href={`/dashboard/locations/${location.id}`} key={`view-${location.id}`}>
+              <Link
+                href={`/dashboard/locations/${location.id}`}
+                key={`view-${location.id}`}
+              >
                 <Button variant="subtle" leftSection={<IconEye size={16} />}>
                   View
                 </Button>
@@ -69,12 +64,9 @@ export default function LocationsPage() {
               location.name,
               location.address || "No address",
               <Flex key={`actions-${location.id}`}>
-                <Button
-                  variant="subtle"
-                  onClick={() => setSelectedLocation(location)}
-                >
-                  Edit
-                </Button>
+                <Link href={`/dashboard/locations/${location.id}/edit`}>
+                  <Button variant="subtle">Edit</Button>
+                </Link>
 
                 <Popover shadow="md">
                   <Popover.Target>
@@ -94,7 +86,7 @@ export default function LocationsPage() {
                     </Button>
                   </Popover.Dropdown>
                 </Popover>
-              </Flex>
+              </Flex>,
             ];
           }),
         }}

@@ -61,6 +61,14 @@ model Location {
   name           String
   address        String?
   description    String?
+  // Contact Information
+  phoneNumber    String?
+  email          String?
+  website        String?
+  facebookUrl    String?
+  instagramUrl   String?
+  twitterUrl     String?
+  linkedinUrl    String?
   workspaceId    String
   Workspace      Workspace       @relation(fields: [workspaceId], references: [id])
   Events         Event[]
