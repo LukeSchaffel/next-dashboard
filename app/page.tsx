@@ -31,12 +31,14 @@ export default async function HomePage() {
             to resource management
           </Title>
           <Text c="dimmed" mt="md">
-            A comprehensive Event Management System designed to streamline every aspect of your events. 
-            From planning to execution, our platform helps you manage event details, ticketing, seating layouts, 
-            and locations all in one place. Create beautiful event pages, handle ticket sales, design custom 
-            seating arrangements, and track your event's success with real-time analytics. Whether you're 
-            organizing a conference, concert, or corporate event, our system provides the tools you need to 
-            deliver exceptional experiences.
+            A comprehensive Event Management System designed to streamline every
+            aspect of your events. From planning to execution, our platform
+            helps you manage event details, ticketing, seating layouts, and
+            locations all in one place. Create beautiful event pages, handle
+            ticket sales, design custom seating arrangements, and track your
+            events success with real-time analytics. Whether youre organizing a
+            conference, concert, or corporate event, our system provides the
+            tools you need to deliver exceptional experiences.
           </Text>
 
           <List
@@ -50,13 +52,16 @@ export default async function HomePage() {
             }
           >
             <ListItem>
-              <b>Smart Event Management</b> – Create and manage events with detailed information, locations, and custom seating layouts
+              <b>Smart Event Management</b> – Create and manage events with
+              detailed information, locations, and custom seating layouts
             </ListItem>
             <ListItem>
-              <b>Advanced Ticketing System</b> – Handle ticket sales, track attendance, and manage different ticket types with ease
+              <b>Advanced Ticketing System</b> – Handle ticket sales, track
+              attendance, and manage different ticket types with ease
             </ListItem>
             <ListItem>
-              <b>Real-time Analytics</b> – Monitor ticket sales, revenue, and event performance with comprehensive dashboards
+              <b>Real-time Analytics</b> – Monitor ticket sales, revenue, and
+              event performance with comprehensive dashboards
             </ListItem>
           </List>
 
