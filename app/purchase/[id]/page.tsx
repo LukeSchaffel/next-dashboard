@@ -84,9 +84,9 @@ async function getTicketType(id: string) {
 export default async function PurchasePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = params;
+  const { id } = await params;
   const ticketType = await getTicketType(id);
 
   if (!ticketType) {
