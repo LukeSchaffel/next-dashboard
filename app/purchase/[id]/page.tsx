@@ -150,10 +150,14 @@ export default async function PurchasePage({
               </Badge>
             ) : hasLayout && ticketType.Event.eventLayout ? (
               <TicketPurchaseContainer
-                sections={ticketType.Event.eventLayout.sections.filter(
-                  (section) =>
+                sections={ticketType.Event.eventLayout.sections
+                  .filter((section) =>
                     allowedSections.some((allowed) => allowed.id === section.id)
-                )}
+                  )
+                  .map(section => ({
+                    ...section,
+                    description: section.description || ""
+                  }))}
                 basePrice={ticketType.price}
                 ticketTypeId={ticketType.id}
               />
@@ -161,6 +165,8 @@ export default async function PurchasePage({
               <PurchaseForm
                 price={ticketType.price}
                 ticketTypeId={ticketType.id}
+                selectedSeatIds={[]}
+                quantity={1}
               />
             )}
           </Stack>

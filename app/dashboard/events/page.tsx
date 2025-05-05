@@ -13,7 +13,7 @@ import {
   SimpleGrid,
   SegmentedControl,
 } from "@mantine/core";
-import { EventWithLocation } from "@/lib/prisma";
+import { EventWithDetails } from "@/stores/useEventStore";
 
 import { Table } from "@/lib/components";
 import { useContext, useEffect, useState } from "react";
@@ -33,9 +33,7 @@ type ViewType = "table" | "calendar";
 
 export default function EventsPage() {
   const { userRole } = useContext(DashboardContext);
-  const [selectedEvent, setSelectedEvent] = useState<
-    EventWithLocation | undefined
-  >(undefined);
+  const [selectedEvent, setSelectedEvent] = useState<EventWithDetails | undefined>(undefined);
   const [view, setView] = useState<ViewType>("table");
   const { events, loading, hasFetched, fetchEvents, deleteEvent } =
     useEventStore();

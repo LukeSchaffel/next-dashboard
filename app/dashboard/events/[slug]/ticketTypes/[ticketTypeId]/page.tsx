@@ -240,13 +240,13 @@ export default function TicketTypePage({
         />
       </Paper>
 
-      <TicketForm
+      {/* <TicketForm
         opened={ticketModalOpened}
         onClose={closeTicketModal}
         ticketTypes={ticketTypes}
         loading={ticketLoading}
         eventSlug={slug}
-      />
+      /> */}
     </Stack>
   );
 }

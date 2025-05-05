@@ -2,22 +2,7 @@
 import { useState } from "react";
 import SeatSelection from "./SeatSelection";
 import PurchaseForm from "./PurchaseForm";
-
-interface Section {
-  id: string;
-  name: string;
-  description?: string | null;
-  priceMultiplier: number;
-  rows: {
-    id: string;
-    name: string;
-    seats: {
-      id: string;
-      number: string;
-      status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "DISABLED";
-    }[];
-  }[];
-}
+import type { Section } from "@/lib/components/seating-layout";
 
 interface TicketPurchaseContainerProps {
   sections: Section[];
@@ -55,7 +40,6 @@ export default function TicketPurchaseContainer({
       <SeatSelection
         sections={sections}
         basePrice={basePrice}
-        selectedSeatIds={selectedSeats.map((seat) => seat.id)}
         onSeatSelect={handleSeatSelect}
       />
       <PurchaseForm

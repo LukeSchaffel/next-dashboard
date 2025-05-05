@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { Event, TicketType, Ticket, Location } from "@prisma/client";
 
-interface EventWithDetails extends Event {
-  Location: {
+export interface EventWithDetails extends Event {
+  Location?: {
     id: string;
     name: string;
     address: string | null;
@@ -225,9 +225,9 @@ export const useEventStore = create<EventsStore>((set, get) => ({
       if (get().currentEvent) {
         set({
           currentEvent: {
-            ...get().currentEvent,
-            Tickets: [...get().currentEvent.Tickets, newTicket],
-          },
+            ...get().currentEvent!,
+            Tickets: [...get().currentEvent!.Tickets, newTicket] as EventWithDetails['Tickets'],
+          } as EventWithDetails,
         });
       }
     } catch (err) {
@@ -251,11 +251,11 @@ export const useEventStore = create<EventsStore>((set, get) => ({
       if (get().currentEvent) {
         set({
           currentEvent: {
-            ...get().currentEvent,
-            Tickets: get().currentEvent.Tickets.map((t) =>
+            ...get().currentEvent!,
+            Tickets: get().currentEvent!.Tickets.map((t) =>
               t.id === ticketId ? updatedTicket : t
-            ),
-          },
+            ) as EventWithDetails['Tickets'],
+          } as EventWithDetails,
         });
       }
     } catch (err) {

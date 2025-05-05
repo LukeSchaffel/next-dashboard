@@ -334,13 +334,13 @@ export default function EventPage({
         editingTicketTypeId={editingTicketTypeId || undefined}
       />
 
-      <TicketForm
+      {/* <TicketForm
         opened={ticketModalOpened}
         onClose={closeTicketModal}
         ticketTypes={ticketTypes}
         loading={ticketLoading}
         eventSlug={slug}
-      />
+      /> */}
 
       <DescriptionEditorModal
         opened={descriptionModalOpened}
