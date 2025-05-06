@@ -9,7 +9,18 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const { name, address, description } = await request.json();
+    const {
+      name,
+      address,
+      description,
+      phoneNumber,
+      email,
+      website,
+      facebookUrl,
+      instagramUrl,
+      twitterUrl,
+      linkedinUrl,
+    } = await request.json();
     const { workspaceId } = await getAuthSession();
 
     const location = await prisma.location.findUnique({
@@ -33,6 +44,13 @@ export async function PATCH(
         name: name || location.name,
         address: address || location.address,
         description: description || location.description,
+        phoneNumber: phoneNumber || location.phoneNumber,
+        email: email || location.email,
+        website: website || location.website,
+        facebookUrl: facebookUrl || location.facebookUrl,
+        instagramUrl: instagramUrl || location.instagramUrl,
+        twitterUrl: twitterUrl || location.twitterUrl,
+        linkedinUrl: linkedinUrl || location.linkedinUrl,
       },
     });
 

@@ -44,8 +44,8 @@ export default async function HomePage() {
             helps you manage event details, ticketing, seating layouts, and
             locations all in one place. Create beautiful event pages, handle
             ticket sales, design custom seating arrangements, and track your
-            event's success with real-time analytics. Whether you're organizing
-            a conference, concert, or corporate event, our system provides the
+            events success with real-time analytics. Whether youre organizing a
+            conference, concert, or corporate event, our system provides the
             tools you need to deliver exceptional experiences.
           </Text>
 

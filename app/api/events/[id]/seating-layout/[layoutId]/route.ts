@@ -5,13 +5,14 @@ import { getAuthSession } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; layoutId: string } }
+  { params }: { params: Promise<{ id: string; layoutId: string }> }
 ) {
   try {
+    const { id, layoutId } = await params;
     const { workspaceId } = await getAuthSession();
 
     const eventLayout = await prisma.eventLayout.findUnique({
-      where: { id: params.layoutId },
+      where: { id: layoutId },
       include: {
         sections: {
           include: {
@@ -45,14 +46,15 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; layoutId: string } }
+  { params }: { params: Promise<{ id: string; layoutId: string }> }
 ) {
   try {
+    const { id, layoutId } = await params;
     const { workspaceId } = await getAuthSession();
     const { name, description, sections } = await request.json();
 
     const eventLayout = await prisma.eventLayout.findUnique({
-      where: { id: params.layoutId },
+      where: { id: layoutId },
       include: {
         sections: {
           include: {
@@ -92,12 +94,12 @@ export async function PUT(
 
     // Delete all sections
     await prisma.eventSection.deleteMany({
-      where: { eventLayoutId: params.layoutId },
+      where: { eventLayoutId: layoutId },
     });
 
     // Update the layout and create new sections
     const updatedLayout = await prisma.eventLayout.update({
-      where: { id: params.layoutId },
+      where: { id: layoutId },
       data: {
         name,
         description,
@@ -145,13 +147,14 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; layoutId: string } }
+  { params }: { params: Promise<{ id: string; layoutId: string }> }
 ) {
   try {
+    const { id, layoutId } = await params;
     const { workspaceId } = await getAuthSession();
 
     const eventLayout = await prisma.eventLayout.findUnique({
-      where: { id: params.layoutId },
+      where: { id: layoutId },
     });
 
     if (!eventLayout) {
@@ -163,7 +166,7 @@ export async function DELETE(
     }
 
     await prisma.eventLayout.delete({
-      where: { id: params.layoutId },
+      where: { id: layoutId },
     });
 
     return NextResponse.json({ success: true });

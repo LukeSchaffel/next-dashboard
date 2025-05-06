@@ -5,13 +5,30 @@ import { getAuthSession } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, address } = await request.json();
+    const {
+      name,
+      address,
+      phoneNumber,
+      email,
+      website,
+      facebookUrl,
+      instagramUrl,
+      twitterUrl,
+      linkedinUrl,
+    } = await request.json();
     const { workspaceId } = await getAuthSession();
 
     const location = await prisma.location.create({
       data: {
         name,
         address,
+        phoneNumber,
+        email,
+        website,
+        facebookUrl,
+        instagramUrl,
+        twitterUrl,
+        linkedinUrl,
         workspaceId,
       },
       include: {

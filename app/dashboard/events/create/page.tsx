@@ -182,7 +182,7 @@ export default function CreateEventPage() {
                 <Title order={3}>Seating Layout</Title>
                 <Text>
                   This location has a template seating layout available. You can
-                  use it as a starting point for your event's seating
+                  use it as a starting point for your events seating
                   arrangement.
                 </Text>
                 <Checkbox

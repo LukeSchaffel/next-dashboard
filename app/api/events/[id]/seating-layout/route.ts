@@ -5,13 +5,14 @@ import { getAuthSession } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { workspaceId } = await getAuthSession();
 
     const event = await prisma.event.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         eventLayout: {
           include: {
@@ -49,14 +50,15 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { workspaceId } = await getAuthSession();
     const { name, description, sections } = await request.json();
 
     const event = await prisma.event.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         eventLayout: true,
       },

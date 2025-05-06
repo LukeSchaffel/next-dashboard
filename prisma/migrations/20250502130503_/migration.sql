@@ -49,6 +49,13 @@ CREATE TABLE "Location" (
     "name" TEXT NOT NULL,
     "address" TEXT,
     "description" TEXT,
+    "phoneNumber" TEXT,
+    "email" TEXT,
+    "website" TEXT,
+    "facebookUrl" TEXT,
+    "instagramUrl" TEXT,
+    "twitterUrl" TEXT,
+    "linkedinUrl" TEXT,
     "workspaceId" TEXT NOT NULL,
 
     CONSTRAINT "Location_pkey" PRIMARY KEY ("id")
