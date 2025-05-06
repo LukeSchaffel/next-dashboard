@@ -6,9 +6,15 @@ import { getAuthSession } from "@/lib/auth";
 export async function POST(request: NextRequest) {
   try {
     const {
+      type,
       name,
       description,
       locationId,
+      // Series specific fields
+      startDate,
+      endDate,
+      events,
+      // Single event fields
       startsAt,
       endsAt,
       ticketTypes,
@@ -50,82 +56,175 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const event = await prisma.event.create({
-      data: {
-        name,
-        description,
-        locationId: locationId || null,
-        startsAt: new Date(startsAt),
-        endsAt: new Date(endsAt),
-        userRoleId,
-        workspaceId,
-        TicketTypes: ticketTypes
-          ? {
-              create: ticketTypes.map((type: any) => ({
-                name: type.name,
-                description: type.description,
-                price: type.price,
-                quantity: type.quantity,
-              })),
-            }
-          : undefined,
-        // Create event layout if template is requested and available
-        ...(use_layout_template && location?.templateLayout
-          ? {
-              eventLayout: {
-                create: {
-                  name: `${name} Seating Layout`,
-                  description: `Seating layout for ${name}`,
-                  workspaceId,
-                  templateId: location.templateLayout.id,
-                  sections: {
-                    create: location.templateLayout.sections.map((section) => ({
-                      name: section.name,
-                      description: section.description,
-                      priceMultiplier: section.priceMultiplier,
-                      rows: {
-                        create: section.rows.map((row) => ({
-                          name: row.name,
-                          seats: {
-                            create: row.seats.map((seat) => ({
-                              number: seat.number,
-                              status: seat.status,
+    // Handle single event creation
+    if (type === "single") {
+      const event = await prisma.event.create({
+        data: {
+          name,
+          description,
+          locationId: locationId || null,
+          startsAt: new Date(startsAt),
+          endsAt: new Date(endsAt),
+          userRoleId,
+          workspaceId,
+          TicketTypes: ticketTypes
+            ? {
+                create: ticketTypes.map((type: any) => ({
+                  name: type.name,
+                  description: type.description,
+                  price: type.price,
+                  quantity: type.quantity,
+                })),
+              }
+            : undefined,
+          // Create event layout if template is requested and available
+          ...(use_layout_template && location?.templateLayout
+            ? {
+                eventLayout: {
+                  create: {
+                    name: `${name} Seating Layout`,
+                    description: `Seating layout for ${name}`,
+                    workspaceId,
+                    templateId: location.templateLayout.id,
+                    sections: {
+                      create: location.templateLayout.sections.map(
+                        (section) => ({
+                          name: section.name,
+                          description: section.description,
+                          priceMultiplier: section.priceMultiplier,
+                          rows: {
+                            create: section.rows.map((row) => ({
+                              name: row.name,
+                              seats: {
+                                create: row.seats.map((seat) => ({
+                                  number: seat.number,
+                                  status: seat.status,
+                                })),
+                              },
                             })),
                           },
-                        })),
-                      },
-                    })),
+                        })
+                      ),
+                    },
                   },
                 },
-              },
-            }
-          : {}),
-      },
-      include: {
-        Location: {
-          select: {
-            id: true,
-            name: true,
-          },
+              }
+            : {}),
         },
-        TicketTypes: true,
-        eventLayout: {
-          include: {
-            sections: {
-              include: {
-                rows: {
-                  include: {
-                    seats: true,
+        include: {
+          Location: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          TicketTypes: true,
+          EventSeries: true,
+          eventLayout: {
+            include: {
+              sections: {
+                include: {
+                  rows: {
+                    include: {
+                      seats: true,
+                    },
                   },
                 },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    return NextResponse.json(event, { status: 201 });
+      return NextResponse.json(event, { status: 201 });
+    }
+
+    // Handle event series creation
+    if (type === "series") {
+      const series = await prisma.eventSeries.create({
+        data: {
+          name,
+          description,
+          startDate: new Date(startDate),
+          endDate: new Date(endDate),
+          workspaceId,
+          events: {
+            create: events.map((event: any) => ({
+              name: event.name,
+              description: event.description,
+              locationId: locationId || null,
+              startsAt: new Date(event.startsAt),
+              endsAt: new Date(event.endsAt),
+              userRoleId,
+              workspaceId,
+              // Create event layout if template is requested and available
+              ...(use_layout_template && location?.templateLayout
+                ? {
+                    eventLayout: {
+                      create: {
+                        name: `${event.name} Seating Layout`,
+                        description: `Seating layout for ${event.name}`,
+                        workspaceId,
+                        templateId: location.templateLayout.id,
+                        sections: {
+                          create: location.templateLayout.sections.map(
+                            (section) => ({
+                              name: section.name,
+                              description: section.description,
+                              priceMultiplier: section.priceMultiplier,
+                              rows: {
+                                create: section.rows.map((row) => ({
+                                  name: row.name,
+                                  seats: {
+                                    create: row.seats.map((seat) => ({
+                                      number: seat.number,
+                                      status: seat.status,
+                                    })),
+                                  },
+                                })),
+                              },
+                            })
+                          ),
+                        },
+                      },
+                    },
+                  }
+                : {}),
+            })),
+          },
+        },
+        include: {
+          events: {
+            include: {
+              Location: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              TicketTypes: true,
+              eventLayout: {
+                include: {
+                  sections: {
+                    include: {
+                      rows: {
+                        include: {
+                          seats: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return NextResponse.json(series, { status: 201 });
+    }
+
+    return NextResponse.json({ error: "Invalid event type" }, { status: 400 });
   } catch (error) {
     console.error("Failed to create event:", error);
     return NextResponse.json(
@@ -151,6 +250,7 @@ export async function GET(request: NextRequest) {
           },
         },
         TicketTypes: true,
+        EventSeries: true,
       },
       orderBy: {
         startsAt: "desc",

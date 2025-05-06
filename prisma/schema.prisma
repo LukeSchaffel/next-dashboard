@@ -34,6 +34,7 @@ model Workspace {
   Events         Event[]
   TemplateLayout TemplateLayout[]
   EventLayout    EventLayout[]
+  EventSeries    EventSeries[]
 }
 
 model UserRole {
@@ -67,21 +68,36 @@ model Location {
   templateLayout TemplateLayout? @relation("LocationTemplateLayout")
 }
 
-model Event {
-  id          String       @id @default(cuid())
+model EventSeries {
+  id          String    @id @default(cuid())
   name        String
   description String?
-  startsAt    DateTime?
-  endsAt      DateTime?
-  locationId  String?
-  Location    Location?    @relation(fields: [locationId], references: [id])
-  userRoleId  String
-  CreatedBy   UserRole     @relation(fields: [userRoleId], references: [id])
+  startDate   DateTime
+  endDate     DateTime
   workspaceId String
-  Workspace   Workspace    @relation(fields: [workspaceId], references: [id])
-  Tickets     Ticket[]
-  TicketTypes TicketType[]
-  eventLayout EventLayout? @relation("EventCustomLayout")
+  Workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  events      Event[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Event {
+  id            String       @id @default(cuid())
+  name          String
+  description   String?
+  startsAt      DateTime?
+  endsAt        DateTime?
+  locationId    String?
+  Location      Location?    @relation(fields: [locationId], references: [id])
+  userRoleId    String
+  CreatedBy     UserRole     @relation(fields: [userRoleId], references: [id])
+  workspaceId   String
+  Workspace     Workspace    @relation(fields: [workspaceId], references: [id])
+  eventSeriesId String?
+  EventSeries   EventSeries? @relation(fields: [eventSeriesId], references: [id])
+  Tickets       Ticket[]
+  TicketTypes   TicketType[]
+  eventLayout   EventLayout? @relation("EventCustomLayout")
 }
 
 model Ticket {

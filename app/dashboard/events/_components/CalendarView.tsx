@@ -3,13 +3,30 @@ import { useEffect, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import { EventWithLocation } from "@/lib/prisma";
+import { Event } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import styles from "./CalendarView.module.css";
 
+interface EventWithDetails extends Event {
+  Location?: {
+    id: string;
+    name: string;
+    address: string | null;
+  } | null;
+  EventSeries?: {
+    id: string;
+    name: string;
+    description: string | null;
+    startDate: Date;
+    endDate: Date;
+  } | null;
+  Tickets: any[];
+  TicketTypes: any[];
+}
+
 interface CalendarViewProps {
-  events: EventWithLocation[];
+  events: EventWithDetails[];
 }
 
 export default function CalendarView({ events }: CalendarViewProps) {

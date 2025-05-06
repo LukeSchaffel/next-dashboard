@@ -16,22 +16,42 @@ import {
   Text,
   Box,
   Checkbox,
+  SegmentedControl,
+  ActionIcon,
+  Tooltip,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { DateTimePicker } from "@mantine/dates";
 import { useLocationStore } from "@/stores/useLocationStore";
 import { useEventStore } from "@/stores/useEventStore";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft, IconEdit } from "@tabler/icons-react";
+import {
+  IconArrowLeft,
+  IconEdit,
+  IconPlus,
+  IconTrash,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import DescriptionEditor from "../_components/DescriptionEditor";
 
+type EventType = "single" | "series";
+
+interface EventInstance {
+  name: string;
+  startsAt: Date;
+  endsAt: Date;
+}
+
 interface EventFormValues {
+  type: EventType;
   name: string;
   description: string;
   locationId: string;
-  startsAt: Date;
-  endsAt: Date;
+  // Series specific fields
+  seriesStartDate: Date;
+  seriesEndDate: Date;
+  // Event instances
+  instances: EventInstance[];
   use_layout_template: boolean;
 }
 
@@ -43,27 +63,39 @@ export default function CreateEventPage() {
     hasFetched: locationsFetched,
     fetchLocations,
   } = useLocationStore();
-  const { createEvent, loading: eventLoading } = useEventStore();
+  const {
+    createEvent,
+    createEventSeries,
+    loading: eventLoading,
+  } = useEventStore();
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [templateLayout, setTemplateLayout] = useState<any>(null);
+
   useEffect(() => {
     if (!locationsFetched) {
       fetchLocations();
     }
   }, [locationsFetched, fetchLocations]);
+
   const form = useForm<EventFormValues>({
     initialValues: {
+      type: "single",
       name: "",
       description: "",
       locationId: "",
-      startsAt: new Date(),
-      endsAt: new Date(),
+      seriesStartDate: new Date(),
+      seriesEndDate: new Date(),
+      instances: [{ name: "", startsAt: new Date(), endsAt: new Date() }],
       use_layout_template: false,
     },
     validate: {
       name: (value) => (!value ? "Name is required" : null),
-      startsAt: (value) => (!value ? "Start date is required" : null),
-      endsAt: (value) => (!value ? "End date is required" : null),
+      locationId: (value) => (!value ? "Location is required" : null),
+      instances: {
+        name: (value) => (!value ? "Event name is required" : null),
+        startsAt: (value) => (!value ? "Start date is required" : null),
+        endsAt: (value) => (!value ? "End date is required" : null),
+      },
     },
   });
 
@@ -78,14 +110,47 @@ export default function CreateEventPage() {
     }
   };
 
+  const addInstance = () => {
+    form.insertListItem("instances", {
+      name: "",
+      startsAt: new Date(),
+      endsAt: new Date(),
+    });
+  };
+
+  const removeInstance = (index: number) => {
+    form.removeListItem("instances", index);
+  };
+
   const handleSubmit = async (values: EventFormValues) => {
     try {
-      const eventData = {
-        ...values,
-        locationId: values.locationId || undefined, // Convert empty string to undefined
-      };
-      const event = await createEvent(eventData);
-      router.push(`/dashboard/events/${event.id}`);
+      if (values.type === "single") {
+        const eventData = {
+          name: values.name,
+          description: values.description,
+          locationId: values.locationId || undefined,
+          startsAt: values.instances[0].startsAt,
+          endsAt: values.instances[0].endsAt,
+        };
+        const event = await createEvent(eventData);
+        router.push(`/dashboard/events/${event.id}`);
+      } else {
+        const seriesData = {
+          name: values.name,
+          description: values.description,
+          startDate: values.seriesStartDate,
+          endDate: values.seriesEndDate,
+          events: values.instances.map((instance) => ({
+            name: instance.name,
+            description: values.description,
+            locationId: values.locationId,
+            startsAt: instance.startsAt,
+            endsAt: instance.endsAt,
+          })),
+        };
+        const series = await createEventSeries(seriesData);
+        router.push(`/dashboard/events/${series.events[0].id}`);
+      }
     } catch (error) {
       console.error("Failed to create event:", error);
     }
@@ -112,6 +177,19 @@ export default function CreateEventPage() {
 
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="xl">
+          <Paper p="md" withBorder>
+            <Stack gap="md">
+              <Title order={3}>Event Type</Title>
+              <SegmentedControl
+                data={[
+                  { label: "Single Event", value: "single" },
+                  { label: "Event Series", value: "series" },
+                ]}
+                {...form.getInputProps("type")}
+              />
+            </Stack>
+          </Paper>
+
           <Paper p="md" withBorder>
             <Stack gap="md">
               <Title order={3}>Event Details</Title>
@@ -154,27 +232,127 @@ export default function CreateEventPage() {
                     />
                   </Stack>
                 </Grid.Col>
-                <Grid.Col span={6}>
-                  <DateTimePicker
-                    label="Start Date & Time"
-                    placeholder="Select start date and time"
-                    required
-                    {...form.getInputProps("startsAt")}
-                    valueFormat="MM/DD/YY hh:mm A"
-                  />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <DateTimePicker
-                    label="End Date & Time"
-                    placeholder="Select end date and time"
-                    required
-                    {...form.getInputProps("endsAt")}
-                    valueFormat="MM/DD/YY hh:mm A"
-                  />
-                </Grid.Col>
               </Grid>
             </Stack>
           </Paper>
+
+          {form.values.type === "series" && (
+            <Paper p="md" withBorder>
+              <Stack gap="md">
+                <Group justify="space-between">
+                  <Title order={3}>Series Schedule</Title>
+                  <Button
+                    leftSection={<IconPlus size={16} />}
+                    onClick={addInstance}
+                    variant="light"
+                  >
+                    Add Event
+                  </Button>
+                </Group>
+                <Grid>
+                  <Grid.Col span={6}>
+                    <DateTimePicker
+                      label="Series Start Date"
+                      placeholder="Select start date"
+                      required
+                      {...form.getInputProps("seriesStartDate")}
+                      valueFormat="MM/DD/YY hh:mm A"
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <DateTimePicker
+                      label="Series End Date"
+                      placeholder="Select end date"
+                      required
+                      {...form.getInputProps("seriesEndDate")}
+                      valueFormat="MM/DD/YY hh:mm A"
+                    />
+                  </Grid.Col>
+                </Grid>
+                <Divider />
+                <Stack gap="md">
+                  {form.values.instances.map((_, index) => (
+                    <Paper key={index} p="md" withBorder>
+                      <Stack gap="md">
+                        <Group justify="space-between">
+                          <Title order={4}>Event {index + 1}</Title>
+                          {index > 0 && (
+                            <ActionIcon
+                              color="red"
+                              variant="subtle"
+                              onClick={() => removeInstance(index)}
+                            >
+                              <IconTrash size={16} />
+                            </ActionIcon>
+                          )}
+                        </Group>
+                        <Grid>
+                          <Grid.Col span={12}>
+                            <TextInput
+                              label="Event Name"
+                              placeholder="Enter event name"
+                              required
+                              {...form.getInputProps(`instances.${index}.name`)}
+                            />
+                          </Grid.Col>
+                          <Grid.Col span={6}>
+                            <DateTimePicker
+                              label="Start Date & Time"
+                              placeholder="Select start date and time"
+                              required
+                              {...form.getInputProps(
+                                `instances.${index}.startsAt`
+                              )}
+                              valueFormat="MM/DD/YY hh:mm A"
+                            />
+                          </Grid.Col>
+                          <Grid.Col span={6}>
+                            <DateTimePicker
+                              label="End Date & Time"
+                              placeholder="Select end date and time"
+                              required
+                              {...form.getInputProps(
+                                `instances.${index}.endsAt`
+                              )}
+                              valueFormat="MM/DD/YY hh:mm A"
+                            />
+                          </Grid.Col>
+                        </Grid>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Stack>
+            </Paper>
+          )}
+
+          {form.values.type === "single" && (
+            <Paper p="md" withBorder>
+              <Stack gap="md">
+                <Title order={3}>Schedule</Title>
+                <Grid>
+                  <Grid.Col span={6}>
+                    <DateTimePicker
+                      label="Start Date & Time"
+                      placeholder="Select start date and time"
+                      required
+                      {...form.getInputProps("instances.0.startsAt")}
+                      valueFormat="MM/DD/YY hh:mm A"
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <DateTimePicker
+                      label="End Date & Time"
+                      placeholder="Select end date and time"
+                      required
+                      {...form.getInputProps("instances.0.endsAt")}
+                      valueFormat="MM/DD/YY hh:mm A"
+                    />
+                  </Grid.Col>
+                </Grid>
+              </Stack>
+            </Paper>
+          )}
 
           {templateLayout && (
             <Paper p="md" withBorder>
@@ -197,7 +375,7 @@ export default function CreateEventPage() {
 
           <Group justify="flex-end">
             <Button type="submit" loading={eventLoading}>
-              Create Event
+              Create {form.values.type === "single" ? "Event" : "Event Series"}
             </Button>
           </Group>
         </Stack>
