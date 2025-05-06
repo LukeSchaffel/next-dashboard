@@ -227,7 +227,6 @@ export const useEventStore = create<EventsStore>((set, get) => ({
   },
   createEvent: async (values) => {
     try {
-      console.log("Creating event with values:", values);
       const res = await fetch("/api/events", {
         method: "POST",
         headers: {
@@ -243,7 +242,6 @@ export const useEventStore = create<EventsStore>((set, get) => ({
       }
 
       const response = await res.json();
-      console.log("Create event response:", response);
 
       if (values.type === "series") {
         const { events, series } = response;
