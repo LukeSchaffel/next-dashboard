@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import {
   Icon2fa,
   IconBellRinging,
@@ -57,6 +58,15 @@ const tabs = {
 export function Sider() {
   const [section, setSection] = useState<"account" | "general">("account");
   const [active, setActive] = useState("Billing");
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Find the matching tab based on the current pathname
+    const matchingTab = tabs.account.find((tab) => tab.link === pathname);
+    if (matchingTab) {
+      setActive(matchingTab.label);
+    }
+  }, [pathname]);
 
   const links = tabs[section].map((item) => (
     <Link
@@ -75,7 +85,7 @@ export function Sider() {
 
   return (
     <nav className={classes.navbar}>
-      <div>
+      {/* <div>
         <SegmentedControl
           value={section}
           onChange={(value: any) => setSection(value)}
@@ -86,7 +96,7 @@ export function Sider() {
             { label: "System", value: "general" },
           ]}
         />
-      </div>
+      </div> */}
 
       <div className={classes.navbarMain}>{links}</div>
 

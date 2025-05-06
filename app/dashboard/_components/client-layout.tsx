@@ -29,7 +29,15 @@ export default function ClientDashboardLayout({
 
   const formatTitle = () => {
     const split = pathname.split("/");
-    return capitalize(split[split.length - 1]);
+    let title = "home";
+
+    if (split.includes("events")) title = "events";
+    if (split.includes("locations")) title = "locations";
+    if (split.includes("users")) title = "users";
+    if (split.includes("notifications")) title = "notifications";
+    if (split.includes("settings")) title = "settings";
+
+    return capitalize(title);
   };
 
   return (
