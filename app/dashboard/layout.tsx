@@ -13,7 +13,7 @@ export default async function DashboardLayout({
   const { userId } = await auth();
 
   if (!userId) {
-    redirect("/sign-in");
+    redirect("/");
   }
 
   let activeRole;
