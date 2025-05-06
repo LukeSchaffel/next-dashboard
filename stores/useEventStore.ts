@@ -50,7 +50,7 @@ interface EventWithDetails extends Event {
   } | null;
 }
 
-interface EventSeriesWithDetails extends EventSeries {
+export interface EventSeriesWithDetails extends EventSeries {
   events: EventWithDetails[];
 }
 
@@ -74,25 +74,17 @@ interface EventsStore {
   deleteEvent: (eventId: string) => Promise<void>;
   deleteEventSeries: (seriesId: string) => Promise<void>;
   createEvent: (values: {
+    type: "single" | "series";
     name: string;
     description: string;
     locationId?: string | null;
-    startsAt: Date;
-    endsAt: Date;
-    eventSeriesId?: string | null;
-    ticketTypes?: {
-      name: string;
-      description: string;
-      price: number;
-      quantity: number;
-    }[];
-  }) => Promise<EventWithDetails>;
-  createEventSeries: (values: {
-    name: string;
-    description: string;
-    startDate: Date;
-    endDate: Date;
-    events: {
+    // Single event fields
+    startsAt?: Date;
+    endsAt?: Date;
+    // Series fields
+    startDate?: Date;
+    endDate?: Date;
+    events?: {
       name: string;
       description: string;
       locationId?: string | null;
@@ -105,7 +97,13 @@ interface EventsStore {
         quantity: number;
       }[];
     }[];
-  }) => Promise<EventSeriesWithDetails>;
+    ticketTypes?: {
+      name: string;
+      description: string;
+      price: number;
+      quantity: number;
+    }[];
+  }) => Promise<EventWithDetails | EventWithDetails[]>;
   updateEvent: (id: string, values: any) => Promise<EventWithDetails>;
   updateEventSeries: (
     id: string,
@@ -229,6 +227,7 @@ export const useEventStore = create<EventsStore>((set, get) => ({
   },
   createEvent: async (values) => {
     try {
+      console.log("Creating event with values:", values);
       const res = await fetch("/api/events", {
         method: "POST",
         headers: {
@@ -237,15 +236,36 @@ export const useEventStore = create<EventsStore>((set, get) => ({
         body: JSON.stringify(values),
       });
 
-      if (!res.ok) throw new Error("Failed to create event");
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Failed to create event:", errorData);
+        throw new Error(errorData.error || "Failed to create event");
+      }
 
-      const newEvent: EventWithDetails = await res.json();
+      const response = await res.json();
+      console.log("Create event response:", response);
 
-      set({
-        events: [...get().events, newEvent],
-      });
-
-      return newEvent;
+      if (values.type === "series") {
+        const { events, series } = response;
+        set((state) => {
+          const newEvents = [...state.events, ...events];
+          const newSeries = [...state.eventSeries, series];
+          return {
+            events: newEvents,
+            eventSeries: newSeries,
+          };
+        });
+        return events;
+      } else {
+        // For single events, the response is the event itself
+        set((state) => {
+          const newEvents = [...state.events, response];
+          return {
+            events: newEvents,
+          };
+        });
+        return response;
+      }
     } catch (err) {
       console.error("Create failed:", err);
       throw err;
@@ -345,7 +365,7 @@ export const useEventStore = create<EventsStore>((set, get) => ({
             ...currentEvent,
             Tickets: currentEvent.Tickets.map((t) =>
               t.id === ticketId ? updatedTicket : t
-            ) as EventWithDetails['Tickets'],
+            ) as EventWithDetails["Tickets"],
           } as EventWithDetails,
         });
       }
@@ -400,30 +420,6 @@ export const useEventStore = create<EventsStore>((set, get) => ({
       });
     } catch (err) {
       console.error("Delete ticket type failed:", err);
-      throw err;
-    }
-  },
-  createEventSeries: async (values) => {
-    try {
-      const res = await fetch("/api/event-series", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!res.ok) throw new Error("Failed to create event series");
-
-      const newSeries: EventSeriesWithDetails = await res.json();
-
-      set({
-        eventSeries: [...get().eventSeries, newSeries],
-      });
-
-      return newSeries;
-    } catch (err) {
-      console.error("Create series failed:", err);
       throw err;
     }
   },

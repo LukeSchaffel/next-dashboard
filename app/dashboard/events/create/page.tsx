@@ -24,6 +24,7 @@ import { useForm } from "@mantine/form";
 import { DateTimePicker } from "@mantine/dates";
 import { useLocationStore } from "@/stores/useLocationStore";
 import { useEventStore } from "@/stores/useEventStore";
+import type { EventSeriesWithDetails } from "@/stores/useEventStore";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconArrowLeft,
@@ -63,11 +64,7 @@ export default function CreateEventPage() {
     hasFetched: locationsFetched,
     fetchLocations,
   } = useLocationStore();
-  const {
-    createEvent,
-    createEventSeries,
-    loading: eventLoading,
-  } = useEventStore();
+  const { createEvent, loading: eventLoading } = useEventStore();
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [templateLayout, setTemplateLayout] = useState<any>(null);
 
@@ -90,9 +87,10 @@ export default function CreateEventPage() {
     },
     validate: {
       name: (value) => (!value ? "Name is required" : null),
-      locationId: (value) => (!value ? "Location is required" : null),
+      description: (value) => (!value ? "Description is required" : null),
       instances: {
-        name: (value) => (!value ? "Event name is required" : null),
+        name: (value, values) =>
+          values.type === "series" && !value ? "Event name is required" : null,
         startsAt: (value) => (!value ? "Start date is required" : null),
         endsAt: (value) => (!value ? "End date is required" : null),
       },
@@ -126,30 +124,38 @@ export default function CreateEventPage() {
     try {
       if (values.type === "single") {
         const eventData = {
+          type: "single" as const,
           name: values.name,
           description: values.description,
           locationId: values.locationId || undefined,
           startsAt: values.instances[0].startsAt,
           endsAt: values.instances[0].endsAt,
+          use_layout_template: values.use_layout_template,
         };
         const event = await createEvent(eventData);
-        router.push(`/dashboard/events/${event.id}`);
+        if (!Array.isArray(event)) {
+          router.push(`/dashboard/events/${event.id}`);
+        }
       } else {
         const seriesData = {
+          type: "series" as const,
           name: values.name,
           description: values.description,
           startDate: values.seriesStartDate,
           endDate: values.seriesEndDate,
+          use_layout_template: values.use_layout_template,
+          locationId: values.locationId || undefined,
           events: values.instances.map((instance) => ({
             name: instance.name,
             description: values.description,
-            locationId: values.locationId,
             startsAt: instance.startsAt,
             endsAt: instance.endsAt,
           })),
         };
-        const series = await createEventSeries(seriesData);
-        router.push(`/dashboard/events/${series.events[0].id}`);
+        const events = await createEvent(seriesData);
+        if (Array.isArray(events) && events.length > 0) {
+          router.push(`/dashboard/events/`);
+        }
       }
     } catch (error) {
       console.error("Failed to create event:", error);

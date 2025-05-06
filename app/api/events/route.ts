@@ -141,6 +141,40 @@ export async function POST(request: NextRequest) {
 
     // Handle event series creation
     if (type === "series") {
+      let eventLocation = null;
+      if (locationId) {
+        eventLocation = await prisma.location.findUnique({
+          where: { id: locationId },
+          include: {
+            templateLayout: {
+              include: {
+                sections: {
+                  include: {
+                    rows: {
+                      include: {
+                        seats: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!eventLocation) {
+          return NextResponse.json(
+            { error: "Location not found" },
+            { status: 404 }
+          );
+        }
+
+        if (eventLocation.workspaceId !== workspaceId) {
+          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        }
+      }
+
+      // Create the series first
       const series = await prisma.eventSeries.create({
         data: {
           name,
@@ -148,8 +182,16 @@ export async function POST(request: NextRequest) {
           startDate: new Date(startDate),
           endDate: new Date(endDate),
           workspaceId,
-          events: {
-            create: events.map((event: any) => ({
+        },
+      });
+
+      // Create each event individually to handle location and layout properly
+      const createdEvents = await Promise.all(
+        events.map(async (event: any) => {
+          // Check location for each event if provided
+
+          return prisma.event.create({
+            data: {
               name: event.name,
               description: event.description,
               locationId: locationId || null,
@@ -157,17 +199,18 @@ export async function POST(request: NextRequest) {
               endsAt: new Date(event.endsAt),
               userRoleId,
               workspaceId,
+              eventSeriesId: series.id,
               // Create event layout if template is requested and available
-              ...(use_layout_template && location?.templateLayout
+              ...(use_layout_template && eventLocation?.templateLayout
                 ? {
                     eventLayout: {
                       create: {
                         name: `${event.name} Seating Layout`,
                         description: `Seating layout for ${event.name}`,
                         workspaceId,
-                        templateId: location.templateLayout.id,
+                        templateId: eventLocation.templateLayout.id,
                         sections: {
-                          create: location.templateLayout.sections.map(
+                          create: eventLocation.templateLayout.sections.map(
                             (section) => ({
                               name: section.name,
                               description: section.description,
@@ -190,9 +233,37 @@ export async function POST(request: NextRequest) {
                     },
                   }
                 : {}),
-            })),
-          },
-        },
+            },
+            include: {
+              Location: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              TicketTypes: true,
+              EventSeries: true,
+              eventLayout: {
+                include: {
+                  sections: {
+                    include: {
+                      rows: {
+                        include: {
+                          seats: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          });
+        })
+      );
+
+      // Fetch the complete series with events
+      const completeSeries = await prisma.eventSeries.findUnique({
+        where: { id: series.id },
         include: {
           events: {
             include: {
@@ -203,6 +274,7 @@ export async function POST(request: NextRequest) {
                 },
               },
               TicketTypes: true,
+              EventSeries: true,
               eventLayout: {
                 include: {
                   sections: {
@@ -221,7 +293,10 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      return NextResponse.json(series, { status: 201 });
+      return NextResponse.json(
+        { events: createdEvents, series: completeSeries },
+        { status: 201 }
+      );
     }
 
     return NextResponse.json({ error: "Invalid event type" }, { status: 400 });
