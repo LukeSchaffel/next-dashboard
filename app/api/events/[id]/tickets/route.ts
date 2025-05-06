@@ -100,21 +100,21 @@ export async function POST(
       }
     }
 
-    const ticket = await prisma.ticket.create({
-      data: {
-        name: body.name,
-        email: body.email,
-        price: ticketPrice,
-        status: body.status,
-        eventId: id,
-        ticketTypeId: body.ticketTypeId,
-      },
-      include: {
-        TicketType: true,
-      },
-    });
+    // const ticket = await prisma.ticket.create({
+    //   data: {
+    //     name: body.name,
+    //     email: body.email,
+    //     price: ticketPrice,
+    //     status: body.status,
+    //     eventId: id,
+    //     ticketTypeId: body.ticketTypeId,
+    //   },
+    //   include: {
+    //     TicketType: true,
+    //   },
+    // });
 
-    return NextResponse.json(ticket, { status: 201 });
+    return NextResponse.json({}, { status: 201 });
   } catch (error) {
     console.error("Failed to create ticket:", error);
     return NextResponse.json(

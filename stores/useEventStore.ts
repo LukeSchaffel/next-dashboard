@@ -345,8 +345,8 @@ export const useEventStore = create<EventsStore>((set, get) => ({
             ...currentEvent,
             Tickets: currentEvent.Tickets.map((t) =>
               t.id === ticketId ? updatedTicket : t
-            ),
-          },
+            ) as EventWithDetails['Tickets'],
+          } as EventWithDetails,
         });
       }
     } catch (err) {

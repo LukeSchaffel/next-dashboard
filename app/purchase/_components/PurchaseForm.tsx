@@ -14,15 +14,15 @@ import { useRouter } from "next/navigation";
 interface PurchaseFormProps {
   price: number;
   ticketTypeId: string;
-  selectedSeatIds: string[];
-  quantity: number;
+  selectedSeatIds?: string[];
+  quantity?: number;
 }
 
 export default function PurchaseForm({
   price,
   ticketTypeId,
-  selectedSeatIds,
-  quantity,
+  selectedSeatIds = [],
+  quantity = 1,
 }: PurchaseFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +40,8 @@ export default function PurchaseForm({
   });
 
   const handleSubmit = async (values: typeof form.values) => {
-    if (selectedSeatIds.length === 0) {
-      setError("Please select at least one seat");
+    if (selectedSeatIds.length === 0 && !quantity) {
+      setError("Please select at least one seat or specify quantity");
       return;
     }
 

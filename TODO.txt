@@ -10,3 +10,7 @@
     1. Each event can occur multiple times accross its timeframe, create specific instances by date-time 
 4. Stripe integration
 5. Add users and ushers into workspace
+
+
+6. Figure out how to manually handle tickets
+7. Editing resources

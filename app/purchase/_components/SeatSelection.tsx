@@ -35,6 +35,7 @@ export default function PurchaseSeatSelection({
       basePrice={basePrice}
       selectedSeatIds={selectedSeatIds}
       onSeatSelect={handleSeatSelect}
+      showPrices={true}
     />
   );
 }
