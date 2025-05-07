@@ -1,0 +1,82 @@
+.title {
+  font-family: Greycliff CF, var(--mantine-font-family);
+  font-size: 36px;
+  line-height: 1.2;
+  font-weight: 800;
+  margin-bottom: var(--mantine-spacing-md);
+}
+
+.highlight {
+  color: var(--mantine-color-blue-6);
+  font-weight: 900;
+}
+
+.section {
+  padding: var(--mantine-spacing-xl) 0;
+}
+
+.sectionAlt {
+  background-color: var(--mantine-color-gray-0);
+  padding: var(--mantine-spacing-xl) 0;
+}
+
+.eventCard {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  height: 100%;
+  overflow: hidden;
+}
+
+.eventCard:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--mantine-shadow-md);
+}
+
+.eventImage {
+  overflow: hidden;
+  position: relative;
+  width: 240px;
+  height: 160px;
+}
+
+.eventImage :global(.mantine-Image-root) {
+  transition: transform 0.3s ease;
+}
+
+.eventCard:hover .eventImage :global(.mantine-Image-root) {
+  transform: scale(1.05);
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  margin-bottom: var(--mantine-spacing-md);
+}
+
+.seriesTitle {
+  color: var(--mantine-color-blue-6);
+  font-weight: 600;
+  padding-bottom: var(--mantine-spacing-xs);
+  border-bottom: 1px solid var(--mantine-color-gray-3);
+}
+
+.sectionContent {
+  padding: var(--mantine-spacing-xl);
+  border-radius: var(--mantine-radius-md);
+  background-color: var(--mantine-color-white);
+  box-shadow: var(--mantine-shadow-sm);
+}
+
+.contactInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-md);
+  border-radius: var(--mantine-radius-md);
+  background-color: var(--mantine-color-gray-0);
+  transition: background-color 0.2s ease;
+}
+
+.contactInfo:hover {
+  background-color: var(--mantine-color-gray-1);
+}
