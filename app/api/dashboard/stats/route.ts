@@ -9,10 +9,21 @@ export async function GET() {
     const { workspaceId } = await getAuthSession();
 
     // Get all tickets and events
-
     const events = await prisma.event.findMany({
       where: { workspaceId },
-      include: { Tickets: { include: { Event: true } } },
+      include: {
+        Tickets: { include: { Event: true } },
+        Location: {
+          select: {
+            name: true,
+          },
+        },
+        EventSeries: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
 
     const tickets = events.flatMap((e) =>
@@ -45,6 +56,24 @@ export async function GET() {
     const revenueThisMonth = monthlyRevenue[monthlyRevenue.length - 1].revenue;
     const revenueLastMonth = monthlyRevenue[monthlyRevenue.length - 2].revenue;
 
+    // Get this week's events
+    const startOfWeek = dayjs().startOf("week");
+    const endOfWeek = dayjs().endOf("week");
+    const thisWeekEvents = events
+      .filter((event) => {
+        const eventStart = dayjs(event.startsAt);
+        return (
+          eventStart.isAfter(startOfWeek) && eventStart.isBefore(endOfWeek)
+        );
+      })
+      .map((event) => ({
+        id: event.id,
+        name: event.name,
+        startsAt: event.startsAt?.toISOString(),
+        location: event.Location?.name || null,
+        seriesName: event.EventSeries?.name || null,
+      }));
+
     // Count tickets by status
     const ticketStatusCounts = {
       PENDING: tickets.filter((ticket) => ticket.status === "PENDING").length,
@@ -62,6 +91,7 @@ export async function GET() {
       revenueThisMonth,
       revenueLastMonth,
       monthlyRevenue,
+      thisWeekEvents,
       ticketStatusCounts,
     });
   } catch (error) {

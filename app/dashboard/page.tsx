@@ -13,8 +13,10 @@ import {
 } from "@mantine/core";
 import { IconTicket, IconCalendar, IconTrendingUp } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { AreaChart, LineChart, DonutChart } from "@mantine/charts";
+import { AreaChart, LineChart } from "@mantine/charts";
 import dayjs from "dayjs";
+import { Table } from "@/lib/components";
+import Link from "next/link";
 
 interface DashboardStats {
   totalTickets: number;
@@ -23,12 +25,13 @@ interface DashboardStats {
   revenueThisMonth: number;
   revenueLastMonth: number;
   monthlyRevenue: { month: string; revenue: number }[];
-  ticketStatusCounts: {
-    PENDING: number;
-    CONFIRMED: number;
-    CANCELLED: number;
-    REFUNDED: number;
-  };
+  thisWeekEvents: {
+    id: string;
+    name: string;
+    startsAt: string;
+    location: string | null;
+    seriesName: string | null;
+  }[];
 }
 
 export default function DashboardPage() {
@@ -150,60 +153,25 @@ export default function DashboardPage() {
 
         <Paper p="md" withBorder>
           <Title order={3} mb="md">
-            Ticket Status Distribution
+            Events This Week
           </Title>
-          <Center>
-            <DonutChart
-              withLabelsLine
-              labelsType="value"
-              withLabels
-              h={300}
-              data={[
-                {
-                  value: parseFloat(
-                    (
-                      (stats.ticketStatusCounts.CONFIRMED /
-                        stats.totalTickets) *
-                      100
-                    ).toFixed(2)
-                  ),
-                  color: "green",
-                  name: "Confirmed",
-                },
-                {
-                  value: parseFloat(
-                    (
-                      (stats.ticketStatusCounts.PENDING / stats.totalTickets) *
-                      100
-                    ).toFixed(2)
-                  ),
-                  color: "yellow",
-                  name: "Pending",
-                },
-                {
-                  value: parseFloat(
-                    (
-                      (stats.ticketStatusCounts.CANCELLED /
-                        stats.totalTickets) *
-                      100
-                    ).toFixed(2)
-                  ),
-                  color: "red",
-                  name: "Cancelled",
-                },
-                {
-                  value: parseFloat(
-                    (
-                      (stats.ticketStatusCounts.REFUNDED / stats.totalTickets) *
-                      100
-                    ).toFixed(2)
-                  ),
-                  color: "gray",
-                  name: "Refunded",
-                },
-              ]}
-            />
-          </Center>
+          <Table
+            data={{
+              head: ["Name", "Series", "Location", "Start Date"],
+              body: stats.thisWeekEvents.map((event) => [
+                <Link
+                  key={event.id}
+                  href={`/dashboard/events/${event.id}`}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  {event.name}
+                </Link>,
+                event.seriesName || "",
+                event.location || "No location",
+                dayjs(event.startsAt).format("MM/DD/YY hh:mm A"),
+              ]),
+            }}
+          />
         </Paper>
       </SimpleGrid>
     </Stack>
