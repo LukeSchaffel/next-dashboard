@@ -18,9 +18,11 @@ import {
   Box,
   Divider,
   rem,
+  BackgroundImage,
 } from "@mantine/core";
 import Link from "next/link";
 import { IconCalendar, IconClock, IconMapPin } from "@tabler/icons-react";
+import classes from "./_styles.module.css";
 
 interface EventWithDetails extends Event {
   Location: {
@@ -164,140 +166,210 @@ export default async function EventPage({
   const isCurrent = !isUpcoming && !isPast;
 
   return (
-    <Container size="lg" py="xl">
-      <Stack gap="xl">
-        {/* Hero Section */}
-        <Paper p="xl" radius="md" withBorder>
-          <Stack gap="lg">
-            <Group justify="space-between" align="flex-start">
-              <Stack gap="xs">
-                <Title order={1} size={rem(42)}>{event.name}</Title>
-                <Group gap="xl">
-                  <Group gap="xs">
-                    <IconCalendar size={20} stroke={1.5} />
-                    <Text size="lg">
-                      {dayjs(event.startsAt).format("dddd, MMMM D, YYYY")}
-                    </Text>
-                  </Group>
-                  <Group gap="xs">
-                    <IconClock size={20} stroke={1.5} />
-                    <Text size="lg">
-                      {dayjs(event.startsAt).format("h:mm A")} -{" "}
-                      {dayjs(event.endsAt).format("h:mm A")}
-                    </Text>
-                  </Group>
-                </Group>
-              </Stack>
-              <Badge 
-                size="xl" 
-                variant={isPast ? "light" : "filled"}
-                color={isPast ? "gray" : isCurrent ? "green" : "blue"}
-              >
-                {isPast ? "Past Event" : isCurrent ? "Happening Now" : "Upcoming"}
-              </Badge>
-            </Group>
-
-            {event.description && (
-              <Box mt="md">
-                <div dangerouslySetInnerHTML={{ __html: event.description }} />
-              </Box>
-            )}
-          </Stack>
-        </Paper>
-
-        {event.Location && (
-          <Paper p="xl" radius="md" withBorder>
+    <Box>
+      {/* Hero Section with Background */}
+      <BackgroundImage
+        src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070"
+        h={400}
+      >
+        <Box
+          style={{
+            background:
+              "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <Container size="lg">
             <Stack gap="md">
-              <Group gap="xs">
-                <IconMapPin size={24} stroke={1.5} />
-                <Title order={2}>Location</Title>
+              <Group justify="space-between" align="flex-start">
+                <Stack gap="xs">
+                  <Title order={1} size={rem(42)} c="white">
+                    {event.name}
+                  </Title>
+                  <Group gap="xl">
+                    <Group gap="xs">
+                      <IconCalendar size={20} stroke={1.5} color="white" />
+                      <Text size="lg" c="gray.3">
+                        {dayjs(event.startsAt).format("dddd, MMMM D, YYYY")}
+                      </Text>
+                    </Group>
+                    <Group gap="xs">
+                      <IconClock size={20} stroke={1.5} color="white" />
+                      <Text size="lg" c="gray.3">
+                        {dayjs(event.startsAt).format("h:mm A")} -{" "}
+                        {dayjs(event.endsAt).format("h:mm A")}
+                      </Text>
+                    </Group>
+                  </Group>
+                </Stack>
+                <Badge
+                  size="xl"
+                  variant={isPast ? "light" : "filled"}
+                  color={isPast ? "gray" : isCurrent ? "green" : "blue"}
+                >
+                  {isPast
+                    ? "Past Event"
+                    : isCurrent
+                    ? "Happening Now"
+                    : "Upcoming"}
+                </Badge>
               </Group>
-              <Divider />
-              <Stack gap="md">
-                <Text size="xl" fw={500}>
-                  {event.Location.name}
-                </Text>
-                {event.Location.address && (
-                  <Text size="lg" c="dimmed">
-                    {event.Location.address}
-                  </Text>
-                )}
-                <Link href={`/locations/${event.Location.id}`}>
-                  <Button variant="light" size="md" radius="md">
-                    View Location Details
-                  </Button>
-                </Link>
-              </Stack>
             </Stack>
-          </Paper>
-        )}
+          </Container>
+        </Box>
+      </BackgroundImage>
 
-        {isUpcoming && event.TicketTypes.length > 0 && (
-          <Paper p="xl" radius="md" withBorder>
-            <Stack gap="xl">
-              <Title order={2}>Purchase Tickets</Title>
-              <Grid gutter="xl">
-                {event.TicketTypes.map((ticketType) => (
-                  <GridCol key={ticketType.id} span={{ base: 12, sm: 6, md: 4 }}>
-                    <Paper p="xl" radius="md" withBorder h="100%">
-                      <Stack gap="lg" justify="space-between" h="100%">
-                        <Stack gap="md">
-                          <Stack gap="xs">
-                            <Title order={3}>{ticketType.name}</Title>
-                            <Text size="xl" fw={700} c="blue">
-                              ${(ticketType.price / 100).toFixed(2)}
-                            </Text>
-                            {ticketType.description && (
-                              <Text size="sm" c="dimmed">
-                                {ticketType.description}
-                              </Text>
-                            )}
-                          </Stack>
-                          <List size="sm" spacing="xs">
-                            {ticketType.available > 0 ? (
-                              <ListItem>
-                                {ticketType.available} tickets remaining
-                              </ListItem>
-                            ) : (
-                              <ListItem c="red">Sold Out</ListItem>
-                            )}
-                            {ticketType.maxPerOrder && (
-                              <ListItem>
-                                Maximum {ticketType.maxPerOrder} per order
-                              </ListItem>
-                            )}
-                          </List>
-                        </Stack>
-                        <Link href={`/purchase/${ticketType.id}`}>
-                          <Button 
-                            fullWidth 
-                            size="lg"
-                            radius="md"
-                            disabled={ticketType.available === 0}
-                            variant={ticketType.available === 0 ? "light" : "filled"}
+      <Container size="lg" py="xl">
+        <Stack gap="xl">
+          {/* Event Description */}
+          {event.description && (
+            <Box className={classes.section}>
+              <Paper className={classes.sectionContent}>
+                <Stack gap="md">
+                  <Group className={classes.sectionTitle}>
+                    <Title order={2} className={classes.title}>
+                      About This{" "}
+                      <span className={classes.highlight}>Event</span>
+                    </Title>
+                  </Group>
+                  <Divider />
+                  <Box>
+                    <div
+                      dangerouslySetInnerHTML={{ __html: event.description }}
+                    />
+                  </Box>
+                </Stack>
+              </Paper>
+            </Box>
+          )}
+
+          {/* Location Section */}
+          {event.Location && (
+            <Box className={classes.sectionAlt}>
+              <Container size="lg">
+                <Paper className={classes.sectionContent}>
+                  <Stack gap="md">
+                    <Group className={classes.sectionTitle}>
+                      <IconMapPin size={24} stroke={1.5} />
+                      <Title order={2} className={classes.title}>
+                        Event{" "}
+                        <span className={classes.highlight}>Location</span>
+                      </Title>
+                    </Group>
+                    <Divider />
+                    <Stack gap="md">
+                      <Text size="xl" fw={500}>
+                        {event.Location.name}
+                      </Text>
+                      {event.Location.address && (
+                        <Text size="lg" c="dimmed">
+                          {event.Location.address}
+                        </Text>
+                      )}
+                      <Link href={`/locations/${event.Location.id}`}>
+                        <Button variant="light" size="md" radius="md">
+                          View Location Details
+                        </Button>
+                      </Link>
+                    </Stack>
+                  </Stack>
+                </Paper>
+              </Container>
+            </Box>
+          )}
+
+          {/* Tickets Section */}
+          {isUpcoming && event.TicketTypes.length > 0 && (
+            <Box className={classes.section}>
+              <Container size="lg">
+                <Stack gap="xl">
+                  <Title order={2} className={classes.title} ta="center">
+                    Available <span className={classes.highlight}>Tickets</span>
+                  </Title>
+                  <Grid gutter="xl">
+                    {event.TicketTypes.map((ticketType) => (
+                      <GridCol
+                        key={ticketType.id}
+                        span={{ base: 12, sm: 6, md: 4 }}
+                      >
+                        <Paper className={classes.ticketCard}>
+                          <Stack
+                            gap="lg"
+                            justify="space-between"
+                            h="100%"
+                            p="xl"
                           >
-                            {ticketType.available === 0
-                              ? "Sold Out"
-                              : "Select Tickets"}
-                          </Button>
-                        </Link>
-                      </Stack>
-                    </Paper>
-                  </GridCol>
-                ))}
-              </Grid>
-            </Stack>
-          </Paper>
-        )}
+                            <Stack gap="md">
+                              <Stack gap="xs">
+                                <Title order={3}>{ticketType.name}</Title>
+                                <Text className={classes.ticketPrice}>
+                                  ${(ticketType.price / 100).toFixed(2)}
+                                </Text>
+                                {ticketType.description && (
+                                  <Text size="sm" c="dimmed">
+                                    {ticketType.description}
+                                  </Text>
+                                )}
+                              </Stack>
+                              <List size="sm" spacing="xs">
+                                {ticketType.available > 0 ? (
+                                  <ListItem>
+                                    {ticketType.available} tickets remaining
+                                  </ListItem>
+                                ) : (
+                                  <ListItem c="red">Sold Out</ListItem>
+                                )}
+                                {ticketType.maxPerOrder && (
+                                  <ListItem>
+                                    Maximum {ticketType.maxPerOrder} per order
+                                  </ListItem>
+                                )}
+                              </List>
+                            </Stack>
+                            <Link href={`/purchase/${ticketType.id}`}>
+                              <Button
+                                fullWidth
+                                size="lg"
+                                radius="md"
+                                disabled={ticketType.available === 0}
+                                variant={
+                                  ticketType.available === 0
+                                    ? "light"
+                                    : "filled"
+                                }
+                              >
+                                {ticketType.available === 0
+                                  ? "Sold Out"
+                                  : "Select Tickets"}
+                              </Button>
+                            </Link>
+                          </Stack>
+                        </Paper>
+                      </GridCol>
+                    ))}
+                  </Grid>
+                </Stack>
+              </Container>
+            </Box>
+          )}
 
-        {isPast && (
-          <Paper p="xl" radius="md" withBorder>
-            <Text ta="center" size="lg" c="dimmed">
-              This event has ended. Check back for future events at this location.
-            </Text>
-          </Paper>
-        )}
-      </Stack>
-    </Container>
+          {/* Past Event Message */}
+          {isPast && (
+            <Box className={classes.sectionAlt}>
+              <Container size="lg">
+                <Paper className={classes.sectionContent}>
+                  <Text ta="center" size="lg" c="dimmed">
+                    This event has ended. Check back for future events at this
+                    location.
+                  </Text>
+                </Paper>
+              </Container>
+            </Box>
+          )}
+        </Stack>
+      </Container>
+    </Box>
   );
 }
