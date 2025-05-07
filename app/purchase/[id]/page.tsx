@@ -9,12 +9,18 @@ import {
   Grid,
   GridCol,
   Flex,
+  Box,
+  BackgroundImage,
+  ThemeIcon,
+  Divider,
 } from "@mantine/core";
 import { notFound } from "next/navigation";
 import dayjs from "dayjs";
 import PurchaseForm from "../_components/PurchaseForm";
 import TicketPurchaseContainer from "../_components/TicketPurchaseContainer";
 import { prisma } from "@/lib/prisma";
+import { IconCalendar, IconMapPin } from "@tabler/icons-react";
+import classes from "./_styles.module.css";
 
 interface TicketType {
   id: string;
@@ -102,76 +108,136 @@ export default async function PurchasePage({
   const allowedSections = ticketType.allowedSections;
 
   return (
-    <Flex h={"100vh"} w={"100vw"} p={"xl"}>
-      <Group align="middle" flex={1}>
-        <Paper p="xl" withBorder flex={1}>
-          <Stack gap="md">
-            <Title order={2}>{ticketType.Event.name}</Title>
-            {ticketType.Event.description && (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: ticketType.Event.description,
-                }}
-              />
-            )}
-            <Text size="lg">
-              {dayjs(ticketType.Event.startsAt).format("MMM D, YYYY h:mm A")} -{" "}
-              {dayjs(ticketType.Event.endsAt).format("MMM D, YYYY h:mm A")}
-            </Text>
-            {ticketType.Event.Location && (
-              <Text size="lg" c="dimmed">
-                {ticketType.Event.Location.name}
-                {ticketType.Event.Location.address && (
-                  <> - {ticketType.Event.Location.address}</>
-                )}
-              </Text>
-            )}
-          </Stack>
-        </Paper>
+    <Box>
+      {/* Hero Section with Background */}
+      <BackgroundImage
+        src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070"
+        h={300}
+      >
+        <Box
+          style={{
+            background:
+              "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <Container size="lg">
+            <Stack gap="md">
+              <Title className={classes.title} c="white">
+                {ticketType.Event.name}
+              </Title>
+              <Group gap="xs" c="gray.3">
+                <ThemeIcon size="lg" variant="light" radius="xl">
+                  <IconCalendar size={18} />
+                </ThemeIcon>
+                <Text size="lg">
+                  {dayjs(ticketType.Event.startsAt).format(
+                    "MMM D, YYYY h:mm A"
+                  )}{" "}
+                  -{" "}
+                  {dayjs(ticketType.Event.endsAt).format("MMM D, YYYY h:mm A")}
+                </Text>
+              </Group>
+              {ticketType.Event.Location && (
+                <Group gap="xs" c="gray.3">
+                  <ThemeIcon size="lg" variant="light" radius="xl">
+                    <IconMapPin size={18} />
+                  </ThemeIcon>
+                  <Text size="lg">
+                    {ticketType.Event.Location.name}
+                    {ticketType.Event.Location.address && (
+                      <> - {ticketType.Event.Location.address}</>
+                    )}
+                  </Text>
+                </Group>
+              )}
+            </Stack>
+          </Container>
+        </Box>
+      </BackgroundImage>
 
-        <Paper p="xl" withBorder flex={1}>
-          <Stack gap="md">
-            <Title order={3}>Ticket Details</Title>
-            <Text size="lg" fw={500}>
-              {ticketType.name}
-            </Text>
-            {ticketType.description && (
-              <Text c="dimmed">{ticketType.description}</Text>
-            )}
-            <Title order={3}>${(ticketType.price / 100).toFixed(2)}</Title>
-            {ticketType.quantity && (
-              <Text size="sm" c="dimmed">
-                {ticketType.Tickets.length} / {ticketType.quantity} tickets sold
-              </Text>
-            )}
-            {isSoldOut ? (
-              <Badge color="red" size="xl">
-                Sold Out
-              </Badge>
-            ) : hasLayout && ticketType.Event.eventLayout ? (
-              <TicketPurchaseContainer
-                sections={ticketType.Event.eventLayout.sections
-                  .filter((section) =>
-                    allowedSections.some((allowed) => allowed.id === section.id)
-                  )
-                  .map(section => ({
-                    ...section,
-                    description: section.description || ""
-                  }))}
-                basePrice={ticketType.price}
-                ticketTypeId={ticketType.id}
-              />
-            ) : (
-              <PurchaseForm
-                price={ticketType.price}
-                ticketTypeId={ticketType.id}
-                selectedSeatIds={[]}
-                quantity={1}
-              />
-            )}
-          </Stack>
-        </Paper>
-      </Group>
-    </Flex>
+      <Container size="lg" py="xl">
+        <Stack gap="xl">
+          {/* Event Information */}
+          {ticketType.Event.description && (
+            <Paper p="xl" radius="md" withBorder>
+              <Stack gap="lg">
+                <Title order={2} className={classes.sectionTitle}>
+                  About This Event
+                </Title>
+                <div
+                  className={classes.sectionContent}
+                  dangerouslySetInnerHTML={{
+                    __html: ticketType.Event.description,
+                  }}
+                />
+              </Stack>
+            </Paper>
+          )}
+
+          {/* Ticket Purchase Section */}
+          <Paper p="xl" radius="md" withBorder>
+            <Stack gap="lg">
+              <Title order={2} className={classes.sectionTitle}>
+                Purchase Tickets
+              </Title>
+              <Stack gap="md">
+                <Group justify="space-between" align="flex-start">
+                  <Stack gap="xs">
+                    <Text size="lg" fw={500}>
+                      {ticketType.name}
+                    </Text>
+                    {ticketType.description && (
+                      <Text c="dimmed">{ticketType.description}</Text>
+                    )}
+                  </Stack>
+                  <Stack align="flex-end" gap="xs">
+                    <Title order={3}>
+                      ${(ticketType.price / 100).toFixed(2)}
+                    </Title>
+                    {ticketType.quantity && (
+                      <Text size="sm" c="dimmed">
+                        {ticketType.Tickets.length} / {ticketType.quantity}{" "}
+                        tickets sold
+                      </Text>
+                    )}
+                  </Stack>
+                </Group>
+
+                {isSoldOut ? (
+                  <Badge color="red" size="xl">
+                    Sold Out
+                  </Badge>
+                ) : hasLayout && ticketType.Event.eventLayout ? (
+                  <TicketPurchaseContainer
+                    sections={ticketType.Event.eventLayout.sections
+                      .filter((section) =>
+                        allowedSections.some(
+                          (allowed) => allowed.id === section.id
+                        )
+                      )
+                      .map((section) => ({
+                        ...section,
+                        description: section.description || "",
+                      }))}
+                    basePrice={ticketType.price}
+                    ticketTypeId={ticketType.id}
+                  />
+                ) : (
+                  <PurchaseForm
+                    price={ticketType.price}
+                    ticketTypeId={ticketType.id}
+                    selectedSeatIds={[]}
+                    quantity={1}
+                  />
+                )}
+              </Stack>
+            </Stack>
+          </Paper>
+        </Stack>
+      </Container>
+    </Box>
   );
 }
