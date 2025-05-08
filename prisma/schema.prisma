@@ -24,17 +24,26 @@ model User {
 }
 
 model Workspace {
-  id             String           @id @default(cuid())
-  name           String
-  ownerId        String
-  Owner          User             @relation(fields: [ownerId], references: [id])
-  Locations      Location[]
-  Roles          UserRole[]
-  createdAt      DateTime         @default(now())
-  Events         Event[]
-  TemplateLayout TemplateLayout[]
-  EventLayout    EventLayout[]
-  EventSeries    EventSeries[]
+  id              String            @id @default(cuid())
+  name            String
+  ownerId         String
+  Owner           User              @relation(fields: [ownerId], references: [id])
+  Locations       Location[]
+  Roles           UserRole[]
+  createdAt       DateTime          @default(now())
+  Events          Event[]
+  TemplateLayout  TemplateLayout[]
+  EventLayout     EventLayout[]
+  EventSeries     EventSeries[]
+  Ticket          Ticket[]
+  TicketType      TicketType[]
+  TemplateSection TemplateSection[]
+  EventSection    EventSection[]
+  TemplateRow     TemplateRow[]
+  EventRow        EventRow[]
+  TemplateSeat    TemplateSeat[]
+  EventSeat       EventSeat[]
+  TicketPurchase  TicketPurchase[]
 }
 
 model UserRole {
@@ -124,9 +133,12 @@ model Ticket {
   seat         EventSeat?
   purchaseId   String
   purchase     TicketPurchase @relation(fields: [purchaseId], references: [id])
+  workspaceId  String
+  Workspace    Workspace      @relation(fields: [workspaceId], references: [id])
 
   @@index([email])
   @@index([status])
+  @@index([workspaceId])
 }
 
 model TicketType {
@@ -141,6 +153,10 @@ model TicketType {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   allowedSections EventSection[] @relation("TicketTypeSections")
+  workspaceId     String
+  Workspace       Workspace      @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
 }
 
 enum TicketStatus {
@@ -189,6 +205,10 @@ model TemplateSection {
   priceMultiplier  Float          @default(1.0)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
+  workspaceId      String
+  Workspace        Workspace      @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
 }
 
 model EventSection {
@@ -202,56 +222,72 @@ model EventSection {
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
   allowedTicketTypes TicketType[] @relation("TicketTypeSections")
+  workspaceId        String
+  Workspace          Workspace    @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
 }
 
 model TemplateRow {
-  id        String          @id @default(cuid())
-  name      String
-  sectionId String
-  Section   TemplateSection @relation(fields: [sectionId], references: [id])
-  seats     TemplateSeat[]
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  id          String          @id @default(cuid())
+  name        String
+  sectionId   String
+  Section     TemplateSection @relation(fields: [sectionId], references: [id])
+  seats       TemplateSeat[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  workspaceId String
+  Workspace   Workspace       @relation(fields: [workspaceId], references: [id])
 
   @@unique([sectionId, name])
+  @@index([workspaceId])
 }
 
 model EventRow {
-  id        String       @id @default(cuid())
-  name      String
-  sectionId String
-  Section   EventSection @relation(fields: [sectionId], references: [id])
-  seats     EventSeat[]
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id          String       @id @default(cuid())
+  name        String
+  sectionId   String
+  Section     EventSection @relation(fields: [sectionId], references: [id])
+  seats       EventSeat[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  workspaceId String
+  Workspace   Workspace    @relation(fields: [workspaceId], references: [id])
 
   @@unique([sectionId, name])
+  @@index([workspaceId])
 }
 
 model TemplateSeat {
-  id        String      @id @default(cuid())
-  number    String
-  status    SeatStatus  @default(AVAILABLE)
-  rowId     String
-  Row       TemplateRow @relation(fields: [rowId], references: [id])
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id          String      @id @default(cuid())
+  number      String
+  status      SeatStatus  @default(AVAILABLE)
+  rowId       String
+  Row         TemplateRow @relation(fields: [rowId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  workspaceId String
+  Workspace   Workspace   @relation(fields: [workspaceId], references: [id])
 
   @@unique([rowId, number])
+  @@index([workspaceId])
 }
 
 model EventSeat {
-  id        String     @id @default(cuid())
-  number    String
-  status    SeatStatus @default(AVAILABLE)
-  rowId     String
-  Row       EventRow   @relation(fields: [rowId], references: [id])
-  ticketId  String?    @unique
-  ticket    Ticket?    @relation(fields: [ticketId], references: [id])
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id          String     @id @default(cuid())
+  number      String
+  status      SeatStatus @default(AVAILABLE)
+  rowId       String
+  Row         EventRow   @relation(fields: [rowId], references: [id])
+  ticketId    String?    @unique
+  ticket      Ticket?    @relation(fields: [ticketId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  workspaceId String
+  Workspace   Workspace  @relation(fields: [workspaceId], references: [id])
 
   @@unique([rowId, number])
+  @@index([workspaceId])
 }
 
 enum SeatStatus {
@@ -270,9 +306,12 @@ model TicketPurchase {
   tickets       Ticket[]
   customerEmail String
   customerName  String?
+  workspaceId   String
+  Workspace     Workspace      @relation(fields: [workspaceId], references: [id])
 
   @@index([customerEmail])
   @@index([status])
+  @@index([workspaceId])
 }
 
 enum PurchaseStatus {

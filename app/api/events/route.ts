@@ -92,13 +92,16 @@ export async function POST(request: NextRequest) {
                           name: section.name,
                           description: section.description,
                           priceMultiplier: section.priceMultiplier,
+                          workspaceId: workspaceId,
                           rows: {
                             create: section.rows.map((row) => ({
                               name: row.name,
+                              workspaceId: workspaceId,
                               seats: {
                                 create: row.seats.map((seat) => ({
                                   number: seat.number,
                                   status: seat.status,
+                                  workspaceId: workspaceId,
                                 })),
                               },
                             })),
@@ -215,13 +218,16 @@ export async function POST(request: NextRequest) {
                               name: section.name,
                               description: section.description,
                               priceMultiplier: section.priceMultiplier,
+                              workspaceId: workspaceId,
                               rows: {
                                 create: section.rows.map((row) => ({
                                   name: row.name,
+                                  workspaceId: workspaceId,
                                   seats: {
                                     create: row.seats.map((seat) => ({
                                       number: seat.number,
                                       status: seat.status,
+                                      workspaceId: workspaceId,
                                     })),
                                   },
                                 })),

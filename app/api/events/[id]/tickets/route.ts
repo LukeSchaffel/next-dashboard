@@ -108,6 +108,7 @@ export async function POST(
     //     status: body.status,
     //     eventId: id,
     //     ticketTypeId: body.ticketTypeId,
+    //     workspaceId: workspaceId,
     //   },
     //   include: {
     //     TicketType: true,

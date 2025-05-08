@@ -31,9 +31,9 @@ interface SearchParams {
 export default async function DiscoverPage({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<SearchParams>;
 }) {
-  const { search, sort, type, location, dateRange } = searchParams;
+  const { search, sort, type, location, dateRange } = await searchParams;
 
   // Build the where clause based on search parameters
   const where: any = {

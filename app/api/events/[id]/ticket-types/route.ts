@@ -56,6 +56,7 @@ export async function POST(
         price: body.price,
         quantity: body.quantity,
         eventId: id,
+        workspaceId: workspaceId,
         allowedSections: body.allowedSections
           ? {
               connect: body.allowedSections.map((sectionId: string) => ({

@@ -103,6 +103,7 @@ CREATE TABLE "Ticket" (
     "ticketTypeId" TEXT NOT NULL,
     "seatId" TEXT,
     "purchaseId" TEXT NOT NULL,
+    "workspaceId" TEXT NOT NULL,
 
     CONSTRAINT "Ticket_pkey" PRIMARY KEY ("id")
 );
@@ -117,6 +118,7 @@ CREATE TABLE "TicketType" (
     "eventId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "workspaceId" TEXT NOT NULL,
 
     CONSTRAINT "TicketType_pkey" PRIMARY KEY ("id")
 );
@@ -157,6 +159,7 @@ CREATE TABLE "TemplateSection" (
     "priceMultiplier" DOUBLE PRECISION NOT NULL DEFAULT 1.0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "workspaceId" TEXT NOT NULL,
 
     CONSTRAINT "TemplateSection_pkey" PRIMARY KEY ("id")
 );
@@ -170,6 +173,7 @@ CREATE TABLE "EventSection" (
     "priceMultiplier" DOUBLE PRECISION NOT NULL DEFAULT 1.0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "workspaceId" TEXT NOT NULL,
 
     CONSTRAINT "EventSection_pkey" PRIMARY KEY ("id")
 );
@@ -181,6 +185,7 @@ CREATE TABLE "TemplateRow" (
     "sectionId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "workspaceId" TEXT NOT NULL,
 
     CONSTRAINT "TemplateRow_pkey" PRIMARY KEY ("id")
 );
@@ -192,6 +197,7 @@ CREATE TABLE "EventRow" (
     "sectionId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "workspaceId" TEXT NOT NULL,
 
     CONSTRAINT "EventRow_pkey" PRIMARY KEY ("id")
 );
@@ -204,6 +210,7 @@ CREATE TABLE "TemplateSeat" (
     "rowId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "workspaceId" TEXT NOT NULL,
 
     CONSTRAINT "TemplateSeat_pkey" PRIMARY KEY ("id")
 );
@@ -217,6 +224,7 @@ CREATE TABLE "EventSeat" (
     "ticketId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "workspaceId" TEXT NOT NULL,
 
     CONSTRAINT "EventSeat_pkey" PRIMARY KEY ("id")
 );
@@ -230,6 +238,7 @@ CREATE TABLE "TicketPurchase" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "customerEmail" TEXT NOT NULL,
     "customerName" TEXT,
+    "workspaceId" TEXT NOT NULL,
 
     CONSTRAINT "TicketPurchase_pkey" PRIMARY KEY ("id")
 );
@@ -261,22 +270,46 @@ CREATE INDEX "Ticket_email_idx" ON "Ticket"("email");
 CREATE INDEX "Ticket_status_idx" ON "Ticket"("status");
 
 -- CreateIndex
+CREATE INDEX "Ticket_workspaceId_idx" ON "Ticket"("workspaceId");
+
+-- CreateIndex
+CREATE INDEX "TicketType_workspaceId_idx" ON "TicketType"("workspaceId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "TemplateLayout_locationId_key" ON "TemplateLayout"("locationId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "EventLayout_eventId_key" ON "EventLayout"("eventId");
 
 -- CreateIndex
+CREATE INDEX "TemplateSection_workspaceId_idx" ON "TemplateSection"("workspaceId");
+
+-- CreateIndex
+CREATE INDEX "EventSection_workspaceId_idx" ON "EventSection"("workspaceId");
+
+-- CreateIndex
+CREATE INDEX "TemplateRow_workspaceId_idx" ON "TemplateRow"("workspaceId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "TemplateRow_sectionId_name_key" ON "TemplateRow"("sectionId", "name");
 
 -- CreateIndex
+CREATE INDEX "EventRow_workspaceId_idx" ON "EventRow"("workspaceId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "EventRow_sectionId_name_key" ON "EventRow"("sectionId", "name");
+
+-- CreateIndex
+CREATE INDEX "TemplateSeat_workspaceId_idx" ON "TemplateSeat"("workspaceId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "TemplateSeat_rowId_number_key" ON "TemplateSeat"("rowId", "number");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "EventSeat_ticketId_key" ON "EventSeat"("ticketId");
+
+-- CreateIndex
+CREATE INDEX "EventSeat_workspaceId_idx" ON "EventSeat"("workspaceId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "EventSeat_rowId_number_key" ON "EventSeat"("rowId", "number");
@@ -286,6 +319,9 @@ CREATE INDEX "TicketPurchase_customerEmail_idx" ON "TicketPurchase"("customerEma
 
 -- CreateIndex
 CREATE INDEX "TicketPurchase_status_idx" ON "TicketPurchase"("status");
+
+-- CreateIndex
+CREATE INDEX "TicketPurchase_workspaceId_idx" ON "TicketPurchase"("workspaceId");
 
 -- CreateIndex
 CREATE INDEX "_TicketTypeSections_B_index" ON "_TicketTypeSections"("B");
@@ -327,7 +363,13 @@ ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_ticketTypeId_fkey" FOREIGN KEY ("tic
 ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_purchaseId_fkey" FOREIGN KEY ("purchaseId") REFERENCES "TicketPurchase"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "TicketType" ADD CONSTRAINT "TicketType_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "Event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TicketType" ADD CONSTRAINT "TicketType_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TemplateLayout" ADD CONSTRAINT "TemplateLayout_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -348,22 +390,43 @@ ALTER TABLE "EventLayout" ADD CONSTRAINT "EventLayout_workspaceId_fkey" FOREIGN 
 ALTER TABLE "TemplateSection" ADD CONSTRAINT "TemplateSection_templateLayoutId_fkey" FOREIGN KEY ("templateLayoutId") REFERENCES "TemplateLayout"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "TemplateSection" ADD CONSTRAINT "TemplateSection_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "EventSection" ADD CONSTRAINT "EventSection_eventLayoutId_fkey" FOREIGN KEY ("eventLayoutId") REFERENCES "EventLayout"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EventSection" ADD CONSTRAINT "EventSection_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TemplateRow" ADD CONSTRAINT "TemplateRow_sectionId_fkey" FOREIGN KEY ("sectionId") REFERENCES "TemplateSection"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "TemplateRow" ADD CONSTRAINT "TemplateRow_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "EventRow" ADD CONSTRAINT "EventRow_sectionId_fkey" FOREIGN KEY ("sectionId") REFERENCES "EventSection"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "EventRow" ADD CONSTRAINT "EventRow_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "TemplateSeat" ADD CONSTRAINT "TemplateSeat_rowId_fkey" FOREIGN KEY ("rowId") REFERENCES "TemplateRow"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TemplateSeat" ADD CONSTRAINT "TemplateSeat_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "EventSeat" ADD CONSTRAINT "EventSeat_rowId_fkey" FOREIGN KEY ("rowId") REFERENCES "EventRow"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "EventSeat" ADD CONSTRAINT "EventSeat_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "Ticket"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EventSeat" ADD CONSTRAINT "EventSeat_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TicketPurchase" ADD CONSTRAINT "TicketPurchase_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_TicketTypeSections" ADD CONSTRAINT "_TicketTypeSections_A_fkey" FOREIGN KEY ("A") REFERENCES "EventSection"("id") ON DELETE CASCADE ON UPDATE CASCADE;

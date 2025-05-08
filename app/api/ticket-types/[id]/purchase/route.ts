@@ -64,6 +64,7 @@ export async function POST(
         status: PurchaseStatus.PENDING,
         customerEmail: body.email,
         customerName: body.name,
+        workspaceId: ticketType.workspaceId,
       },
     });
 
@@ -136,6 +137,7 @@ export async function POST(
               ticketTypeId: ticketType.id,
               seatId: seat.id,
               purchaseId: purchase.id,
+              workspaceId: ticketType.workspaceId,
             },
           })
         )
@@ -171,6 +173,7 @@ export async function POST(
               eventId: ticketType.eventId,
               ticketTypeId: ticketType.id,
               purchaseId: purchase.id,
+              workspaceId: ticketType.workspaceId,
             },
           })
         )
