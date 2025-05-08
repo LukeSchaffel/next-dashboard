@@ -102,11 +102,11 @@ export default async function HomePage() {
 
                 <Group mt={30}>
                   <SignedOut>
-                    <SignInButton>
+                    <Link href="/discover">
                       <Button radius="xl" size="md" className={classes.control}>
                         Browse Events
                       </Button>
-                    </SignInButton>
+                    </Link>
                     <SignUpButton>
                       <Button
                         variant="white"
