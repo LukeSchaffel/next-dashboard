@@ -58,6 +58,11 @@ export default async function HomePage() {
     include: {
       Location: true,
       TicketTypes: true,
+      EventSeries: {
+        select: {
+          name: true,
+        },
+      },
     },
     orderBy: {
       startsAt: "asc",

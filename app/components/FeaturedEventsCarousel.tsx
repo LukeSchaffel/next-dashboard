@@ -17,18 +17,7 @@ import { Carousel, CarouselSlide } from "@mantine/carousel";
 import { Event, Location, TicketType } from "@prisma/client";
 import dayjs from "dayjs";
 
-interface EventWithDetails extends Event {
-  Location: Location | null;
-  TicketTypes: TicketType[];
-}
-
-interface FeaturedEventsCarouselProps {
-  events: EventWithDetails[];
-}
-
-export function FeaturedEventsCarousel({
-  events,
-}: FeaturedEventsCarouselProps) {
+export function FeaturedEventsCarousel({ events }: { events: any[] }) {
   if (events.length === 0) {
     return (
       <div style={{ marginTop: 60, marginBottom: 60 }}>
@@ -83,7 +72,7 @@ export function FeaturedEventsCarousel({
               <Stack mt="md" mb="xs">
                 <Group justify="space-between">
                   <Badge color="blue" variant="light">
-                    {event.Location?.name || "No Location"}
+                    {event?.Location?.name || "No Location"}
                   </Badge>
                   <Text fw={500} c="dimmed">
                     {event.TicketTypes[0]
@@ -92,6 +81,9 @@ export function FeaturedEventsCarousel({
                   </Text>
                 </Group>
                 <Text fw={500} size="lg">
+                  {event?.EventSeries?.name && (
+                    <>{event?.EventSeries?.name} - </>
+                  )}
                   {event.name}
                 </Text>
                 <Text size="sm" c="dimmed">
