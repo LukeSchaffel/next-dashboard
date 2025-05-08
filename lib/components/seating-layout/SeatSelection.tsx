@@ -114,14 +114,14 @@ export function SeatSelection({
               </Text>
             )}
           </Text>
-          <Paper p="md" withBorder>
-            <Stack gap="md">
+          <Paper p="md" withBorder style={{ overflowX: "auto" }}>
+            <Stack gap="md" align="center">
               {section.rows.map((row) => (
                 <Box key={row.id}>
                   <Text size="sm" fw={500} mb="xs">
                     Row {row.name}
                   </Text>
-                  <Group gap="xs">
+                  <Group gap="xs" wrap="nowrap">
                     {[...row.seats]
                       .sort((a, b) => parseInt(a.number) - parseInt(b.number))
                       .map((seat) => (
@@ -132,6 +132,17 @@ export function SeatSelection({
                           size={buttonSize}
                           onClick={() => handleSeatClick(seat, section)}
                           disabled={!readOnly && seat.status !== "AVAILABLE"}
+                          styles={{
+                            root: {
+                              minWidth: "40px",
+                              width: "40px",
+                              height: "40px",
+                              padding: "0",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            },
+                          }}
                         >
                           {seat.number}
                         </Button>
