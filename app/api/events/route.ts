@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
       endsAt,
       ticketTypes,
       use_layout_template,
+      tags,
     } = await request.json();
     const { workspaceId, userRoleId } = await getAuthSession();
 
@@ -77,6 +78,14 @@ export async function POST(request: NextRequest) {
                 })),
               }
             : undefined,
+          tags: tags
+            ? {
+                create: tags.map((tag: { id: string }) => ({
+                  tagId: tag.id,
+                  workspaceId,
+                })),
+              }
+            : undefined,
           // Create event layout if template is requested and available
           ...(use_layout_template && location?.templateLayout
             ? {
@@ -123,6 +132,7 @@ export async function POST(request: NextRequest) {
           },
           TicketTypes: true,
           EventSeries: true,
+          tags: true,
           eventLayout: {
             include: {
               sections: {
@@ -203,6 +213,14 @@ export async function POST(request: NextRequest) {
               userRoleId,
               workspaceId,
               eventSeriesId: series.id,
+              tags: tags
+                ? {
+                    create: tags.map((tag: { id: string }) => ({
+                      tagId: tag.id,
+                      workspaceId,
+                    })),
+                  }
+                : undefined,
               // Create event layout if template is requested and available
               ...(use_layout_template && eventLocation?.templateLayout
                 ? {
@@ -249,6 +267,7 @@ export async function POST(request: NextRequest) {
               },
               TicketTypes: true,
               EventSeries: true,
+              tags: true,
               eventLayout: {
                 include: {
                   sections: {
@@ -281,6 +300,7 @@ export async function POST(request: NextRequest) {
               },
               TicketTypes: true,
               EventSeries: true,
+              tags: true,
               eventLayout: {
                 include: {
                   sections: {
@@ -332,6 +352,7 @@ export async function GET(request: NextRequest) {
         },
         TicketTypes: true,
         EventSeries: true,
+        tags: true,
       },
       orderBy: {
         startsAt: "desc",

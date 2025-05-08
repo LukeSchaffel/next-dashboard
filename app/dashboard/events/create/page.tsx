@@ -19,6 +19,7 @@ import {
   SegmentedControl,
   ActionIcon,
   Tooltip,
+  MultiSelect,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { DateTimePicker } from "@mantine/dates";
@@ -54,6 +55,7 @@ interface EventFormValues {
   // Event instances
   instances: EventInstance[];
   use_layout_template: boolean;
+  tags: string[];
 }
 
 export default function CreateEventPage() {
@@ -67,12 +69,33 @@ export default function CreateEventPage() {
   const { createEvent, loading: eventLoading } = useEventStore();
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [templateLayout, setTemplateLayout] = useState<any>(null);
+  const [availableTags, setAvailableTags] = useState<
+    { value: string; label: string }[]
+  >([]);
 
   useEffect(() => {
     if (!locationsFetched) {
       fetchLocations();
     }
   }, [locationsFetched, fetchLocations]);
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch("/api/tags");
+        const tags = await response.json();
+        setAvailableTags(
+          tags.map((tag: any) => ({
+            value: tag.id,
+            label: tag.name,
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to fetch tags:", error);
+      }
+    };
+    fetchTags();
+  }, []);
 
   const form = useForm<EventFormValues>({
     initialValues: {
@@ -84,6 +107,7 @@ export default function CreateEventPage() {
       seriesEndDate: new Date(),
       instances: [{ name: "", startsAt: new Date(), endsAt: new Date() }],
       use_layout_template: false,
+      tags: [],
     },
     validate: {
       name: (value) => (!value ? "Name is required" : null),
@@ -131,6 +155,7 @@ export default function CreateEventPage() {
           startsAt: values.instances[0].startsAt,
           endsAt: values.instances[0].endsAt,
           use_layout_template: values.use_layout_template,
+          tags: values.tags,
         };
         const event = await createEvent(eventData);
         if (!Array.isArray(event)) {
@@ -145,6 +170,7 @@ export default function CreateEventPage() {
           endDate: values.seriesEndDate,
           use_layout_template: values.use_layout_template,
           locationId: values.locationId || undefined,
+          tags: values.tags,
           events: values.instances.map((instance) => ({
             name: instance.name,
             description: values.description,
@@ -223,6 +249,16 @@ export default function CreateEventPage() {
                         handleLocationChange(value);
                       }
                     }}
+                  />
+                </Grid.Col>
+                <Grid.Col span={12}>
+                  <MultiSelect
+                    label="Tags"
+                    placeholder="Select tags"
+                    data={availableTags}
+                    searchable
+                    clearable
+                    {...form.getInputProps("tags")}
                   />
                 </Grid.Col>
                 <Grid.Col span={12}>

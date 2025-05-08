@@ -48,6 +48,7 @@ interface EventWithDetails extends Event {
       }[];
     }[];
   } | null;
+  tags?: { id: string; name: string }[];
 }
 
 export interface EventSeriesWithDetails extends EventSeries {
@@ -103,6 +104,7 @@ interface EventsStore {
       price: number;
       quantity: number;
     }[];
+    tags?: string[] | { id: string; name: string }[];
   }) => Promise<EventWithDetails | EventWithDetails[]>;
   updateEvent: (id: string, values: any) => Promise<EventWithDetails>;
   updateEventSeries: (
@@ -227,12 +229,20 @@ export const useEventStore = create<EventsStore>((set, get) => ({
   },
   createEvent: async (values) => {
     try {
+      // Convert string array tags to object array if needed
+      const tags = values.tags?.map((tag) =>
+        typeof tag === "string" ? { id: tag, name: tag } : tag
+      );
+
       const res = await fetch("/api/events", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          ...values,
+          tags: tags || [],
+        }),
       });
 
       if (!res.ok) {

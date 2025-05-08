@@ -44,6 +44,7 @@ model Workspace {
   TemplateSeat    TemplateSeat[]
   EventSeat       EventSeat[]
   TicketPurchase  TicketPurchase[]
+  EventTags       EventTag[]
 }
 
 model UserRole {
@@ -115,6 +116,7 @@ model Event {
   Tickets       Ticket[]
   TicketTypes   TicketType[]
   eventLayout   EventLayout? @relation("EventCustomLayout")
+  tags          EventTag[]
 }
 
 model Ticket {
@@ -319,4 +321,29 @@ enum PurchaseStatus {
   COMPLETED
   CANCELLED
   REFUNDED
+}
+
+model Tag {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  eventTags   EventTag[]
+}
+
+model EventTag {
+  id          String   @id @default(cuid())
+  tagId       String
+  eventId     String
+  workspaceId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  Tag       Tag       @relation(fields: [tagId], references: [id])
+  Event     Event     @relation(fields: [eventId], references: [id])
+  Workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([tagId, eventId])
+  @@index([workspaceId])
 }

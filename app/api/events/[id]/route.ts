@@ -80,6 +80,13 @@ export async function PATCH(
         ...(updateData.locationId !== undefined && {
           locationId: updateData.locationId || null,
         }),
+        ...(updateData.tags !== undefined && {
+          tags: {
+            set: updateData.tags.map((tag: { id: string }) => ({
+              id: tag.id,
+            })),
+          },
+        }),
       },
       include: {
         Location: true,
@@ -95,6 +102,7 @@ export async function PATCH(
             Tickets: true,
           },
         },
+        tags: true,
       },
     });
 
