@@ -1,11 +1,11 @@
-1. Multi ticket purchasing system
+1. Multi ticket purchasing system - DOne
 2. Layout enhancements
   - Drag and drop seats
   - re arange seats
   - drag and drop sections
   - Layout spacing
   - Better viewing 
-3. Event enhancements
+3. Event enhancements - DOne
   - Event instances
     1. Each event can occur multiple times accross its timeframe, create specific instances by date-time 
 4. Stripe integration
@@ -14,3 +14,4 @@
 
 6. Figure out how to manually handle tickets
 7. Editing resources
+8. Form enhancements, format phone numbers, validate start and end date times, Better handling of description

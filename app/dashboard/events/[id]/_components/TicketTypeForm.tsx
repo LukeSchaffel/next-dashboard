@@ -27,14 +27,14 @@ interface TicketType {
 interface TicketTypeFormProps {
   opened: boolean;
   onClose: () => void;
-  eventSlug: string;
+  eventId: string;
   editingTicketTypeId?: string;
 }
 
 export default function TicketTypeForm({
   opened,
   onClose,
-  eventSlug,
+  eventId,
   editingTicketTypeId,
 }: TicketTypeFormProps) {
   const { addTicketType, updateTicketType, ticketTypes, currentEvent } =
@@ -81,9 +81,9 @@ export default function TicketTypeForm({
   const handleSubmit = async (values: typeof form.values) => {
     try {
       if (editingTicketTypeId) {
-        await updateTicketType(eventSlug, editingTicketTypeId, values);
+        await updateTicketType(eventId, editingTicketTypeId, values);
       } else {
-        await addTicketType(eventSlug, values);
+        await addTicketType(eventId, values);
       }
       form.reset();
       onClose();

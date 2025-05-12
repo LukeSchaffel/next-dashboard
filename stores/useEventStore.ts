@@ -48,7 +48,11 @@ interface EventWithDetails extends Event {
       }[];
     }[];
   } | null;
-  tags?: { id: string; name: string }[];
+  tags?: {
+    id: string;
+    name: string;
+    tagId: string;
+  }[];
 }
 
 export interface EventSeriesWithDetails extends EventSeries {
@@ -230,9 +234,12 @@ export const useEventStore = create<EventsStore>((set, get) => ({
   createEvent: async (values) => {
     try {
       // Convert string array tags to object array if needed
-      const tags = values.tags?.map((tag) =>
-        typeof tag === "string" ? { id: tag, name: tag } : tag
-      );
+      const tags = values.tags?.map((tag) => {
+        if (typeof tag === "string") {
+          return { id: tag };
+        }
+        return { id: tag.id, name: tag.name };
+      });
 
       const res = await fetch("/api/events", {
         method: "POST",
@@ -281,12 +288,21 @@ export const useEventStore = create<EventsStore>((set, get) => ({
   },
   updateEvent: async (id: string, values: any) => {
     try {
+      // Handle tags if they are included in the update
+      const updateData = { ...values };
+      if (values.tags) {
+        updateData.tags = values.tags.map((tag: any) => ({
+          id: typeof tag === "string" ? tag : tag.id,
+          name: typeof tag === "string" ? tag : tag.name,
+        }));
+      }
+
       const res = await fetch(`/api/events/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(updateData),
       });
 
       if (!res.ok) throw new Error("Failed to update event");

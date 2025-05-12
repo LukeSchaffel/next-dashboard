@@ -80,10 +80,24 @@ export async function POST(request: NextRequest) {
             : undefined,
           tags: tags
             ? {
-                create: tags.map((tag: { id: string }) => ({
-                  tagId: tag.id,
-                  workspaceId,
-                })),
+                create: await Promise.all(
+                  tags.map(async (tag: { id: string; name?: string }) => {
+                    // If name is not provided, fetch it from the Tag
+                    let tagName = tag.name;
+                    if (!tagName) {
+                      const tagData = await prisma.tag.findUnique({
+                        where: { id: tag.id },
+                        select: { name: true },
+                      });
+                      tagName = tagData?.name || "";
+                    }
+                    return {
+                      tagId: tag.id,
+                      workspaceId,
+                      name: tagName,
+                    };
+                  })
+                ),
               }
             : undefined,
           // Create event layout if template is requested and available
@@ -215,10 +229,24 @@ export async function POST(request: NextRequest) {
               eventSeriesId: series.id,
               tags: tags
                 ? {
-                    create: tags.map((tag: { id: string }) => ({
-                      tagId: tag.id,
-                      workspaceId,
-                    })),
+                    create: await Promise.all(
+                      tags.map(async (tag: { id: string; name?: string }) => {
+                        // If name is not provided, fetch it from the Tag
+                        let tagName = tag.name;
+                        if (!tagName) {
+                          const tagData = await prisma.tag.findUnique({
+                            where: { id: tag.id },
+                            select: { name: true },
+                          });
+                          tagName = tagData?.name || "";
+                        }
+                        return {
+                          tagId: tag.id,
+                          workspaceId,
+                          name: tagName,
+                        };
+                      })
+                    ),
                   }
                 : undefined,
               // Create event layout if template is requested and available

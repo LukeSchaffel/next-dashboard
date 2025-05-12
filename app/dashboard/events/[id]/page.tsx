@@ -37,6 +37,7 @@ import {
   IconMaximize,
   IconMinimize,
   IconX,
+  IconTag,
 } from "@tabler/icons-react";
 import DescriptionEditor from "../_components/DescriptionEditor";
 import TicketTypeForm from "./_components/TicketTypeForm";
@@ -45,13 +46,14 @@ import { useEventStore } from "@/stores/useEventStore";
 import { Table, SeatSelection } from "@/lib/components";
 import Link from "next/link";
 import DescriptionEditorModal from "../_components/DescriptionEditorModal";
+import TagManager from "./_components/TagManager";
 
 export default function EventPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ id: string }>;
 }) {
-  const { slug } = use(params);
+  const { id } = use(params);
   const { ref, toggle, fullscreen } = useFullscreen();
   const {
     currentEvent,
@@ -90,13 +92,15 @@ export default function EventPage({
   );
   const [showFullscreenSeating, setShowFullscreenSeating] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
+    useDisclosure(false);
 
   useEffect(() => {
-    fetchEvent(slug).catch(() => {
+    fetchEvent(id).catch(() => {
       notFound();
     });
-    fetchTicketTypes(slug).catch(console.error);
-  }, [slug, fetchEvent, fetchTicketTypes]);
+    fetchTicketTypes(id).catch(console.error);
+  }, [id, fetchEvent, fetchTicketTypes]);
 
   const handleEditTicketType = async (ticketTypeId: string) => {
     setEditingTicketTypeId(ticketTypeId);
@@ -107,7 +111,7 @@ export default function EventPage({
     if (!confirm("Are you sure you want to delete this ticket type?")) return;
 
     try {
-      await deleteTicketType(slug, ticketTypeId);
+      await deleteTicketType(id, ticketTypeId);
     } catch (error) {
       console.error("Failed to delete ticket type:", error);
     }
@@ -118,7 +122,7 @@ export default function EventPage({
     status: TicketStatus
   ) => {
     try {
-      await updateTicket(slug, ticketId, { status });
+      await updateTicket(id, ticketId, { status });
     } catch (error) {
       console.error("Failed to update ticket:", error);
     }
@@ -200,6 +204,22 @@ export default function EventPage({
                 {currentEvent.Location.name}
               </Badge>
             )}
+            <Button
+              variant="subtle"
+              leftSection={<IconTag size={16} />}
+              onClick={openTagManager}
+            >
+              Manage Tags
+            </Button>
+            {currentEvent.tags && currentEvent.tags.length > 0 && (
+              <>
+                {currentEvent.tags.map((tag) => (
+                  <Badge key={tag.id} size="lg" variant="light" color="blue">
+                    {tag.name}
+                  </Badge>
+                ))}
+              </>
+            )}
           </Group>
           {currentEvent.description && (
             <div
@@ -263,7 +283,7 @@ export default function EventPage({
               body: ticketTypes.map((ticketType) => [
                 <Link
                   key={ticketType.id}
-                  href={`/dashboard/events/${slug}/ticketTypes/${ticketType.id}`}
+                  href={`/dashboard/events/${id}/ticketTypes/${ticketType.id}`}
                 >
                   <Button variant="subtle" leftSection={<IconEye size={16} />}>
                     View
@@ -330,7 +350,7 @@ export default function EventPage({
           closeTicketTypeModal();
           setEditingTicketTypeId(null);
         }}
-        eventSlug={slug}
+        eventId={id}
         editingTicketTypeId={editingTicketTypeId || undefined}
       />
 
@@ -339,7 +359,7 @@ export default function EventPage({
         onClose={closeTicketModal}
         ticketTypes={ticketTypes}
         loading={ticketLoading}
-        eventSlug={slug}
+        eventid={id}
       /> */}
 
       <DescriptionEditorModal
@@ -464,6 +484,13 @@ export default function EventPage({
           </Stack>
         </Box>
       )}
+
+      <TagManager
+        opened={tagManagerOpened}
+        onClose={closeTagManager}
+        eventId={id}
+        currentTags={currentEvent.tags || []}
+      />
     </Stack>
   );
 }

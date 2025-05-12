@@ -40,6 +40,11 @@ export async function GET(
             },
           },
         },
+        tags: {
+          include: {
+            Tag: true,
+          },
+        },
       },
     });
 
@@ -82,9 +87,24 @@ export async function PATCH(
         }),
         ...(updateData.tags !== undefined && {
           tags: {
-            set: updateData.tags.map((tag: { id: string }) => ({
-              id: tag.id,
-            })),
+            deleteMany: {},
+            create: await Promise.all(
+              updateData.tags.map(async (tag: { id: string; name?: string }) => {
+                let tagName = tag.name;
+                if (!tagName) {
+                  const tagData = await prisma.tag.findUnique({
+                    where: { id: tag.id },
+                    select: { name: true },
+                  });
+                  tagName = tagData?.name || "";
+                }
+                return {
+                  tagId: tag.id,
+                  workspaceId,
+                  name: tagName,
+                };
+              })
+            ),
           },
         }),
       },
@@ -108,6 +128,7 @@ export async function PATCH(
 
     return NextResponse.json(event, { status: 200 });
   } catch (error) {
+    console.log(error)
     return NextResponse.json(
       { error: "Failed to update event" },
       { status: 500 }
