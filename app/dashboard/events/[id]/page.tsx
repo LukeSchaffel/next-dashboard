@@ -17,6 +17,7 @@ import {
   Tooltip,
   ActionIcon,
   Box,
+  Image,
 } from "@mantine/core";
 import { Event, Ticket, TicketStatus, TicketType } from "@prisma/client";
 import { notFound } from "next/navigation";
@@ -38,6 +39,8 @@ import {
   IconMinimize,
   IconX,
   IconTag,
+  IconUpload,
+  IconPhoto,
 } from "@tabler/icons-react";
 import DescriptionEditor from "../_components/DescriptionEditor";
 import TicketTypeForm from "./_components/TicketTypeForm";
@@ -47,6 +50,9 @@ import { Table, SeatSelection } from "@/lib/components";
 import Link from "next/link";
 import DescriptionEditorModal from "../_components/DescriptionEditorModal";
 import TagManager from "./_components/TagManager";
+import { Dropzone, FileWithPath } from "@mantine/dropzone";
+import { useSupabase } from "@/lib/supabase";
+import ImageUploader from "../../_components/ImageUploader";
 
 export default function EventPage({
   params,
@@ -94,6 +100,8 @@ export default function EventPage({
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
     useDisclosure(false);
+  const [imagePath, setImagePath] = useState<string | null>(null);
+  const { listImages } = useSupabase();
 
   useEffect(() => {
     fetchEvent(id).catch(() => {
@@ -101,6 +109,14 @@ export default function EventPage({
     });
     fetchTicketTypes(id).catch(console.error);
   }, [id, fetchEvent, fetchTicketTypes]);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      const imgs = await listImages("event");
+      console.log(imgs);
+    };
+    fetchImages();
+  }, [listImages]);
 
   const handleEditTicketType = async (ticketTypeId: string) => {
     setEditingTicketTypeId(ticketTypeId);
@@ -258,6 +274,14 @@ export default function EventPage({
               </Title>
             </Stack>
           </Group>
+
+          <ImageUploader
+            type="events"
+            workspaceId={currentEvent.workspaceId}
+            currentImagePath={imagePath}
+            onImageUploaded={setImagePath}
+            onImageRemoved={() => setImagePath(null)}
+          />
         </Stack>
       </Paper>
 
