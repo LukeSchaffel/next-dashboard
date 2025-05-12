@@ -13,17 +13,17 @@ import {
   Badge,
   Stack,
   Button,
-  rem,
+  MultiSelect,
 } from "@mantine/core";
 import { prisma } from "@/lib/prisma";
-import { IconSearch, IconCalendar, IconMapPin } from "@tabler/icons-react";
+import { IconSearch, IconCalendar, IconMapPin, IconTag } from "@tabler/icons-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 interface SearchParams {
   search?: string;
   sort?: string;
-  type?: string;
+  tags?: string;
   location?: string;
   dateRange?: string;
 }
@@ -33,7 +33,7 @@ export default async function DiscoverPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { search, sort, type, location, dateRange } = await searchParams;
+  const { search, sort, tags, location, dateRange } = await searchParams;
 
   // Build the where clause based on search parameters
   const where: any = {
@@ -49,8 +49,15 @@ export default async function DiscoverPage({
     ];
   }
 
-  if (type) {
-    where.type = type;
+  if (tags) {
+    const tagIds = tags.split(",");
+    where.tags = {
+      some: {
+        tagId: {
+          in: tagIds,
+        },
+      },
+    };
   }
 
   if (location) {
@@ -121,6 +128,11 @@ export default async function DiscoverPage({
           name: true,
         },
       },
+      tags: {
+        include: {
+          Tag: true,
+        },
+      },
     },
     orderBy,
   });
@@ -130,6 +142,17 @@ export default async function DiscoverPage({
     select: {
       id: true,
       name: true,
+    },
+  });
+
+  // Get all available tags for the tag filter
+  const availableTags = await prisma.tag.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: {
+      name: "asc",
     },
   });
 
@@ -167,17 +190,18 @@ export default async function DiscoverPage({
               />
             </Group>
             <Group gap="md">
-              <Select
-                name="type"
-                placeholder="Event Type"
-                data={[
-                  { value: "concert", label: "Concert" },
-                  { value: "sports", label: "Sports" },
-                  { value: "conference", label: "Conference" },
-                  { value: "workshop", label: "Workshop" },
-                ]}
-                style={{ width: 150 }}
-                defaultValue={type}
+              <MultiSelect
+                name="tags"
+                placeholder="Filter by tags"
+                data={availableTags.map((tag) => ({
+                  value: tag.id,
+                  label: tag.name,
+                }))}
+                style={{ width: 250 }}
+                defaultValue={tags?.split(",")}
+                leftSection={<IconTag size={16} />}
+                searchable
+                clearable
               />
               <Select
                 name="location"
@@ -258,6 +282,21 @@ export default async function DiscoverPage({
                     {event.Location?.name || "Location TBA"}
                   </Text>
                 </Group>
+
+                {event.tags && event.tags.length > 0 && (
+                  <Group gap="xs" wrap="wrap">
+                    {event.tags.map((eventTag) => (
+                      <Badge
+                        key={eventTag.id}
+                        variant="light"
+                        color="gray"
+                        size="sm"
+                      >
+                        {eventTag.Tag.name}
+                      </Badge>
+                    ))}
+                  </Group>
+                )}
 
                 <Group justify="space-between" mt="xs">
                   <Text fw={500} size="sm">
