@@ -13,6 +13,7 @@ interface ImageUploaderProps {
   maxSize?: number;
   height?: number;
   accept?: string[];
+  resourceId: string;
 }
 
 export default function ImageUploader({
@@ -24,9 +25,12 @@ export default function ImageUploader({
   maxSize = 5 * 1024 ** 2, // 5MB default
   height = 220,
   accept = ["image/jpeg", "image/png", "image/webp"],
+  resourceId,
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
-  const [imagePath, setImagePath] = useState<string | null>(currentImagePath || null);
+  const [imagePath, setImagePath] = useState<string | null>(
+    currentImagePath || null
+  );
   const { uploadImage } = useSupabase();
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,7 +44,12 @@ export default function ImageUploader({
 
     setUploading(true);
     try {
-      const path = await uploadImage(type, workspaceId, file);
+      const path = await uploadImage(
+        type,
+        workspaceId,
+        resourceId,
+        file
+      );
       if (path) {
         setImagePath(path);
         onImageUploaded?.(path);
@@ -117,4 +126,4 @@ export default function ImageUploader({
       </Group>
     </Dropzone>
   );
-} 
+}

@@ -102,7 +102,8 @@ export default function EventPage({
     useDisclosure(false);
   const [imagePath, setImagePath] = useState<string | null>(null);
   const { listImages } = useSupabase();
-
+  const [images, setImages] = useState([]);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   useEffect(() => {
     fetchEvent(id).catch(() => {
       notFound();
@@ -111,12 +112,15 @@ export default function EventPage({
   }, [id, fetchEvent, fetchTicketTypes]);
 
   useEffect(() => {
-    const fetchImages = async () => {
-      const imgs = await listImages("event");
-      console.log(imgs);
-    };
-    fetchImages();
-  }, [listImages]);
+    if (currentEvent?.id && !imagesLoaded) {
+      const fetchImages = async () => {
+        const imgs = await listImages("events", currentEvent.id);
+        setImages(imgs);
+        setImagesLoaded(true);
+      };
+      fetchImages();
+    }
+  }, [listImages, currentEvent?.id, imagesLoaded]);
 
   const handleEditTicketType = async (ticketTypeId: string) => {
     setEditingTicketTypeId(ticketTypeId);
@@ -168,7 +172,7 @@ export default function EventPage({
   if (loading || !currentEvent) {
     return <div>Loading...</div>;
   }
-
+  console.log(images);
   return (
     <Stack gap="xl">
       <Paper p="xl" withBorder>
@@ -281,6 +285,7 @@ export default function EventPage({
             currentImagePath={imagePath}
             onImageUploaded={setImagePath}
             onImageRemoved={() => setImagePath(null)}
+            resourceId={currentEvent.id}
           />
         </Stack>
       </Paper>

@@ -33,6 +33,7 @@ export const useSupabase = () => {
   const uploadImage = async (
     type: "events" | "locations",
     workspaceId: string,
+    resourceId: string,
     file: File
   ) => {
     if (!client) {
@@ -41,7 +42,9 @@ export const useSupabase = () => {
     const { data, error } = await client.storage
       .from("images")
       .upload(
-        `user-uploads/${type}/${workspaceId}/${sanitizeFilename(file.name)}`,
+        `user-uploads/${type}/${workspaceId}/${resourceId}/${sanitizeFilename(
+          file.name
+        )}`,
         file
       );
 
@@ -55,11 +58,14 @@ export const useSupabase = () => {
 
   const getImageUrl = (path: string) => {
     if (!path) return null;
-    return `${supabaseUrl}/storage/v1/object/public/images/${path}`;
+    if (!client) return null;
+    const { data } = client.storage.from("images").getPublicUrl(path);
+    return data.publicUrl;
   };
 
   const listImages = async (
-    type: "event" | "location"
+    type: "events" | "locations",
+    resourceId: string
   ): Promise<any[] | undefined> => {
     if (client) {
       if (!workspace?.id) {
@@ -68,17 +74,21 @@ export const useSupabase = () => {
 
       const { data, error } = await client.storage
         .from("images")
-        .list(`user-uploads/${type}s/${workspace.id}`);
+        .list(`user-uploads/${type}/${workspace.id}/${resourceId}`);
 
       if (error) {
         console.error("Failed to list images:", error);
         throw error;
       }
 
-      return data.map((file) => ({
-        ...file,
-        url: `${supabaseUrl}/storage/v1/object/public/images/user-uploads/${type}s/${workspace.id}/${file.name}`,
-      }));
+      return data.map((file) => {
+        const { data: urlData } = client.storage
+          .from("images")
+          .getPublicUrl(
+            `user-uploads/${type}/${workspace.id}/${resourceId}/${file.name}`
+          );
+        return urlData.publicUrl;
+      });
     }
   };
 
@@ -106,4 +116,34 @@ export const useSupabase = () => {
 
 const sanitizeFilename = (name: string) => {
   return name.replace(/[^a-z0-9.\-_]/gi, "_");
+};
+
+// Server-side Supabase client
+export const supabaseServer = createClient(supabaseUrl, supabaseAnonKey);
+
+export const listImagesServer = async (
+  type: "event" | "location",
+  workspaceId: string,
+  resourceId: string
+): Promise<any[]> => {
+  const { data, error } = await supabaseServer.storage
+    .from("images")
+    .list(`user-uploads/${type}s/${workspaceId}/${resourceId}`);
+
+  if (error) {
+    console.error("Failed to list images:", error);
+    throw error;
+  }
+
+  return data.map((file) => {
+    const { data: urlData } = supabaseServer.storage
+      .from("images")
+      .getPublicUrl(
+        `user-uploads/${type}s/${workspaceId}/${resourceId}/${file.name}`
+      );
+    return {
+      ...file,
+      url: urlData.publicUrl,
+    };
+  });
 };
