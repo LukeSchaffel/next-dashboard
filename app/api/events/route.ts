@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession } from "@/lib/auth";
+import {
+  validateAndGetLocation,
+  processTags,
+  createEventLayoutFromTemplate,
+  createTicketTypes,
+  eventIncludeOptions,
+} from "@/lib/event-helpers";
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,37 +30,16 @@ export async function POST(request: NextRequest) {
     } = await request.json();
     const { workspaceId, userRoleId } = await getAuthSession();
 
-    // Only check location if one is provided
+    // Validate and get location if provided
     let location = null;
     if (locationId) {
-      location = await prisma.location.findUnique({
-        where: { id: locationId },
-        include: {
-          templateLayout: {
-            include: {
-              sections: {
-                include: {
-                  rows: {
-                    include: {
-                      seats: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
-
-      if (!location) {
+      try {
+        location = await validateAndGetLocation(locationId, workspaceId);
+      } catch (error: any) {
         return NextResponse.json(
-          { error: "Location not found" },
-          { status: 404 }
+          { error: error.message },
+          { status: error.message === "Unauthorized" ? 403 : 404 }
         );
-      }
-
-      if (location.workspaceId !== workspaceId) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
     }
 
@@ -68,99 +54,20 @@ export async function POST(request: NextRequest) {
           endsAt: new Date(endsAt),
           userRoleId,
           workspaceId,
-          TicketTypes: ticketTypes
-            ? {
-                create: ticketTypes.map((type: any) => ({
-                  name: type.name,
-                  description: type.description,
-                  price: type.price,
-                  quantity: type.quantity,
-                })),
-              }
-            : undefined,
-          tags: tags
-            ? {
-                create: await Promise.all(
-                  tags.map(async (tag: { id: string; name?: string }) => {
-                    // If name is not provided, fetch it from the Tag
-                    let tagName = tag.name;
-                    if (!tagName) {
-                      const tagData = await prisma.tag.findUnique({
-                        where: { id: tag.id },
-                        select: { name: true },
-                      });
-                      tagName = tagData?.name || "";
-                    }
-                    return {
-                      tagId: tag.id,
-                      workspaceId,
-                      name: tagName,
-                    };
-                  })
-                ),
-              }
-            : undefined,
+          TicketTypes: createTicketTypes(ticketTypes),
+          tags: await processTags(tags, workspaceId),
           // Create event layout if template is requested and available
           ...(use_layout_template && location?.templateLayout
             ? {
-                eventLayout: {
-                  create: {
-                    name: `${name} Seating Layout`,
-                    description: `Seating layout for ${name}`,
-                    workspaceId,
-                    templateId: location.templateLayout.id,
-                    sections: {
-                      create: location.templateLayout.sections.map(
-                        (section) => ({
-                          name: section.name,
-                          description: section.description,
-                          priceMultiplier: section.priceMultiplier,
-                          workspaceId: workspaceId,
-                          rows: {
-                            create: section.rows.map((row) => ({
-                              name: row.name,
-                              workspaceId: workspaceId,
-                              seats: {
-                                create: row.seats.map((seat) => ({
-                                  number: seat.number,
-                                  status: seat.status,
-                                  workspaceId: workspaceId,
-                                })),
-                              },
-                            })),
-                          },
-                        })
-                      ),
-                    },
-                  },
-                },
+                eventLayout: createEventLayoutFromTemplate(
+                  location.templateLayout,
+                  name,
+                  workspaceId
+                ),
               }
             : {}),
         },
-        include: {
-          Location: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          TicketTypes: true,
-          EventSeries: true,
-          tags: true,
-          eventLayout: {
-            include: {
-              sections: {
-                include: {
-                  rows: {
-                    include: {
-                      seats: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
+        include: eventIncludeOptions,
       });
 
       return NextResponse.json(event, { status: 201 });
@@ -168,39 +75,6 @@ export async function POST(request: NextRequest) {
 
     // Handle event series creation
     if (type === "series") {
-      let eventLocation = null;
-      if (locationId) {
-        eventLocation = await prisma.location.findUnique({
-          where: { id: locationId },
-          include: {
-            templateLayout: {
-              include: {
-                sections: {
-                  include: {
-                    rows: {
-                      include: {
-                        seats: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        });
-
-        if (!eventLocation) {
-          return NextResponse.json(
-            { error: "Location not found" },
-            { status: 404 }
-          );
-        }
-
-        if (eventLocation.workspaceId !== workspaceId) {
-          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-        }
-      }
-
       // Create the series first
       const series = await prisma.eventSeries.create({
         data: {
@@ -215,8 +89,6 @@ export async function POST(request: NextRequest) {
       // Create each event individually to handle location and layout properly
       const createdEvents = await Promise.all(
         events.map(async (event: any) => {
-          // Check location for each event if provided
-
           return prisma.event.create({
             data: {
               name: event.name,
@@ -227,89 +99,19 @@ export async function POST(request: NextRequest) {
               userRoleId,
               workspaceId,
               eventSeriesId: series.id,
-              tags: tags
-                ? {
-                    create: await Promise.all(
-                      tags.map(async (tag: { id: string; name?: string }) => {
-                        // If name is not provided, fetch it from the Tag
-                        let tagName = tag.name;
-                        if (!tagName) {
-                          const tagData = await prisma.tag.findUnique({
-                            where: { id: tag.id },
-                            select: { name: true },
-                          });
-                          tagName = tagData?.name || "";
-                        }
-                        return {
-                          tagId: tag.id,
-                          workspaceId,
-                          name: tagName,
-                        };
-                      })
-                    ),
-                  }
-                : undefined,
+              tags: await processTags(tags, workspaceId),
               // Create event layout if template is requested and available
-              ...(use_layout_template && eventLocation?.templateLayout
+              ...(use_layout_template && location?.templateLayout
                 ? {
-                    eventLayout: {
-                      create: {
-                        name: `${event.name} Seating Layout`,
-                        description: `Seating layout for ${event.name}`,
-                        workspaceId,
-                        templateId: eventLocation.templateLayout.id,
-                        sections: {
-                          create: eventLocation.templateLayout.sections.map(
-                            (section) => ({
-                              name: section.name,
-                              description: section.description,
-                              priceMultiplier: section.priceMultiplier,
-                              workspaceId: workspaceId,
-                              rows: {
-                                create: section.rows.map((row) => ({
-                                  name: row.name,
-                                  workspaceId: workspaceId,
-                                  seats: {
-                                    create: row.seats.map((seat) => ({
-                                      number: seat.number,
-                                      status: seat.status,
-                                      workspaceId: workspaceId,
-                                    })),
-                                  },
-                                })),
-                              },
-                            })
-                          ),
-                        },
-                      },
-                    },
+                    eventLayout: createEventLayoutFromTemplate(
+                      location.templateLayout,
+                      event.name,
+                      workspaceId
+                    ),
                   }
                 : {}),
             },
-            include: {
-              Location: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              TicketTypes: true,
-              EventSeries: true,
-              tags: true,
-              eventLayout: {
-                include: {
-                  sections: {
-                    include: {
-                      rows: {
-                        include: {
-                          seats: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
+            include: eventIncludeOptions,
           });
         })
       );
@@ -319,30 +121,7 @@ export async function POST(request: NextRequest) {
         where: { id: series.id },
         include: {
           events: {
-            include: {
-              Location: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              TicketTypes: true,
-              EventSeries: true,
-              tags: true,
-              eventLayout: {
-                include: {
-                  sections: {
-                    include: {
-                      rows: {
-                        include: {
-                          seats: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
+            include: eventIncludeOptions,
           },
         },
       });
@@ -354,10 +133,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ error: "Invalid event type" }, { status: 400 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to create event:", error);
     return NextResponse.json(
-      { error: "Failed to create event" },
+      { error: error.message || "Failed to create event" },
       { status: 500 }
     );
   }
@@ -371,17 +150,7 @@ export async function GET(request: NextRequest) {
       where: {
         workspaceId,
       },
-      include: {
-        Location: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        TicketTypes: true,
-        EventSeries: true,
-        tags: true,
-      },
+      include: eventIncludeOptions,
       orderBy: {
         startsAt: "desc",
       },

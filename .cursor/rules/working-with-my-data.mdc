@@ -13,3 +13,4 @@ alwaysApply: true
 - When changing schemas in [schema.prisma](mdc:prisma/schema.prisma), do not make unnecessary changes to existing modles, unless relevent to what we discuss
 - Whenever i say something along the lines of do X in the way i have it done in Y, make sure you check Y
 - Prices and other monetary values should be stored as cents (Int) in the database
+- Repeated logic for api routes should be stored in /lib, use [event-helpers.ts](mdc:lib/event-helpers.ts) as reference

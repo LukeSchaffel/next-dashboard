@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession } from "@/lib/auth";
+import { updateEventTags, eventIncludeOptions, validateEventAccess } from "@/lib/event-helpers";
 
 export async function GET(
   request: NextRequest,
@@ -73,6 +74,9 @@ export async function PATCH(
     const updateData = await request.json();
     const { workspaceId } = await getAuthSession();
 
+    // Validate event access
+    await validateEventAccess(id, workspaceId);
+
     const event = await prisma.event.update({
       where: { id },
       data: {
@@ -86,52 +90,18 @@ export async function PATCH(
           locationId: updateData.locationId || null,
         }),
         ...(updateData.tags !== undefined && {
-          tags: {
-            deleteMany: {},
-            create: await Promise.all(
-              updateData.tags.map(async (tag: { id: string; name?: string }) => {
-                let tagName = tag.name;
-                if (!tagName) {
-                  const tagData = await prisma.tag.findUnique({
-                    where: { id: tag.id },
-                    select: { name: true },
-                  });
-                  tagName = tagData?.name || "";
-                }
-                return {
-                  tagId: tag.id,
-                  workspaceId,
-                  name: tagName,
-                };
-              })
-            ),
-          },
+          tags: await updateEventTags(updateData.tags, workspaceId),
         }),
       },
-      include: {
-        Location: true,
-        Tickets: {
-          include: {
-            TicketType: true,
-            seat: true,
-            purchase: true,
-          },
-        },
-        TicketTypes: {
-          include: {
-            Tickets: true,
-          },
-        },
-        tags: true,
-      },
+      include: eventIncludeOptions,
     });
 
     return NextResponse.json(event, { status: 200 });
-  } catch (error) {
-    console.log(error)
+  } catch (error: any) {
+    console.error("Failed to update event:", error);
     return NextResponse.json(
-      { error: "Failed to update event" },
-      { status: 500 }
+      { error: error.message || "Failed to update event" },
+      { status: error.message === "Unauthorized" ? 403 : 500 }
     );
   }
 }
