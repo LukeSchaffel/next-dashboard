@@ -14,22 +14,6 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-const eventWithLocationArgs = {
-  include: {
-    Location: true,
-    Tickets: {
-      include: {
-        TicketType: true,
-      },
-    },
-    TicketTypes: {
-      include: {
-        Tickets: true,
-      },
-    },
-  },
-} as const;
-
 export type EventWithLocation = Event & {
   Location: Location | null;
   Tickets: (Ticket & {

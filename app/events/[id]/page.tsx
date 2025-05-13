@@ -174,16 +174,15 @@ export default async function EventPage({
   const isPast = dayjs(event.endsAt).isBefore(dayjs());
   const isCurrent = !isUpcoming && !isPast;
 
+  const headerImage =
+    images.find((img) => img.name === "header")?.url ||
+    images[0]?.url ||
+    "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070";
+
   return (
     <Box>
       {/* Hero Section with Background */}
-      <BackgroundImage
-        src={
-          images[0]?.url ||
-          "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070"
-        }
-        h={400}
-      >
+      <BackgroundImage src={headerImage} h={400}>
         <Box
           style={{
             background:

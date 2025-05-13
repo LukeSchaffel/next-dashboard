@@ -1,0 +1,93 @@
+.imageCard {
+  overflow: hidden;
+  transition: transform 200ms ease;
+}
+
+.imageCard:hover {
+  transform: translateY(-2px);
+}
+
+.imageWrapper {
+  overflow: hidden;
+  border-radius: var(--mantine-radius-md);
+}
+
+.imageOverlay {
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.imageCard:hover .imageOverlay {
+  opacity: 1;
+}
+
+.emptyState {
+  background-color: var(--mantine-color-gray-0);
+  border-style: dashed;
+  border-color: var(--mantine-color-gray-3);
+}
+
+.carouselWrapper {
+  position: relative;
+  border-radius: var(--mantine-radius-md);
+  overflow: hidden;
+}
+
+.carousel {
+  border-radius: var(--mantine-radius-md);
+}
+
+.carouselImage {
+  object-fit: contain;
+  background-color: var(--mantine-color-gray-0);
+}
+
+.slideWrapper {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--mantine-color-gray-0);
+}
+
+.slideOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.85) 90%
+  );
+  padding: var(--mantine-spacing-md);
+}
+
+.indicators {
+  bottom: var(--mantine-spacing-md);
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  transition: width 250ms ease;
+  background-color: var(--mantine-color-white);
+}
+
+.indicator[data-active] {
+  width: 24px;
+}
+
+.modalOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.85) 90%
+  );
+  padding: var(--mantine-spacing-md);
+}
