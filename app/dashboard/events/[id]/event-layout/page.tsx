@@ -19,26 +19,26 @@ import { useEventStore } from "@/stores/useEventStore";
 export default function CreateEventLayoutPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ id: string }>;
 }) {
-  const { slug } = use(params);
+  const { id } = use(params);
   const { currentEvent, loading, fetchEvent } = useEventStore();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchEvent(slug).catch(() => {
+    fetchEvent(id).catch(() => {
       notFound();
     });
-  }, [slug, fetchEvent]);
+  }, [id, fetchEvent]);
 
   // Redirect to the layout page if the event already has a layout
   useEffect(() => {
     if (currentEvent?.eventLayout) {
       redirect(
-        `/dashboard/events/${slug}/event-layout/${currentEvent.eventLayout.id}`
+        `/dashboard/events/${id}/event-layout/${currentEvent.eventLayout.id}`
       );
     }
-  }, [currentEvent, slug]);
+  }, [currentEvent, id]);
 
   const handleSubmit = async (values: {
     name: string;
@@ -47,7 +47,7 @@ export default function CreateEventLayoutPage({
   }) => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/events/${slug}/seating-layout`, {
+      const res = await fetch(`/api/events/${id}/seating-layout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,7 +60,7 @@ export default function CreateEventLayoutPage({
       }
 
       // Refresh the event data to get the new layout
-      await fetchEvent(slug);
+      await fetchEvent(id);
     } catch (error) {
       console.error("Failed to create event layout:", error);
     } finally {

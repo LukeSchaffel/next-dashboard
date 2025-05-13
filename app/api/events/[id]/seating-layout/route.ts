@@ -87,16 +87,19 @@ export async function POST(
         workspaceId,
         sections: {
           create: sections.map((section: any) => ({
+            workspaceId,
             name: section.name,
             description: section.description,
             priceMultiplier: section.priceMultiplier,
             rows: {
               create: section.rows.map((row: any) => ({
+                workspaceId,
                 name: row.name,
                 seats: {
                   create: row.seats.map((seat: any) => ({
                     number: seat.number,
                     status: seat.status,
+                    workspaceId,
                   })),
                 },
               })),

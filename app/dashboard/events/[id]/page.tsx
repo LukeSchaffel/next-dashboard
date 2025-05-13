@@ -1,6 +1,11 @@
 "use client";
-import { Tabs } from "@mantine/core";
-import { IconEye, IconTag, IconTable } from "@tabler/icons-react";
+import { Tabs, Paper, Stack, Text, Button } from "@mantine/core";
+import {
+  IconEye,
+  IconTag,
+  IconTable,
+  IconFileDescription,
+} from "@tabler/icons-react";
 import { Event, Ticket, TicketType } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,13 +13,14 @@ import { use } from "react";
 import { useDisclosure, useFullscreen } from "@mantine/hooks";
 import { useEventStore } from "@/stores/useEventStore";
 import { useSupabase } from "@/lib/supabase";
-import DescriptionEditorModal from "../_components/DescriptionEditorModal";
 import TagManager from "./_components/TagManager";
 import TicketTypeForm from "./_components/TicketTypeForm";
 import EventOverview from "./_components/EventOverview";
 import EventTickets from "./_components/EventTickets";
 import EventSeating from "./_components/EventSeating";
 import EventSkeleton from "./_components/EventSkeleton";
+import EventDescription from "./_components/EventDescription";
+import Link from "next/link";
 
 export default function EventPage({
   params,
@@ -44,14 +50,6 @@ export default function EventPage({
     ticketTypeModalOpened,
     { open: openTicketTypeModal, close: closeTicketTypeModal },
   ] = useDisclosure(false);
-  const [
-    descriptionModalOpened,
-    { open: openDescriptionModal, close: closeDescriptionModal },
-  ] = useDisclosure(false);
-  const [descriptionLoading, setDescriptionLoading] = useState(false);
-  const [descriptionContent, setDescriptionContent] = useState(
-    currentEvent?.description || ""
-  );
   const [showFullscreenSeating, setShowFullscreenSeating] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
@@ -94,20 +92,6 @@ export default function EventPage({
     }
   };
 
-  const handleUpdateDescription = async () => {
-    if (!currentEvent) return;
-
-    setDescriptionLoading(true);
-    try {
-      await updateEvent(currentEvent.id, { description: descriptionContent });
-      closeDescriptionModal();
-    } catch (error) {
-      console.error("Failed to update description:", error);
-    } finally {
-      setDescriptionLoading(false);
-    }
-  };
-
   const handleSeatClick = (seat: { id: string }, section: any) => {
     const ticket = currentEvent?.Tickets.find((t) => t.seat?.id === seat.id);
     if (ticket) {
@@ -125,30 +109,33 @@ export default function EventPage({
         <Tabs.Tab value="overview" leftSection={<IconEye size={16} />}>
           Overview
         </Tabs.Tab>
+        <Tabs.Tab
+          value="description"
+          leftSection={<IconFileDescription size={16} />}
+        >
+          Description
+        </Tabs.Tab>
         <Tabs.Tab value="tickets" leftSection={<IconTag size={16} />}>
           Tickets
         </Tabs.Tab>
-        {currentEvent.eventLayout && (
-          <Tabs.Tab value="seating" leftSection={<IconTable size={16} />}>
-            Seating Chart
-          </Tabs.Tab>
-        )}
+
+        <Tabs.Tab value="seating" leftSection={<IconTable size={16} />}>
+          Seating Chart
+        </Tabs.Tab>
       </Tabs.List>
 
       <Tabs.Panel value="overview">
         <EventOverview
           event={currentEvent}
-          onEditDescription={openDescriptionModal}
-          onToggleFullscreen={() => {
-            setShowFullscreenSeating(true);
-            toggle();
-          }}
-          fullscreen={fullscreen}
           onManageTags={openTagManager}
           imagePath={imagePath}
           onImageUploaded={setImagePath}
           onImageRemoved={() => setImagePath(null)}
         />
+      </Tabs.Panel>
+
+      <Tabs.Panel value="description">
+        <EventDescription event={currentEvent} />
       </Tabs.Panel>
 
       <Tabs.Panel value="tickets">
@@ -162,8 +149,8 @@ export default function EventPage({
         />
       </Tabs.Panel>
 
-      {currentEvent.eventLayout && (
-        <Tabs.Panel value="seating">
+      <Tabs.Panel value="seating">
+        {currentEvent.eventLayout ? (
           <EventSeating
             event={currentEvent}
             onToggleFullscreen={() => {
@@ -172,8 +159,20 @@ export default function EventPage({
             }}
             onSeatClick={handleSeatClick}
           />
-        </Tabs.Panel>
-      )}
+        ) : (
+          <Paper p="xl" withBorder>
+            <Stack gap="md" align="center">
+              <Text size="lg">No seating chart has been created yet</Text>
+              <Button
+                component={Link}
+                href={`/dashboard/events/${currentEvent.id}/event-layout`}
+              >
+                Create Seating Chart
+              </Button>
+            </Stack>
+          </Paper>
+        )}
+      </Tabs.Panel>
 
       <TicketTypeForm
         opened={ticketTypeModalOpened}
@@ -183,15 +182,6 @@ export default function EventPage({
         }}
         eventId={id}
         editingTicketTypeId={editingTicketTypeId || undefined}
-      />
-
-      <DescriptionEditorModal
-        opened={descriptionModalOpened}
-        onClose={closeDescriptionModal}
-        value={descriptionContent}
-        onChange={setDescriptionContent}
-        onSave={handleUpdateDescription}
-        loading={descriptionLoading}
       />
 
       <TagManager
