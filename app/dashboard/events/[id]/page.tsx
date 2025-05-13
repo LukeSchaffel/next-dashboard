@@ -5,6 +5,7 @@ import {
   IconTag,
   IconTable,
   IconFileDescription,
+  IconPhoto,
 } from "@tabler/icons-react";
 import { Event, Ticket, TicketType } from "@prisma/client";
 import { notFound } from "next/navigation";
@@ -20,6 +21,7 @@ import EventTickets from "./_components/EventTickets";
 import EventSeating from "./_components/EventSeating";
 import EventSkeleton from "./_components/EventSkeleton";
 import EventDescription from "./_components/EventDescription";
+import EventImages from "./_components/EventImages";
 import Link from "next/link";
 
 export default function EventPage({
@@ -122,16 +124,14 @@ export default function EventPage({
         <Tabs.Tab value="seating" leftSection={<IconTable size={16} />}>
           Seating Chart
         </Tabs.Tab>
+
+        <Tabs.Tab value="images" leftSection={<IconPhoto size={16} />}>
+          Images
+        </Tabs.Tab>
       </Tabs.List>
 
       <Tabs.Panel value="overview">
-        <EventOverview
-          event={currentEvent}
-          onManageTags={openTagManager}
-          imagePath={imagePath}
-          onImageUploaded={setImagePath}
-          onImageRemoved={() => setImagePath(null)}
-        />
+        <EventOverview event={currentEvent} onManageTags={openTagManager} />
       </Tabs.Panel>
 
       <Tabs.Panel value="description">
@@ -172,6 +172,15 @@ export default function EventPage({
             </Stack>
           </Paper>
         )}
+      </Tabs.Panel>
+
+      <Tabs.Panel value="images">
+        <EventImages
+          event={currentEvent}
+          imagePath={imagePath}
+          onImageUploaded={setImagePath}
+          onImageRemoved={() => setImagePath(null)}
+        />
       </Tabs.Panel>
 
       <TicketTypeForm

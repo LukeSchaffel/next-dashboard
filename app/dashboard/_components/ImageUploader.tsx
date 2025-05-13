@@ -44,14 +44,8 @@ export default function ImageUploader({
 
     setUploading(true);
     try {
-      const path = await uploadImage(
-        type,
-        workspaceId,
-        resourceId,
-        file
-      );
+      const path = await uploadImage(type, workspaceId, resourceId, file);
       if (path) {
-        setImagePath(path);
         onImageUploaded?.(path);
       }
     } catch (error) {
@@ -66,12 +60,12 @@ export default function ImageUploader({
     onImageRemoved?.();
   };
 
-  if (imageUrl) {
+  if (currentImagePath && imageUrl) {
     return (
       <Paper withBorder p="md" radius="md">
         <Group justify="space-between" mb="md">
           <Text size="sm" fw={500}>
-            Image
+            Current Image
           </Text>
           <Button
             variant="subtle"
@@ -84,7 +78,7 @@ export default function ImageUploader({
         </Group>
         <Image
           src={imageUrl}
-          alt="Uploaded image"
+          alt="Current image"
           height={height}
           fit="cover"
           radius="md"

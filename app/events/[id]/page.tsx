@@ -19,10 +19,18 @@ import {
   Divider,
   rem,
   BackgroundImage,
+  SimpleGrid,
+  Image,
 } from "@mantine/core";
 import Link from "next/link";
-import { IconCalendar, IconClock, IconMapPin } from "@tabler/icons-react";
+import {
+  IconCalendar,
+  IconClock,
+  IconMapPin,
+  IconPhoto,
+} from "@tabler/icons-react";
 import classes from "./_styles.module.css";
+import { listImagesServer } from "@/lib/supabase-server";
 
 interface EventWithDetails extends Event {
   Location: {
@@ -161,6 +169,7 @@ export default async function EventPage({
     notFound();
   }
 
+  const images = await listImagesServer("event", event.workspaceId, event.id);
   const isUpcoming = dayjs(event.startsAt).isAfter(dayjs());
   const isPast = dayjs(event.endsAt).isBefore(dayjs());
   const isCurrent = !isUpcoming && !isPast;
@@ -169,7 +178,10 @@ export default async function EventPage({
     <Box>
       {/* Hero Section with Background */}
       <BackgroundImage
-        src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070"
+        src={
+          images[0]?.url ||
+          "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070"
+        }
         h={400}
       >
         <Box
@@ -223,6 +235,35 @@ export default async function EventPage({
 
       <Container size="lg" py="xl">
         <Stack gap="xl">
+          {/* Event Images Section */}
+          {images.length > 0 && (
+            <Box className={classes.section}>
+              <Paper className={classes.sectionContent}>
+                <Stack gap="md">
+                  <Group className={classes.sectionTitle}>
+                    <IconPhoto size={24} stroke={1.5} />
+                    <Title order={2} className={classes.title}>
+                      Event <span className={classes.highlight}>Gallery</span>
+                    </Title>
+                  </Group>
+                  <Divider />
+                  <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                    {images.map((image) => (
+                      <Image
+                        key={image.name}
+                        src={image.url}
+                        alt={image.name}
+                        height={200}
+                        fit="cover"
+                        radius="md"
+                      />
+                    ))}
+                  </SimpleGrid>
+                </Stack>
+              </Paper>
+            </Box>
+          )}
+
           {/* Event Description */}
           {event.description && (
             <Box className={classes.section}>

@@ -18,17 +18,11 @@ import { EventWithDetails } from "@/stores/useEventStore";
 interface EventOverviewProps {
   event: EventWithDetails;
   onManageTags: () => void;
-  imagePath: string | null;
-  onImageUploaded: (path: string) => void;
-  onImageRemoved: () => void;
 }
 
 export default function EventOverview({
   event,
   onManageTags,
-  imagePath,
-  onImageUploaded,
-  onImageRemoved,
 }: EventOverviewProps) {
   return (
     <Stack gap="xl">
@@ -99,15 +93,6 @@ export default function EventOverview({
               </Title>
             </Stack>
           </Group>
-
-          <ImageUploader
-            type="events"
-            workspaceId={event.workspaceId}
-            currentImagePath={imagePath}
-            onImageUploaded={onImageUploaded}
-            onImageRemoved={onImageRemoved}
-            resourceId={event.id}
-          />
         </Stack>
       </Paper>
     </Stack>
