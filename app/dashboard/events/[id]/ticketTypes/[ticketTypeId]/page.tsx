@@ -12,6 +12,8 @@ import {
   ActionIcon,
   Select,
   Tooltip,
+  Collapse,
+  Flex,
 } from "@mantine/core";
 import {
   TicketStatus,
@@ -28,6 +30,8 @@ import {
   IconDownload,
   IconEdit,
   IconTrash,
+  IconChevronDown,
+  IconChevronRight,
 } from "@tabler/icons-react";
 import { useEventStore } from "@/stores/useEventStore";
 import { Table } from "@/lib/components";
@@ -41,6 +45,19 @@ interface Section {
   priceMultiplier: number;
 }
 
+interface Seat {
+  id: string;
+  name: string;
+  sectionId: string;
+  Row?: { name: string };
+  number?: string;
+}
+
+interface TicketWithDetails extends Ticket {
+  seat?: Seat | null;
+  purchase: Purchase;
+}
+
 interface Purchase {
   id: string;
   totalAmount: number;
@@ -48,15 +65,15 @@ interface Purchase {
   customerEmail: string;
   customerName: string | null;
   createdAt: Date;
-  tickets: Ticket[];
+  tickets: TicketWithDetails[];
 }
 
 export default function TicketTypePage({
   params,
 }: {
-  params: Promise<{ slug: string; ticketTypeId: string }>;
+  params: Promise<{ id: string; ticketTypeId: string }>;
 }) {
-  const { slug, ticketTypeId } = use(params);
+  const { id, ticketTypeId } = use(params);
   const {
     currentEvent,
     loading,
@@ -72,22 +89,50 @@ export default function TicketTypePage({
     { open: openTicketModal, close: closeTicketModal },
   ] = useDisclosure(false);
   const [ticketLoading, setTicketLoading] = useState(false);
+  const [expandedPurchases, setExpandedPurchases] = useState<Set<string>>(
+    new Set()
+  );
 
   useEffect(() => {
-    fetchEvent(slug).catch(() => {
-      notFound();
-    });
-    fetchTicketTypes(slug).catch(console.error);
-  }, [slug, fetchEvent, fetchTicketTypes]);
+    const fetchData = async () => {
+      // Only fetch event if it's not already loaded or if it's a different event
+      if (!currentEvent || currentEvent.id !== id) {
+        try {
+          await fetchEvent(id);
+        } catch (error) {
+          notFound();
+        }
+      }
 
-  const currentTicketType = ticketTypes.find((tt) => tt.id === ticketTypeId) as
-    | TicketType
-    | undefined;
+      // Only fetch ticket types if the current ticket type isn't already loaded
+      const currentTicketTypeExists = ticketTypes.some(
+        (tt) => tt.id === ticketTypeId
+      );
+      if (!currentTicketTypeExists) {
+        try {
+          await fetchTicketTypes(id);
+        } catch (error) {
+          console.error("Failed to fetch ticket types:", error);
+        }
+      }
+    };
+
+    fetchData();
+  }, [
+    id,
+    ticketTypeId,
+    currentEvent,
+    ticketTypes,
+    fetchEvent,
+    fetchTicketTypes,
+  ]);
+
+  const currentTicketType = ticketTypes.find((tt) => tt.id === ticketTypeId);
 
   const tickets =
     (currentEvent?.Tickets.filter(
       (ticket) => ticket.ticketTypeId === ticketTypeId
-    ) as (Ticket & { purchase: Purchase })[]) || [];
+    ) as TicketWithDetails[]) || [];
 
   // Group tickets by purchase
   const purchases = tickets.reduce((acc, ticket) => {
@@ -120,7 +165,7 @@ export default function TicketTypePage({
       }
 
       // Refresh the event data to get the updated purchase status
-      await fetchEvent(slug);
+      await fetchEvent(id);
     } catch (error) {
       console.error("Failed to update purchase status:", error);
     }
@@ -150,6 +195,18 @@ export default function TicketTypePage({
     }
   };
 
+  const togglePurchase = (purchaseId: string) => {
+    setExpandedPurchases((prev) => {
+      const next = new Set(prev);
+      if (next.has(purchaseId)) {
+        next.delete(purchaseId);
+      } else {
+        next.add(purchaseId);
+      }
+      return next;
+    });
+  };
+
   if (loading || !currentEvent || !currentTicketType) {
     return <div>Loading...</div>;
   }
@@ -159,10 +216,11 @@ export default function TicketTypePage({
     0
   );
 
-  const totalRevenue = Object.values(purchases).reduce(
-    (sum, purchase) => sum + purchase.totalAmount,
-    0
-  );
+  const totalRevenue =
+    Object.values(purchases).reduce(
+      (sum, purchase) => sum + purchase.totalAmount,
+      0
+    ) / 100; // Convert cents to dollars
 
   return (
     <Stack>
@@ -188,6 +246,7 @@ export default function TicketTypePage({
           loading={loading}
           data={{
             head: [
+              "",
               "Date",
               "Customer",
               "Tickets",
@@ -195,47 +254,108 @@ export default function TicketTypePage({
               "Status",
               "Actions",
             ],
-            body: Object.values(purchases).map((purchase) => [
-              dayjs(purchase.createdAt).format("MMM D, YYYY h:mm A"),
-              <Stack key={purchase.id} gap={0}>
-                <Text size="sm">{purchase.customerName || "N/A"}</Text>
-                <Text size="xs" c="dimmed">
-                  {purchase.customerEmail}
-                </Text>
-              </Stack>,
-              <Text key={purchase.id} size="sm">
-                {purchase.tickets.length}
-              </Text>,
-              <Text key={purchase.id} size="sm">
-                ${purchase.totalAmount.toFixed(2)}
-              </Text>,
-              <Select
-                key={purchase.id}
-                value={purchase.status}
-                onChange={(value) =>
-                  handleUpdatePurchaseStatus(
-                    purchase.id,
-                    value as PurchaseStatus
-                  )
-                }
-                data={[
-                  { value: "PENDING", label: "Pending" },
-                  { value: "COMPLETED", label: "Completed" },
-                  { value: "CANCELLED", label: "Cancelled" },
-                ]}
-                size="xs"
-              />,
-              <Group key={purchase.id} gap="xs">
-                <Tooltip label="Download Tickets">
-                  <ActionIcon
-                    variant="light"
-                    onClick={() => handleDownloadTickets(purchase)}
-                  >
-                    <IconDownload size={16} />
-                  </ActionIcon>
-                </Tooltip>
-              </Group>,
-            ]),
+            body: Object.values(purchases).flatMap((purchase) => {
+              const isExpanded = expandedPurchases.has(purchase.id);
+              const purchaseRow = [
+                <Button
+                  key={`toggle-${purchase.id}`}
+                  variant="subtle"
+                  onClick={() => togglePurchase(purchase.id)}
+                  leftSection={
+                    isExpanded ? (
+                      <IconChevronDown size={16} />
+                    ) : (
+                      <IconChevronRight size={16} />
+                    )
+                  }
+                >
+                  {purchase.tickets.length} Tickets
+                </Button>,
+                dayjs(purchase.createdAt).format("MMM D, YYYY h:mm A"),
+                <Stack key={purchase.id} gap={0}>
+                  <Text size="sm">{purchase.customerName || "N/A"}</Text>
+                  <Text size="xs" c="dimmed">
+                    {purchase.customerEmail}
+                  </Text>
+                </Stack>,
+                <Text key={purchase.id} size="sm">
+                  {purchase.tickets.length}
+                </Text>,
+                <Text key={purchase.id} size="sm">
+                  ${(purchase.totalAmount / 100).toFixed(2)}
+                </Text>,
+                <Badge
+                  key={purchase.id}
+                  color={
+                    purchase.status === "COMPLETED"
+                      ? "green"
+                      : purchase.status === "CANCELLED"
+                      ? "red"
+                      : "yellow"
+                  }
+                >
+                  {purchase.status}
+                </Badge>,
+                <Group key={purchase.id} gap="xs">
+                  <Tooltip label="Download Tickets">
+                    <ActionIcon
+                      variant="light"
+                      onClick={() => handleDownloadTickets(purchase)}
+                    >
+                      <IconDownload size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>,
+              ];
+
+              const ticketRows = isExpanded
+                ? purchase.tickets.map((ticket) => [
+                    "",
+                    dayjs(ticket.createdAt).format("MMM D, YYYY h:mm A"),
+                    <Text key={ticket.id} size="sm" ml="xl">
+                      Ticket #{ticket.id.slice(0, 8)}
+                    </Text>,
+                    <Text key={ticket.id} size="sm">
+                      {ticket.seat
+                        ? `Seat ${ticket?.seat?.Row?.name || "-"} ${
+                            ticket?.seat?.number || "-"
+                          }`
+                        : "No seat assigned"}
+                    </Text>,
+                    <Text key={ticket.id} size="sm">
+                      ${(ticket.price / 100).toFixed(2)}
+                    </Text>,
+                    <Badge
+                      key={ticket.id}
+                      color={
+                        ticket.status === "CONFIRMED"
+                          ? "green"
+                          : ticket.status === "CANCELLED"
+                          ? "red"
+                          : "yellow"
+                      }
+                    >
+                      {ticket.status}
+                    </Badge>,
+                    <Group key={ticket.id} gap="xs">
+                      <Tooltip label="Download Ticket">
+                        <ActionIcon
+                          variant="light"
+                          onClick={() =>
+                            handleDownloadTickets({
+                              tickets: [ticket],
+                            } as Purchase)
+                          }
+                        >
+                          <IconDownload size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>,
+                  ])
+                : [];
+
+              return [purchaseRow, ...ticketRows];
+            }),
           }}
         />
       </Paper>
@@ -245,7 +365,7 @@ export default function TicketTypePage({
         onClose={closeTicketModal}
         ticketTypes={ticketTypes}
         loading={ticketLoading}
-        eventSlug={slug}
+        eventid={id}
       /> */}
     </Stack>
   );

@@ -7,7 +7,7 @@ import {
   EventSeries,
 } from "@prisma/client";
 
-interface EventWithDetails extends Event {
+export interface EventWithDetails extends Event {
   Location?: {
     id: string;
     name: string;
