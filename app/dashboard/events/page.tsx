@@ -14,7 +14,7 @@ import {
   SegmentedControl,
   Collapse,
 } from "@mantine/core";
-import { Event, EventSeries } from "@prisma/client";
+import { Event } from "@prisma/client";
 import dayjs from "dayjs";
 
 import { Table } from "@/lib/components";
@@ -30,43 +30,18 @@ import {
   IconChevronDown,
   IconChevronRight,
 } from "@tabler/icons-react";
-import { useEventStore } from "@/stores/useEventStore";
+import { useEventStore, EventForList } from "@/stores/useEventStore";
 import CalendarView from "./_components/CalendarView";
 
 type ViewType = "table" | "calendar";
 
-export interface EventWithDetails extends Event {
-  Location?: {
-    id: string;
-    name: string;
-    address: string | null;
-  } | null;
-  EventSeries?: {
-    id: string;
-    name: string;
-    description: string | null;
-    startDate: Date;
-    endDate: Date;
-  } | null;
-  Tickets: any[];
-  TicketTypes: any[];
-}
-
 export interface GroupedEvents {
   seriesId: string;
   seriesName: string;
-  events: EventWithDetails[];
-}
-
-interface CalendarViewProps {
-  events: EventWithDetails[];
+  events: EventForList[];
 }
 
 export default function EventsPage() {
-  const { userRole } = useContext(DashboardContext);
-  const [selectedEvent, setSelectedEvent] = useState<
-    EventWithDetails | undefined
-  >(undefined);
   const [view, setView] = useState<ViewType>("table");
   const [expandedSeries, setExpandedSeries] = useState<Set<string>>(new Set());
   const { events, loading, hasFetched, fetchEvents, deleteEvent } =
@@ -179,13 +154,6 @@ export default function EventsPage() {
                       ? dayjs(event.endsAt).format("MM/DD/YY hh:mm A")
                       : "Not set",
                     <Flex key={`actions-${event.id}`}>
-                      <Button
-                        variant="subtle"
-                        onClick={() => setSelectedEvent(event)}
-                      >
-                        Edit
-                      </Button>
-
                       <Popover shadow="md">
                         <Popover.Target>
                           <Button color="red" variant="transparent">
@@ -286,13 +254,6 @@ export default function EventsPage() {
                       ? dayjs(event.endsAt).format("MM/DD/YY hh:mm A")
                       : "Not set",
                     <Flex key={`actions-${event.id}`}>
-                      <Button
-                        variant="subtle"
-                        onClick={() => setSelectedEvent(event)}
-                      >
-                        Edit
-                      </Button>
-
                       <Popover shadow="md">
                         <Popover.Target>
                           <Button color="red" variant="transparent">

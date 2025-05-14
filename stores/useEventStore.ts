@@ -55,12 +55,25 @@ export interface EventWithDetails extends Event {
   }[];
 }
 
+// Simpler event interface with only the data needed for list views
+export interface EventForList extends Event {
+  Location?: {
+    id: string;
+    name: string;
+  } | null;
+  EventSeries?: {
+    id: string;
+    name: string;
+    description: string | null;
+  } | null;
+}
+
 export interface EventSeriesWithDetails extends EventSeries {
   events: EventWithDetails[];
 }
 
 interface EventsStore {
-  events: EventWithDetails[];
+  events: EventForList[];
   eventSeries: EventSeriesWithDetails[];
   currentEvent: EventWithDetails | null;
   currentSeries: EventSeriesWithDetails | null;
@@ -69,7 +82,7 @@ interface EventsStore {
   hasFetched: boolean;
   ticketTypes: TicketType[];
   ticketTypesLoading: boolean;
-  setEvents: (events: EventWithDetails[]) => void;
+  setEvents: (events: EventForList[]) => void;
   setEventSeries: (series: EventSeriesWithDetails[]) => void;
   fetchEvents: () => Promise<void>;
   fetchEventSeries: () => Promise<void>;

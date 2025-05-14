@@ -155,6 +155,25 @@ export const eventIncludeOptions = {
 };
 
 /**
+ * Lighter event include options for list views - only includes the minimum needed data
+ */
+export const eventListIncludeOptions = {
+  Location: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  EventSeries: {
+    select: {
+      id: true,
+      name: true,
+      description: true,
+    },
+  },
+};
+
+/**
  * Updates event tags with proper Prisma operations
  */
 export async function updateEventTags(

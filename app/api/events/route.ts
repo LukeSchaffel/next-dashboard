@@ -8,6 +8,7 @@ import {
   createEventLayoutFromTemplate,
   createTicketTypes,
   eventIncludeOptions,
+  eventListIncludeOptions,
 } from "@/lib/event-helpers";
 
 export async function POST(request: NextRequest) {
@@ -150,7 +151,7 @@ export async function GET(request: NextRequest) {
       where: {
         workspaceId,
       },
-      include: eventIncludeOptions,
+      include: eventListIncludeOptions,
       orderBy: {
         startsAt: "desc",
       },
