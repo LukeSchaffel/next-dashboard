@@ -105,8 +105,8 @@ export default function EventImages({
             <Title order={3}>Upload New Image</Title>
           </Group>
           <Text size="sm" c="dimmed">
-            Upload an image named "header" to set it as the main image on the
-            event page. Otherwise, images will be displayed in the event
+            Upload an image named &quot;header&quot; to set it as the main image
+            on the event page. Otherwise, images will be displayed in the event
             gallery.
           </Text>
           <ImageUploader
