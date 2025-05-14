@@ -46,7 +46,7 @@ export default async function HomePage() {
   const { userId } = await auth();
 
   if (userId) {
-    redirect("/dashboard");
+    // redirect("/dashboard");
   }
 
   const events = await prisma.event.findMany({

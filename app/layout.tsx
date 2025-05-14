@@ -1,23 +1,25 @@
+import { ClerkProvider } from "@clerk/nextjs";
+import React from "react";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/tiptap/styles.css";
 import "@mantine/charts/styles.css";
 import "@mantine/carousel/styles.css";
-import '@mantine/dropzone/styles.css';
-
-import styles from "./_app.module.css";
-import { ClerkProvider } from "@clerk/nextjs";
-import React from "react";
+import "@mantine/dropzone/styles.css";
 import {
   MantineProvider,
   ColorSchemeScript,
   mantineHtmlProps,
+  AppShell,
 } from "@mantine/core";
+
+import AppHeader from "@/lib/components/app-header/AppHeader";
+import styles from "./_app.module.css";
 import { theme } from "../theme";
 
 export const metadata = {
-  title: "Mantine Next.js template",
-  description: "I am using Mantine with Next.js!",
+  title: "Ticket Retreiver",
+  description: "Fetch your next event!",
 };
 
 export default function RootLayout({ children }: { children: any }) {
@@ -33,7 +35,12 @@ export default function RootLayout({ children }: { children: any }) {
           />
         </head>
         <body className={styles.body}>
-          <MantineProvider theme={theme}>{children}</MantineProvider>
+          <MantineProvider theme={theme}>
+            <AppShell>
+              <AppHeader />
+              {children}
+            </AppShell>
+          </MantineProvider>
         </body>
       </html>
     </ClerkProvider>
