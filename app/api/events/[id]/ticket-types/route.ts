@@ -94,6 +94,7 @@ export async function GET(
       include: {
         Tickets: {
           include: {
+            purchase: true,
             seat: {
               include: { Row: true },
             },

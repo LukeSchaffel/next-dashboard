@@ -20,6 +20,7 @@ import {
   PurchaseStatus,
   Ticket,
   TicketType,
+  TicketPurchase,
 } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -33,39 +34,15 @@ import {
   IconChevronDown,
   IconChevronRight,
 } from "@tabler/icons-react";
-import { useEventStore } from "@/stores/useEventStore";
+import {
+  useEventStore,
+  TicketWithSeatingInformation,
+} from "@/stores/useEventStore";
 import { Table } from "@/lib/components";
-import TicketForm from "../../_components/TicketForm";
-import Link from "next/link";
 import dayjs from "dayjs";
 
-interface Section {
-  id: string;
-  name: string;
-  priceMultiplier: number;
-}
-
-interface Seat {
-  id: string;
-  name: string;
-  sectionId: string;
-  Row?: { name: string };
-  number?: string;
-}
-
-interface TicketWithDetails extends Ticket {
-  seat?: Seat | null;
-  purchase: Purchase;
-}
-
-interface Purchase {
-  id: string;
-  totalAmount: number;
-  status: PurchaseStatus;
-  customerEmail: string;
-  customerName: string | null;
-  createdAt: Date;
-  tickets: TicketWithDetails[];
+interface PurchaseWithTickets extends TicketPurchase {
+  tickets: TicketWithSeatingInformation[];
 }
 
 export default function TicketTypePage({
@@ -74,45 +51,21 @@ export default function TicketTypePage({
   params: Promise<{ id: string; ticketTypeId: string }>;
 }) {
   const { id, ticketTypeId } = use(params);
-  const {
-    currentEvent,
-    loading,
-    fetchEvent,
-    addTicket,
-    updateTicket,
-    ticketTypes,
-    fetchTicketTypes,
-  } = useEventStore();
+  const { currentEvent, loading, fetchEvent, ticketTypes, fetchTicketTypes } =
+    useEventStore();
 
-  const [
-    ticketModalOpened,
-    { open: openTicketModal, close: closeTicketModal },
-  ] = useDisclosure(false);
-  const [ticketLoading, setTicketLoading] = useState(false);
   const [expandedPurchases, setExpandedPurchases] = useState<Set<string>>(
     new Set()
   );
 
   useEffect(() => {
     const fetchData = async () => {
-      // Only fetch event if it's not already loaded or if it's a different event
       if (!currentEvent || currentEvent.id !== id) {
         try {
           await fetchEvent(id);
-        } catch (error) {
-          notFound();
-        }
-      }
-
-      // Only fetch ticket types if the current ticket type isn't already loaded
-      const currentTicketTypeExists = ticketTypes.some(
-        (tt) => tt.id === ticketTypeId
-      );
-      if (!currentTicketTypeExists) {
-        try {
           await fetchTicketTypes(id);
         } catch (error) {
-          console.error("Failed to fetch ticket types:", error);
+          notFound();
         }
       }
     };
@@ -130,9 +83,7 @@ export default function TicketTypePage({
   const currentTicketType = ticketTypes.find((tt) => tt.id === ticketTypeId);
 
   const tickets =
-    (currentEvent?.Tickets.filter(
-      (ticket) => ticket.ticketTypeId === ticketTypeId
-    ) as TicketWithDetails[]) || [];
+    ticketTypes.find((tt) => tt.id === ticketTypeId)?.Tickets || [];
 
   // Group tickets by purchase
   const purchases = tickets.reduce((acc, ticket) => {
@@ -141,11 +92,11 @@ export default function TicketTypePage({
       acc[purchase.id] = {
         ...purchase,
         tickets: [],
-      };
+      } as PurchaseWithTickets;
     }
-    acc[purchase.id].tickets.push(ticket);
+    (acc[purchase.id] as PurchaseWithTickets).tickets.push(ticket);
     return acc;
-  }, {} as Record<string, Purchase>);
+  }, {} as Record<string, PurchaseWithTickets>);
 
   const handleUpdatePurchaseStatus = async (
     purchaseId: string,
@@ -164,14 +115,13 @@ export default function TicketTypePage({
         throw new Error("Failed to update purchase status");
       }
 
-      // Refresh the event data to get the updated purchase status
       await fetchEvent(id);
     } catch (error) {
       console.error("Failed to update purchase status:", error);
     }
   };
 
-  const handleDownloadTickets = async (purchase: Purchase) => {
+  const handleDownloadTickets = async (purchase: PurchaseWithTickets) => {
     try {
       const ticketIds = purchase.tickets.map((ticket) => ticket.id);
       const queryString = ticketIds.map((id) => `ticketIds=${id}`).join("&");
@@ -220,7 +170,7 @@ export default function TicketTypePage({
     Object.values(purchases).reduce(
       (sum, purchase) => sum + purchase.totalAmount,
       0
-    ) / 100; // Convert cents to dollars
+    ) / 100;
 
   return (
     <Stack>
@@ -343,8 +293,9 @@ export default function TicketTypePage({
                           variant="light"
                           onClick={() =>
                             handleDownloadTickets({
+                              ...ticket.purchase,
                               tickets: [ticket],
-                            } as Purchase)
+                            } as PurchaseWithTickets)
                           }
                         >
                           <IconDownload size={16} />

@@ -9,6 +9,7 @@ import {
   EventRow,
   EventLayout,
   EventSection,
+  TicketPurchase,
 } from "@prisma/client";
 
 export interface EventWithDetails extends Event {
@@ -41,6 +42,7 @@ export interface TicketTypeWithDetails extends TicketType {
 
 export interface TicketWithSeatingInformation extends Ticket {
   seat: EventSeat & { Row: EventRow };
+  purchase: TicketPurchase;
 }
 
 export interface EventSeriesWithDetails extends EventSeries {
