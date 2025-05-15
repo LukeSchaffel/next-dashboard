@@ -30,7 +30,7 @@ import {
   IconChevronDown,
   IconChevronRight,
 } from "@tabler/icons-react";
-import { useEventStore, EventForList } from "@/stores/useEventStore";
+import { useEventStore, EventWithDetails } from "@/stores/useEventStore";
 import CalendarView from "./_components/CalendarView";
 
 type ViewType = "table" | "calendar";
@@ -38,7 +38,7 @@ type ViewType = "table" | "calendar";
 export interface GroupedEvents {
   seriesId: string;
   seriesName: string;
-  events: EventForList[];
+  events: EventWithDetails[];
 }
 
 export default function EventsPage() {

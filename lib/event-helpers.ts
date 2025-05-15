@@ -7,6 +7,36 @@ interface TagInput {
 }
 
 /**
+ * Common include options for fetching event details
+ */
+export const eventWithDetailsSelector = {
+  EventSeries: {
+    select: {
+      name: true,
+      id: true,
+      description: true,
+    },
+  },
+  Location: {
+    select: {
+      name: true,
+      id: true,
+      address: true,
+    },
+  },
+  _count: {
+    select: {
+      Tickets: true,
+    },
+  },
+  tags: {
+    include: {
+      Tag: true,
+    },
+  },
+} as const;
+
+/**
  * Validates that a location belongs to the workspace and fetches its template layout
  */
 export async function validateAndGetLocation(

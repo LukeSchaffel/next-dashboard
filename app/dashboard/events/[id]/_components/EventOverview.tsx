@@ -13,7 +13,7 @@ import Link from "next/link";
 import { Event, Ticket } from "@prisma/client";
 import dayjs from "dayjs";
 import ImageUploader from "../../../_components/ImageUploader";
-import { EventWithDetails } from "@/stores/useEventStore";
+import { EventWithDetails, useEventStore } from "@/stores/useEventStore";
 
 interface EventOverviewProps {
   event: EventWithDetails;
@@ -24,6 +24,8 @@ export default function EventOverview({
   event,
   onManageTags,
 }: EventOverviewProps) {
+  const { ticketTypes } = useEventStore();
+
   return (
     <Stack gap="xl">
       <Paper p="xl" withBorder>
@@ -40,8 +42,8 @@ export default function EventOverview({
           </Group>
           <Group>
             <Badge size="lg" variant="light">
-              {event.Tickets.length}{" "}
-              {event.Tickets.length === 1 ? "Ticket" : "Tickets"}
+              {event._count?.Tickets || 0}{" "}
+              {event._count?.Tickets === 1 ? "Ticket" : "Tickets"}
             </Badge>
             {event.Location && (
               <Badge size="lg" variant="light">
@@ -76,7 +78,7 @@ export default function EventOverview({
               <Text size="sm" c="dimmed">
                 Total Tickets Sold
               </Text>
-              <Title order={3}>{event.Tickets.length}</Title>
+              <Title order={3}>{event?._count?.Tickets || 0}</Title>
             </Stack>
             <Stack gap={0}>
               <Text size="sm" c="dimmed">
@@ -85,10 +87,12 @@ export default function EventOverview({
               <Title order={3}>
                 $
                 {(
-                  event.Tickets.reduce(
-                    (sum: number, ticket: Ticket) => sum + ticket.price,
-                    0
-                  ) / 100
+                  ticketTypes
+                    ?.flatMap((tt) => tt.Tickets)
+                    ?.reduce(
+                      (sum: number, ticket: Ticket) => sum + ticket.price,
+                      0
+                    ) / 100
                 ).toFixed(2)}
               </Title>
             </Stack>

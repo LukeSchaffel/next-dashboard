@@ -5,6 +5,8 @@ import {
   Ticket,
   Location,
   EventSeries,
+  EventSeat,
+  EventRow,
 } from "@prisma/client";
 
 export interface EventWithDetails extends Event {
@@ -16,56 +18,24 @@ export interface EventWithDetails extends Event {
   EventSeries?: {
     id: string;
     name: string;
-    description: string | null;
-    startDate: Date;
-    endDate: Date;
   } | null;
-  TicketTypes: TicketType[];
-  Tickets: (Ticket & {
-    seat?: {
-      id: string;
-      number: string;
-      status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "DISABLED";
-    } | null;
-  })[];
-  eventLayout?: {
-    id: string;
-    name: string;
-    description: string;
-    sections: {
+  _count?: {
+    Tickets: number;
+  };
+  tags: {
+    Tag: {
       id: string;
       name: string;
-      description: string;
-      priceMultiplier: number;
-      rows: {
-        id: string;
-        name: string;
-        seats: {
-          id: string;
-          number: string;
-          status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "DISABLED";
-        }[];
-      }[];
-    }[];
-  } | null;
-  tags?: {
-    id: string;
-    name: string;
-    tagId: string;
+    };
   }[];
 }
 
-// Simpler event interface with only the data needed for list views
-export interface EventForList extends Event {
-  Location?: {
-    id: string;
-    name: string;
-  } | null;
-  EventSeries?: {
-    id: string;
-    name: string;
-    description: string | null;
-  } | null;
+export interface TicketTypeWithDetails extends TicketType {
+  Tickets: TicketWithSeatingInformation[];
+}
+
+export interface TicketWithSeatingInformation extends Ticket {
+  seat: EventSeat & { Row: EventRow };
 }
 
 export interface EventSeriesWithDetails extends EventSeries {
@@ -73,16 +43,16 @@ export interface EventSeriesWithDetails extends EventSeries {
 }
 
 interface EventsStore {
-  events: EventForList[];
+  events: EventWithDetails[];
   eventSeries: EventSeriesWithDetails[];
   currentEvent: EventWithDetails | null;
   currentSeries: EventSeriesWithDetails | null;
   loading: boolean;
   error: string | null;
   hasFetched: boolean;
-  ticketTypes: TicketType[];
+  ticketTypes: TicketTypeWithDetails[];
   ticketTypesLoading: boolean;
-  setEvents: (events: EventForList[]) => void;
+  setEvents: (events: EventWithDetails[]) => void;
   setEventSeries: (series: EventSeriesWithDetails[]) => void;
   fetchEvents: () => Promise<void>;
   fetchEventSeries: () => Promise<void>;

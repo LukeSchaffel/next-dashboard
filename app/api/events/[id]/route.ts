@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession } from "@/lib/auth";
-import { updateEventTags, eventIncludeOptions, validateEventAccess } from "@/lib/event-helpers";
+import {
+  updateEventTags,
+  eventIncludeOptions,
+  validateEventAccess,
+  eventWithDetailsSelector,
+} from "@/lib/event-helpers";
 
 export async function GET(
   request: NextRequest,
@@ -14,39 +19,7 @@ export async function GET(
 
     const event = await prisma.event.findUnique({
       where: { id },
-      include: {
-        Location: true,
-        Tickets: {
-          include: {
-            TicketType: true,
-            seat: { include: { Row: true } },
-            purchase: true,
-          },
-        },
-        TicketTypes: {
-          include: {
-            Tickets: true,
-          },
-        },
-        eventLayout: {
-          include: {
-            sections: {
-              include: {
-                rows: {
-                  include: {
-                    seats: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        tags: {
-          include: {
-            Tag: true,
-          },
-        },
-      },
+      include: eventWithDetailsSelector,
     });
 
     if (!event) {

@@ -21,6 +21,7 @@ import Link from "next/link";
 import { CopyButton } from "@mantine/core";
 import { Table } from "@/lib/components";
 import { Event, TicketType, Ticket } from "@prisma/client";
+import { useEventStore } from "@/stores/useEventStore";
 
 interface EventTicketsProps {
   event: Event & { Tickets: Ticket[] };
@@ -32,13 +33,15 @@ interface EventTicketsProps {
 }
 
 export default function EventTickets({
-  event,
-  ticketTypes,
   loading,
   onAddTicketType,
   onEditTicketType,
   onDeleteTicketType,
 }: EventTicketsProps) {
+  const { currentEvent: event, ticketTypes } = useEventStore();
+
+  if (!event) return <></>;
+
   return (
     <Paper p="xl" withBorder>
       <Stack gap="md">

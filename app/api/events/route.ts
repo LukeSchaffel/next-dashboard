@@ -9,6 +9,7 @@ import {
   createTicketTypes,
   eventIncludeOptions,
   eventListIncludeOptions,
+  eventWithDetailsSelector,
 } from "@/lib/event-helpers";
 
 export async function POST(request: NextRequest) {
@@ -151,7 +152,7 @@ export async function GET(request: NextRequest) {
       where: {
         workspaceId,
       },
-      include: eventListIncludeOptions,
+      include: eventWithDetailsSelector,
       orderBy: {
         startsAt: "desc",
       },
