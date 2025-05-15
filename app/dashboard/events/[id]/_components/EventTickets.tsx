@@ -15,24 +15,20 @@ import {
   IconCopy,
   IconCheck,
   IconEdit,
-  IconTrash,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { CopyButton } from "@mantine/core";
 import { Table } from "@/lib/components";
-import { Event, TicketType, Ticket } from "@prisma/client";
 import { useEventStore } from "@/stores/useEventStore";
 
 interface EventTicketsProps {
   onAddTicketType: () => void;
   onEditTicketType: (id: string) => void;
-  onDeleteTicketType: (id: string) => void;
 }
 
 export default function EventTickets({
   onAddTicketType,
   onEditTicketType,
-  onDeleteTicketType,
 }: EventTicketsProps) {
   const {
     currentEvent: event,
@@ -119,23 +115,6 @@ export default function EventTickets({
                       onClick={() => onEditTicketType(ticketType.id)}
                     >
                       <IconEdit size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label="Delete ticket type">
-                    <ActionIcon
-                      variant="light"
-                      color="red"
-                      onClick={() => {
-                        if (
-                          confirm(
-                            "Are you sure you want to delete this ticket type? This action cannot be undone."
-                          )
-                        ) {
-                          onDeleteTicketType(ticketType.id);
-                        }
-                      }}
-                    >
-                      <IconTrash size={16} />
                     </ActionIcon>
                   </Tooltip>
                 </Group>,

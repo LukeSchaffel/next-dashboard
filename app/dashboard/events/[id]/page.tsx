@@ -31,13 +31,8 @@ export default function EventPage({
 }) {
   const { id } = use(params);
   const { ref, toggle, fullscreen } = useFullscreen();
-  const {
-    currentEvent,
-    loading,
-    fetchEvent,
-    fetchTicketTypes,
-    deleteTicketType,
-  } = useEventStore();
+  const { currentEvent, loading, fetchEvent, fetchTicketTypes } =
+    useEventStore();
 
   const [editingTicketTypeId, setEditingTicketTypeId] = useState<string | null>(
     null
@@ -76,15 +71,6 @@ export default function EventPage({
     openTicketTypeModal();
   };
 
-  const handleDeleteTicketType = async (ticketTypeId: string) => {
-    if (!confirm("Are you sure you want to delete this ticket type?")) return;
-
-    try {
-      await deleteTicketType(id, ticketTypeId);
-    } catch (error) {
-      console.error("Failed to delete ticket type:", error);
-    }
-  };
 
   if (loading || !currentEvent) {
     return <EventSkeleton />;
@@ -127,7 +113,6 @@ export default function EventPage({
         <EventTickets
           onAddTicketType={openTicketTypeModal}
           onEditTicketType={handleEditTicketType}
-          onDeleteTicketType={handleDeleteTicketType}
         />
       </Tabs.Panel>
 
@@ -135,7 +120,6 @@ export default function EventPage({
         {currentEvent.eventLayout ? (
           <EventSeating
             onToggleFullscreen={() => {
-              setShowFullscreenSeating(true);
               toggle();
             }}
           />
@@ -173,12 +157,7 @@ export default function EventPage({
         editingTicketTypeId={editingTicketTypeId || undefined}
       />
 
-      <TagManager
-        opened={tagManagerOpened}
-        onClose={closeTagManager}
-        eventId={id}
-        currentTags={currentEvent.tags || []}
-      />
+      <TagManager opened={tagManagerOpened} onClose={closeTagManager} />
     </Tabs>
   );
 }

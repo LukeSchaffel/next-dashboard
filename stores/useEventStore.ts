@@ -125,18 +125,6 @@ interface EventsStore {
     values: any
   ) => Promise<EventSeriesWithDetails>;
   addTicketType: (eventId: string, values: any) => Promise<void>;
-  addTicket: (eventId: string, values: any) => Promise<void>;
-  updateTicket: (
-    eventId: string,
-    ticketId: string,
-    values: any
-  ) => Promise<void>;
-  updateTicketType: (
-    eventId: string,
-    ticketTypeId: string,
-    values: any
-  ) => Promise<void>;
-  deleteTicketType: (eventId: string, ticketTypeId: string) => Promise<void>;
   fetchEventLayout: (eventId: string, layoutId: string) => Promise<void>;
 }
 
@@ -352,111 +340,6 @@ export const useEventStore = create<EventsStore>((set, get) => ({
       });
     } catch (err) {
       console.error("Add ticket type failed:", err);
-      throw err;
-    }
-  },
-  addTicket: async (eventId: string, values: any) => {
-    try {
-      const res = await fetch(`/api/events/${eventId}/tickets`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!res.ok) throw new Error("Failed to add ticket");
-
-      const newTicket = await res.json();
-      const currentEvent = get().currentEvent;
-      if (currentEvent) {
-        set({
-          currentEvent: {
-            ...currentEvent,
-            Tickets: [...currentEvent.Tickets, newTicket],
-          },
-        });
-      }
-    } catch (err) {
-      console.error("Add ticket failed:", err);
-      throw err;
-    }
-  },
-  updateTicket: async (eventId: string, ticketId: string, values: any) => {
-    try {
-      const res = await fetch(`/api/events/${eventId}/tickets/${ticketId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!res.ok) throw new Error("Failed to update ticket");
-
-      const updatedTicket = await res.json();
-      const currentEvent = get().currentEvent;
-      if (currentEvent) {
-        set({
-          currentEvent: {
-            ...currentEvent,
-            Tickets: currentEvent.Tickets.map((t) =>
-              t.id === ticketId ? updatedTicket : t
-            ) as EventWithDetails["Tickets"],
-          } as EventWithDetails,
-        });
-      }
-    } catch (err) {
-      console.error("Update ticket failed:", err);
-      throw err;
-    }
-  },
-  updateTicketType: async (
-    eventId: string,
-    ticketTypeId: string,
-    values: any
-  ) => {
-    try {
-      const res = await fetch(
-        `/api/events/${eventId}/ticketTypes/${ticketTypeId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(values),
-        }
-      );
-
-      if (!res.ok) throw new Error("Failed to update ticket type");
-
-      const updatedTicketType = await res.json();
-      set({
-        ticketTypes: get().ticketTypes.map((t) =>
-          t.id === ticketTypeId ? updatedTicketType : t
-        ),
-      });
-    } catch (err) {
-      console.error("Update ticket type failed:", err);
-      throw err;
-    }
-  },
-  deleteTicketType: async (eventId: string, ticketTypeId: string) => {
-    try {
-      const res = await fetch(
-        `/api/events/${eventId}/ticketTypes/${ticketTypeId}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!res.ok) throw new Error("Failed to delete ticket type");
-
-      set({
-        ticketTypes: get().ticketTypes.filter((t) => t.id !== ticketTypeId),
-      });
-    } catch (err) {
-      console.error("Delete ticket type failed:", err);
       throw err;
     }
   },

@@ -11,24 +11,15 @@ import { useEventStore } from "@/stores/useEventStore";
 interface TagManagerProps {
   opened: boolean;
   onClose: () => void;
-  eventId: string;
-  currentTags: { id: string; name: string; tagId: string }[];
 }
 
-export default function TagManager({
-  opened,
-  onClose,
-  eventId,
-  currentTags,
-}: TagManagerProps) {
-  const { updateEvent } = useEventStore();
+export default function TagManager({ opened, onClose }: TagManagerProps) {
+  const { updateEvent, currentEvent } = useEventStore();
   const [availableTags, setAvailableTags] = useState<
     { value: string; label: string }[]
   >([]);
   const [loading, setLoading] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    currentTags.map((tag) => tag.tagId)
-  );
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -45,8 +36,17 @@ export default function TagManager({
         console.error("Failed to fetch tags:", error);
       }
     };
-    fetchTags();
-  }, []);
+    if (!opened && currentEvent) {
+      fetchTags();
+      setSelectedTags(currentEvent?.tags.map((t) => t.Tag.id) || []);
+    } else {
+      setSelectedTags([]);
+    }
+  }, [opened, currentEvent]);
+
+  if (!currentEvent) {
+    return <></>;
+  }
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -60,7 +60,7 @@ export default function TagManager({
         };
       });
 
-      await updateEvent(eventId, { tags });
+      await updateEvent(currentEvent.id, { tags });
       onClose();
     } catch (error) {
       console.error("Failed to update tags:", error);
