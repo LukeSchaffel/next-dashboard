@@ -10,6 +10,11 @@ interface TagInput {
  * Common include options for fetching event details
  */
 export const eventWithDetailsSelector = {
+  eventLayout: {
+    select: {
+      id: true,
+    },
+  },
   EventSeries: {
     select: {
       name: true,

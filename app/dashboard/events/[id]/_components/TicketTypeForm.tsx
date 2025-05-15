@@ -37,7 +37,7 @@ export default function TicketTypeForm({
   eventId,
   editingTicketTypeId,
 }: TicketTypeFormProps) {
-  const { addTicketType, updateTicketType, ticketTypes, currentEvent } =
+  const { addTicketType, updateTicketType, ticketTypes, currentEvent, currentEventLayout } =
     useEventStore();
   const form = useForm({
     initialValues: {
@@ -93,7 +93,7 @@ export default function TicketTypeForm({
   };
 
   const sectionOptions =
-    currentEvent?.eventLayout?.sections.map((section) => ({
+    currentEventLayout?.sections.map((section) => ({
       value: section.id,
       label: section.name,
     })) || [];

@@ -2,23 +2,34 @@ import { Paper, Stack, Group, Title, Button, Tooltip } from "@mantine/core";
 import { IconMaximize } from "@tabler/icons-react";
 import { SeatSelection } from "@/lib/components";
 import { Event } from "@prisma/client";
+import { useEventStore, EventLayoutWithDetails } from "@/stores/useEventStore";
+import { useEffect } from "react";
 
 interface EventSeatingProps {
-  event: Event & {
-    eventLayout?: {
-      sections: any[];
-    } | null;
-  };
   onToggleFullscreen: () => void;
-  onSeatClick: (seat: { id: string }, section: any) => void;
 }
 
 export default function EventSeating({
-  event,
   onToggleFullscreen,
-  onSeatClick,
 }: EventSeatingProps) {
-  if (!event.eventLayout) return null;
+  const {
+    currentEvent: event,
+    currentEventLayout,
+    fetchEventLayout,
+    ticketTypes,
+  } = useEventStore();
+
+  useEffect(() => {
+    if (event && event?.eventLayout?.id) {
+      fetchEventLayout(event.id, event.eventLayout.id);
+    }
+  }, [event?.id]);
+
+  const onSeatClick = (seat: any, section: any) => {
+    const allTickets = ticketTypes.flatMap((tt) => tt.Tickets);
+  };
+
+  if (!event || !currentEventLayout) return null;
 
   return (
     <Paper p="xl" withBorder>
@@ -36,7 +47,7 @@ export default function EventSeating({
           </Tooltip>
         </Group>
         <SeatSelection
-          sections={event.eventLayout.sections}
+          sections={currentEventLayout.sections}
           basePrice={0}
           selectedSeatIds={[]}
           readOnly

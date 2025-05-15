@@ -35,14 +35,8 @@ export default function EventPage({
     currentEvent,
     loading,
     fetchEvent,
-    addTicketType,
-    updateTicket,
-    updateEvent,
-    ticketTypes,
-    ticketTypesLoading,
     fetchTicketTypes,
     deleteTicketType,
-    updateTicketType,
   } = useEventStore();
 
   const [editingTicketTypeId, setEditingTicketTypeId] = useState<string | null>(
@@ -52,8 +46,6 @@ export default function EventPage({
     ticketTypeModalOpened,
     { open: openTicketTypeModal, close: closeTicketTypeModal },
   ] = useDisclosure(false);
-  const [showFullscreenSeating, setShowFullscreenSeating] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
     useDisclosure(false);
   const [imagePath, setImagePath] = useState<string | null>(null);
@@ -91,13 +83,6 @@ export default function EventPage({
       await deleteTicketType(id, ticketTypeId);
     } catch (error) {
       console.error("Failed to delete ticket type:", error);
-    }
-  };
-
-  const handleSeatClick = (seat: { id: string }, section: any) => {
-    const ticket = currentEvent?.Tickets.find((t) => t.seat?.id === seat.id);
-    if (ticket) {
-      setSelectedTicket(ticket);
     }
   };
 
@@ -140,9 +125,6 @@ export default function EventPage({
 
       <Tabs.Panel value="tickets">
         <EventTickets
-          event={currentEvent}
-          ticketTypes={ticketTypes}
-          loading={ticketTypesLoading}
           onAddTicketType={openTicketTypeModal}
           onEditTicketType={handleEditTicketType}
           onDeleteTicketType={handleDeleteTicketType}
@@ -152,12 +134,10 @@ export default function EventPage({
       <Tabs.Panel value="seating">
         {currentEvent.eventLayout ? (
           <EventSeating
-            event={currentEvent}
             onToggleFullscreen={() => {
               setShowFullscreenSeating(true);
               toggle();
             }}
-            onSeatClick={handleSeatClick}
           />
         ) : (
           <Paper p="xl" withBorder>

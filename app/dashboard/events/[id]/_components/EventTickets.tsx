@@ -24,23 +24,25 @@ import { Event, TicketType, Ticket } from "@prisma/client";
 import { useEventStore } from "@/stores/useEventStore";
 
 interface EventTicketsProps {
-  event: Event & { Tickets: Ticket[] };
-  ticketTypes: TicketType[];
-  loading: boolean;
   onAddTicketType: () => void;
   onEditTicketType: (id: string) => void;
   onDeleteTicketType: (id: string) => void;
 }
 
 export default function EventTickets({
-  loading,
   onAddTicketType,
   onEditTicketType,
   onDeleteTicketType,
 }: EventTicketsProps) {
-  const { currentEvent: event, ticketTypes } = useEventStore();
+  const {
+    currentEvent: event,
+    ticketTypes,
+    ticketTypesLoading: loading,
+  } = useEventStore();
 
   if (!event) return <></>;
+
+  const allTickets = ticketTypes.flatMap((tt) => tt.Tickets);
 
   return (
     <Paper p="xl" withBorder>
@@ -84,7 +86,7 @@ export default function EventTickets({
                 ticketType.quantity === null
                   ? "Unlimited"
                   : ticketType.quantity,
-                event.Tickets.filter((t) => t.ticketTypeId === ticketType.id)
+                allTickets.filter((t) => t.ticketTypeId === ticketType.id)
                   .length || 0,
                 <Group gap="xs" key={ticketType.id}>
                   <CopyButton

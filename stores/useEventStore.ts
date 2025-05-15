@@ -7,9 +7,14 @@ import {
   EventSeries,
   EventSeat,
   EventRow,
+  EventLayout,
+  EventSection,
 } from "@prisma/client";
 
 export interface EventWithDetails extends Event {
+  eventLayout: {
+    id: string;
+  };
   Location?: {
     id: string;
     name: string;
@@ -42,6 +47,22 @@ export interface EventSeriesWithDetails extends EventSeries {
   events: EventWithDetails[];
 }
 
+export interface EventSeatWithRow extends EventSeat {
+  Row: EventRow;
+}
+
+export interface EventRowWithSeats extends EventRow {
+  seats: EventSeat[];
+}
+
+export interface EventSectionWithRows extends EventSection {
+  rows: EventRowWithSeats[];
+}
+
+export interface EventLayoutWithDetails extends EventLayout {
+  sections: EventSectionWithRows[];
+}
+
 interface EventsStore {
   events: EventWithDetails[];
   eventSeries: EventSeriesWithDetails[];
@@ -52,6 +73,9 @@ interface EventsStore {
   hasFetched: boolean;
   ticketTypes: TicketTypeWithDetails[];
   ticketTypesLoading: boolean;
+  currentEventLayout: EventLayoutWithDetails | null;
+  layoutLoading: boolean;
+  layoutError: string | null;
   setEvents: (events: EventWithDetails[]) => void;
   setEventSeries: (series: EventSeriesWithDetails[]) => void;
   fetchEvents: () => Promise<void>;
@@ -111,6 +135,7 @@ interface EventsStore {
     values: any
   ) => Promise<void>;
   deleteTicketType: (eventId: string, ticketTypeId: string) => Promise<void>;
+  fetchEventLayout: (eventId: string, layoutId: string) => Promise<void>;
 }
 
 export const useEventStore = create<EventsStore>((set, get) => ({
@@ -123,6 +148,9 @@ export const useEventStore = create<EventsStore>((set, get) => ({
   hasFetched: false,
   ticketTypes: [],
   ticketTypesLoading: false,
+  currentEventLayout: null,
+  layoutLoading: false,
+  layoutError: null,
   setEvents: (events) => set({ events }),
   setEventSeries: (series) => set({ eventSeries: series }),
   fetchEvents: async () => {
@@ -456,6 +484,21 @@ export const useEventStore = create<EventsStore>((set, get) => ({
     } catch (err) {
       console.error("Update series failed:", err);
       throw err;
+    }
+  },
+  fetchEventLayout: async (eventId: string, layoutId: string) => {
+    set({ layoutLoading: true, layoutError: null });
+    try {
+      const res = await fetch(
+        `/api/events/${eventId}/seating-layout/${layoutId}`
+      );
+      if (!res.ok) throw new Error("Failed to fetch event layout");
+      const layout = await res.json();
+      set({ currentEventLayout: layout });
+    } catch (err: any) {
+      set({ layoutError: err.message || "Failed to load event layout" });
+    } finally {
+      set({ layoutLoading: false });
     }
   },
 }));
