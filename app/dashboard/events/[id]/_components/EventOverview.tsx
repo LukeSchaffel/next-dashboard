@@ -53,8 +53,13 @@ export default function EventOverview({
             {event.tags && event.tags.length > 0 && (
               <>
                 {event.tags.map((tag) => (
-                  <Badge key={tag.id} size="lg" variant="light" color="blue">
-                    {tag.name}
+                  <Badge
+                    key={tag.Tag.id}
+                    size="lg"
+                    variant="light"
+                    color="blue"
+                  >
+                    {tag?.Tag.name}
                   </Badge>
                 ))}
               </>
