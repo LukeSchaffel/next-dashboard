@@ -6,7 +6,8 @@ import { use } from "react";
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { SeatingLayoutEditor, SeatingLayout } from "@/lib/components";
+import { SeatingLayoutEditor } from "@/lib/components";
+import { EventLayoutWithDetails } from "@/stores/useEventStore";
 
 export default function EditTemplateLayoutPage({
   params,
@@ -17,7 +18,7 @@ export default function EditTemplateLayoutPage({
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [layout, setLayout] = useState<SeatingLayout | null>(null);
+  const [layout, setLayout] = useState<EventLayoutWithDetails | null>(null);
 
   useEffect(() => {
     const fetchLayout = async () => {
