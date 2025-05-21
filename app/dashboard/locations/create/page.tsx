@@ -14,7 +14,9 @@ import {
 import { useForm } from "@mantine/form";
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
+
 import { useLocationStore } from "@/stores/useLocationStore";
+import { formatPhoneNumber, unformatPhoneNumber } from "@/lib";
 import DescriptionEditor from "../_components/DescriptionEditor";
 
 interface LocationFormValues {
@@ -61,12 +63,34 @@ export default function CreateLocationPage() {
         value && !/^https?:\/\/.+/.test(value) ? "Invalid URL" : null,
       linkedinUrl: (value) =>
         value && !/^https?:\/\/.+/.test(value) ? "Invalid URL" : null,
+      phoneNumber: (value) => {
+        if (!value) return "Phone number is required";
+        const digits = value.replace(/\D/g, "");
+        if (digits.length !== 10) return "Phone number must be 10 digits";
+        return null;
+      },
     },
   });
 
+  const [displayPhoneNumber, setDisplayPhoneNumber] = useState("");
+
+  const handlePhoneNumberChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const rawValue = unformatPhoneNumber(event.target.value);
+    const formatted = formatPhoneNumber(rawValue);
+    setDisplayPhoneNumber(formatted);
+    form.setFieldValue("phoneNumber", rawValue);
+  };
+
   const handleSubmit = async (values: LocationFormValues) => {
     try {
-      const location = await createLocation(values);
+      // Ensure phone number is stored as raw digits
+      const submitValues = {
+        ...values,
+        phoneNumber: unformatPhoneNumber(values.phoneNumber),
+      };
+      const location = await createLocation(submitValues);
       router.push(`/dashboard/locations/${location.id}`);
     } catch (error) {
       console.error("Failed to create location:", error);
@@ -106,6 +130,7 @@ export default function CreateLocationPage() {
                   <TextInput
                     label="Address"
                     placeholder="Enter location address"
+                    required
                     {...form.getInputProps("address")}
                   />
                 </Grid.Col>
@@ -131,8 +156,11 @@ export default function CreateLocationPage() {
                 <Grid.Col span={6}>
                   <TextInput
                     label="Phone Number"
-                    placeholder="+1 (555) 123-4567"
-                    {...form.getInputProps("phoneNumber")}
+                    placeholder="(555) 123-4567"
+                    value={displayPhoneNumber}
+                    onChange={handlePhoneNumberChange}
+                    maxLength={14}
+                    required
                   />
                 </Grid.Col>
                 <Grid.Col span={6}>
@@ -140,6 +168,7 @@ export default function CreateLocationPage() {
                     label="Email"
                     placeholder="contact@location.com"
                     {...form.getInputProps("email")}
+                    required
                   />
                 </Grid.Col>
                 <Grid.Col span={12}>
