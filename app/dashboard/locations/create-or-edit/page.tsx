@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Stack,
   Title,
@@ -10,15 +10,14 @@ import {
   Group,
   Paper,
   Grid,
-  LoadingOverlay,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
+
 import { useLocationStore } from "@/stores/useLocationStore";
-import DescriptionEditor from "../../_components/DescriptionEditor";
-import { Location } from "@prisma/client";
-import { use } from "react";
+import { formatPhoneNumber, unformatPhoneNumber } from "@/lib";
+import DescriptionEditor from "../_components/DescriptionEditor";
 
 interface LocationFormValues {
   name: string;
@@ -33,16 +32,13 @@ interface LocationFormValues {
   linkedinUrl: string;
 }
 
-export default function EditLocationPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = use(params);
+export default function CreateLocationPage() {
   const router = useRouter();
-  const { updateLocation, loading } = useLocationStore();
-  const [location, setLocation] = useState<Location | null>(null);
-  const [fetching, setFetching] = useState(true);
+  const { createLocation, loading, updateLocation } = useLocationStore();
+  const searchParams = useSearchParams();
+
+  const locationIdToEdit = searchParams.get("locationId");
+  const from = searchParams.get("from");
 
   const form = useForm<LocationFormValues>({
     initialValues: {
@@ -71,69 +67,88 @@ export default function EditLocationPage({
         value && !/^https?:\/\/.+/.test(value) ? "Invalid URL" : null,
       linkedinUrl: (value) =>
         value && !/^https?:\/\/.+/.test(value) ? "Invalid URL" : null,
+      phoneNumber: (value) => {
+        if (!value) return "Phone number is required";
+        const digits = value.replace(/\D/g, "");
+        if (digits.length !== 10) return "Phone number must be 10 digits";
+        return null;
+      },
     },
   });
 
+  const [displayPhoneNumber, setDisplayPhoneNumber] = useState("");
+
+  const handlePhoneNumberChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const rawValue = unformatPhoneNumber(event.target.value);
+    const formatted = formatPhoneNumber(rawValue);
+    setDisplayPhoneNumber(formatted);
+    form.setFieldValue("phoneNumber", rawValue);
+  };
+
+  const handleSubmit = async (values: LocationFormValues) => {
+    try {
+      const submitValues = {
+        ...values,
+        phoneNumber: unformatPhoneNumber(values.phoneNumber),
+      };
+      if (locationIdToEdit) {
+        await updateLocation(locationIdToEdit, values);
+        router.push(`/dashboard/locations/${locationIdToEdit}`);
+      } else {
+        const location = await createLocation(submitValues);
+        router.push(`/dashboard/locations/${location.id}`);
+      }
+    } catch (error) {
+      console.error("Failed to create location:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchLocation = async () => {
+      if (!locationIdToEdit) return;
       try {
-        const res = await fetch(`/api/locations/${slug}`);
+        const res = await fetch(`/api/locations/${locationIdToEdit}`);
         if (!res.ok) throw new Error("Failed to fetch location");
         const data = await res.json();
-        setLocation(data);
+        console.log(data);
         form.setValues({
-          name: data.name,
-          address: data.address || "",
-          description: data.description || "",
-          phoneNumber: data.phoneNumber || "",
-          email: data.email || "",
-          website: data.website || "",
-          facebookUrl: data.facebookUrl || "",
-          instagramUrl: data.instagramUrl || "",
-          twitterUrl: data.twitterUrl || "",
-          linkedinUrl: data.linkedinUrl || "",
+          ...data,
         });
+        setDisplayPhoneNumber(
+          data.phoneNumber ? formatPhoneNumber(data.phoneNumber) : ""
+        );
       } catch (error) {
         console.error("Failed to fetch location:", error);
-      } finally {
-        setFetching(false);
       }
     };
 
     fetchLocation();
-  }, [slug]);
+  }, [locationIdToEdit]);
 
-  const handleSubmit = async (values: LocationFormValues) => {
-    try {
-      await updateLocation(slug, values);
-      router.push(`/dashboard/locations/${slug}`);
-    } catch (error) {
-      console.error("Failed to update location:", error);
-    }
-  };
-
-  const backButton = (
-    <Group>
-      <Link href={`/dashboard/locations/${slug}`}>
-        <Button variant="subtle" leftSection={<IconArrowLeft size={16} />}>
-          Back to Location
-        </Button>
-      </Link>
-    </Group>
-  );
-
-  if (fetching) {
-    return <div>Loading...</div>;
-  }
-
-  if (!location) {
-    return <div>Location not found</div>;
-  }
+  const backButton = (() => {
+    const title =
+      from === "details" ? `Back to ${form.values.name}` : "Locations";
+    const to =
+      from === "details" && locationIdToEdit
+        ? `/dashboard/locations/${locationIdToEdit}`
+        : "/dashboard/locations";
+    return (
+      <Group>
+        <Link href={to}>
+          <Button variant="subtle" leftSection={<IconArrowLeft size={16} />}>
+            {title}
+          </Button>
+        </Link>
+      </Group>
+    );
+  })();
 
   return (
     <Stack gap="xl">
       {backButton}
-      <Title order={2}>Edit Location</Title>
+      <Title order={2}>Create New Location</Title>
 
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="xl">
@@ -153,6 +168,7 @@ export default function EditLocationPage({
                   <TextInput
                     label="Address"
                     placeholder="Enter location address"
+                    required
                     {...form.getInputProps("address")}
                   />
                 </Grid.Col>
@@ -178,8 +194,11 @@ export default function EditLocationPage({
                 <Grid.Col span={6}>
                   <TextInput
                     label="Phone Number"
-                    placeholder="+1 (555) 123-4567"
-                    {...form.getInputProps("phoneNumber")}
+                    placeholder="(555) 123-4567"
+                    value={displayPhoneNumber}
+                    onChange={handlePhoneNumberChange}
+                    maxLength={14}
+                    required
                   />
                 </Grid.Col>
                 <Grid.Col span={6}>
@@ -187,6 +206,7 @@ export default function EditLocationPage({
                     label="Email"
                     placeholder="contact@location.com"
                     {...form.getInputProps("email")}
+                    required
                   />
                 </Grid.Col>
                 <Grid.Col span={12}>
@@ -238,7 +258,7 @@ export default function EditLocationPage({
 
           <Group justify="flex-end">
             <Button type="submit" loading={loading}>
-              Save Changes
+              {locationIdToEdit ? "Edit location" : "Create location"}
             </Button>
           </Group>
         </Stack>

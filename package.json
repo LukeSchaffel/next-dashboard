@@ -26,6 +26,7 @@
     "@mantine/dropzone": "^8.0.0",
     "@mantine/form": "^7.17.3",
     "@mantine/hooks": "^7.17.2",
+    "@mantine/notifications": "^8.0.1",
     "@mantine/tiptap": "^7.17.4",
     "@prisma/client": "^6.5.0",
     "@react-pdf/renderer": "^4.3.0",

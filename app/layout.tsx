@@ -6,6 +6,8 @@ import "@mantine/tiptap/styles.css";
 import "@mantine/charts/styles.css";
 import "@mantine/carousel/styles.css";
 import "@mantine/dropzone/styles.css";
+import "@mantine/notifications/styles.css";
+
 import {
   MantineProvider,
   ColorSchemeScript,
@@ -16,6 +18,7 @@ import {
 import AppHeader from "@/lib/components/app-header/AppHeader";
 import styles from "./_app.module.css";
 import { theme } from "../theme";
+import { Notifications } from "@mantine/notifications";
 
 export const metadata = {
   title: "Ticket Retreiver",
@@ -36,6 +39,7 @@ export default function RootLayout({ children }: { children: any }) {
         </head>
         <body className={styles.body}>
           <MantineProvider theme={theme}>
+            <Notifications position="top-right" />
             <AppShell>
               <AppHeader />
               {children}

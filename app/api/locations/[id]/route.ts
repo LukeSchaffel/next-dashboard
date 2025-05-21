@@ -73,12 +73,22 @@ export async function DELETE(
 
     const location = await prisma.location.findUnique({
       where: { id },
+      include: {
+        Events: true,
+      },
     });
 
     if (!location) {
       return NextResponse.json(
         { error: "Location not found" },
         { status: 404 }
+      );
+    }
+
+    if (location.Events?.length > 0) {
+      return NextResponse.json(
+        { error: "A location with existing events can not be deleted" },
+        { status: 400 }
       );
     }
 

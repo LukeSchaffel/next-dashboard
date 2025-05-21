@@ -144,6 +144,11 @@ export default function LocationPage({
               >
                 Edit Description
               </Button>
+              <Link
+                href={`/dashboard/locations/create-or-edit?locationId=${location.id}&from=details`}
+              >
+                <Button variant="light">Edit</Button>
+              </Link>
               {location.templateLayout ? (
                 <Link
                   href={`/dashboard/locations/${location.id}/template-layout/${location.templateLayout.id}`}

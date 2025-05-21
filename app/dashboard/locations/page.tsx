@@ -8,7 +8,6 @@ import {
   Text,
   Badge,
 } from "@mantine/core";
-import { Location } from "@prisma/client";
 import { useContext, useEffect, useState } from "react";
 import { DashboardContext } from "../_components/client-layout";
 import Link from "next/link";
@@ -41,7 +40,7 @@ export default function LocationsPage() {
             Refresh
           </Button>
         </Group>
-        <Link href="/dashboard/locations/create">
+        <Link href="/dashboard/locations/create-or-edit">
           <Button leftSection={<IconPlus size={16} />}>New Location</Button>
         </Link>
       </Flex>
@@ -64,7 +63,9 @@ export default function LocationsPage() {
               location.name,
               location.address || "No address",
               <Flex key={`actions-${location.id}`}>
-                <Link href={`/dashboard/locations/${location.id}/edit`}>
+                <Link
+                  href={`/dashboard/locations/create-or-edit?locationId=${location.id}`}
+                >
                   <Button variant="subtle">Edit</Button>
                 </Link>
 

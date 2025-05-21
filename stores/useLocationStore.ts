@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { Location } from "@prisma/client";
+import { notifications } from "@mantine/notifications";
 
 interface LocationWithTemplate extends Location {
   templateLayout?: {
@@ -44,13 +45,20 @@ export const useLocationStore = create<LocationsStore>((set, get) => ({
       const res = await fetch(`/api/locations/${locationId}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Failed to delete location");
+      if (!res.ok) {
+        const resJson = await res.json();
+        throw new Error(resJson.error || "Failed to delete location");
+      }
 
       set({
         locations: get().locations.filter((l) => l.id !== locationId),
       });
-    } catch (err) {
-      console.error("Delete failed:", err);
+    } catch (err: any) {
+      notifications.show({
+        title: "Could not delete locations",
+        message: err.message,
+        color: "red",
+      });
     }
   },
   createLocation: async (values: any) => {
