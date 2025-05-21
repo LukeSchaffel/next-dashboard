@@ -12,16 +12,26 @@ import {
   LoadingOverlay,
   Anchor,
   Tooltip,
+  Tabs,
 } from "@mantine/core";
-import { Location, Event } from "@prisma/client";
 import { notFound } from "next/navigation";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { use } from "react";
 import Link from "next/link";
-import { IconEye, IconEdit, IconTable, IconCopy } from "@tabler/icons-react";
+import {
+  IconEye,
+  IconEdit,
+  IconTable,
+  IconCopy,
+  IconFileDescription,
+  IconCalendarEvent,
+  IconBuilding,
+} from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
+
 import DescriptionEditor from "../_components/DescriptionEditor";
+import { Location, Event } from "@prisma/client";
 
 interface LocationWithEvents extends Location {
   Events: Event[];
@@ -45,7 +55,6 @@ export default function LocationPage({
     descriptionModalOpened,
     { open: openDescriptionModal, close: closeDescriptionModal },
   ] = useDisclosure(false);
-  const [descriptionLoading, setDescriptionLoading] = useState(false);
 
   useEffect(() => {
     const fetchLocation = async () => {
@@ -122,21 +131,89 @@ export default function LocationPage({
   );
 
   return (
-    <Stack gap="xl">
-      <Paper p="xl" withBorder>
-        <Stack gap="md">
-          <Group justify="space-between">
-            <Title order={2}>{location.name}</Title>
-            <Group>
-              <Tooltip label={copied ? "URL Copied!" : "Copy Public URL"}>
-                <Button
-                  variant="light"
-                  leftSection={<IconCopy size={16} />}
-                  onClick={handleCopyUrl}
-                >
-                  Copy Public URL
-                </Button>
-              </Tooltip>
+    <Tabs defaultValue="overview">
+      <Tabs.List mb={16}>
+        <Tabs.Tab value="overview" leftSection={<IconBuilding size={16} />}>
+          Overview
+        </Tabs.Tab>
+        <Tabs.Tab
+          value="description"
+          leftSection={<IconFileDescription size={16} />}
+        >
+          Description
+        </Tabs.Tab>
+        <Tabs.Tab value="template-layout" leftSection={<IconTable size={16} />}>
+          Template Layout
+        </Tabs.Tab>
+        <Tabs.Tab value="events" leftSection={<IconCalendarEvent size={16} />}>
+          Events
+        </Tabs.Tab>
+      </Tabs.List>
+
+      <Tabs.Panel value="overview">
+        <Stack gap="xl">
+          <Paper p="xl" withBorder>
+            <Stack gap="md">
+              <Group justify="space-between">
+                <Title order={2}>{location.name}</Title>
+                <Group>
+                  <Tooltip label={copied ? "URL Copied!" : "Copy Public URL"}>
+                    <Button
+                      variant="light"
+                      leftSection={<IconCopy size={16} />}
+                      onClick={handleCopyUrl}
+                    >
+                      Copy Public URL
+                    </Button>
+                  </Tooltip>
+                  <Link
+                    href={`/dashboard/locations/create-or-edit?locationId=${location.id}&from=details`}
+                  >
+                    <Button variant="light">Edit</Button>
+                  </Link>
+                </Group>
+              </Group>
+              {location.address && (
+                <Text size="lg" c="dimmed">
+                  {location.address}
+                </Text>
+              )}
+
+              <Stack gap="md" mt="md">
+                <Title order={3}>Contact Information</Title>
+                {location.phoneNumber && (
+                  <Group>
+                    <Text fw={500}>Phone:</Text>
+                    <Text>{location.phoneNumber}</Text>
+                  </Group>
+                )}
+                {location.email && (
+                  <Group>
+                    <Text fw={500}>Email:</Text>
+                    <Anchor href={`mailto:${location.email}`}>
+                      {location.email}
+                    </Anchor>
+                  </Group>
+                )}
+                {location.website && (
+                  <Group>
+                    <Text fw={500}>Website:</Text>
+                    <Anchor href={location.website} target="_blank">
+                      {location.website}
+                    </Anchor>
+                  </Group>
+                )}
+              </Stack>
+            </Stack>
+          </Paper>
+        </Stack>
+      </Tabs.Panel>
+
+      <Tabs.Panel value="description">
+        <Paper p="xl" withBorder>
+          <Stack gap="md">
+            <Group justify="space-between">
+              <Title order={3}>Description</Title>
               <Button
                 variant="light"
                 leftSection={<IconEdit size={16} />}
@@ -144,11 +221,21 @@ export default function LocationPage({
               >
                 Edit Description
               </Button>
-              <Link
-                href={`/dashboard/locations/create-or-edit?locationId=${location.id}&from=details`}
-              >
-                <Button variant="light">Edit</Button>
-              </Link>
+            </Group>
+            {location.description ? (
+              <div dangerouslySetInnerHTML={{ __html: location.description }} />
+            ) : (
+              <Text c="dimmed">No description available</Text>
+            )}
+          </Stack>
+        </Paper>
+      </Tabs.Panel>
+
+      <Tabs.Panel value="template-layout">
+        <Paper p="xl" withBorder>
+          <Stack gap="md">
+            <Group justify="space-between">
+              <Title order={3}>Template Layout</Title>
               {location.templateLayout ? (
                 <Link
                   href={`/dashboard/locations/${location.id}/template-layout/${location.templateLayout.id}`}
@@ -167,157 +254,70 @@ export default function LocationPage({
                 </Link>
               )}
             </Group>
-          </Group>
-          {location.address && (
-            <Text size="lg" c="dimmed">
-              {location.address}
-            </Text>
-          )}
-          {location.description && (
-            <div dangerouslySetInnerHTML={{ __html: location.description }} />
-          )}
-
-          <Stack gap="md" mt="md">
-            <Title order={3}>Contact Information</Title>
-            {location.phoneNumber && (
-              <Group>
-                <Text fw={500}>Phone:</Text>
-                <Text>{location.phoneNumber}</Text>
-              </Group>
-            )}
-            {location.email && (
-              <Group>
-                <Text fw={500}>Email:</Text>
-                <Anchor href={`mailto:${location.email}`}>
-                  {location.email}
-                </Anchor>
-              </Group>
-            )}
-            {location.website && (
-              <Group>
-                <Text fw={500}>Website:</Text>
-                <Anchor
-                  href={location.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {location.website}
-                </Anchor>
-              </Group>
-            )}
-
-            {(location.facebookUrl ||
-              location.instagramUrl ||
-              location.twitterUrl ||
-              location.linkedinUrl) && (
-              <>
-                <Title order={3}>Social Media</Title>
-                {location.facebookUrl && (
-                  <Group>
-                    <Text fw={500}>Facebook:</Text>
-                    <Anchor
-                      href={location.facebookUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {location.facebookUrl}
-                    </Anchor>
-                  </Group>
+            {location.templateLayout ? (
+              <Stack gap="md">
+                <Text fw={500}>{location.templateLayout.name}</Text>
+                {location.templateLayout.description && (
+                  <Text>{location.templateLayout.description}</Text>
                 )}
-                {location.instagramUrl && (
-                  <Group>
-                    <Text fw={500}>Instagram:</Text>
-                    <Anchor
-                      href={location.instagramUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {location.instagramUrl}
-                    </Anchor>
-                  </Group>
-                )}
-                {location.twitterUrl && (
-                  <Group>
-                    <Text fw={500}>Twitter:</Text>
-                    <Anchor
-                      href={location.twitterUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {location.twitterUrl}
-                    </Anchor>
-                  </Group>
-                )}
-                {location.linkedinUrl && (
-                  <Group>
-                    <Text fw={500}>LinkedIn:</Text>
-                    <Anchor
-                      href={location.linkedinUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {location.linkedinUrl}
-                    </Anchor>
-                  </Group>
-                )}
-              </>
+              </Stack>
+            ) : (
+              <Text c="dimmed">No template layout has been created yet</Text>
             )}
           </Stack>
-
-          <Badge size="lg" variant="light">
-            {events.length} {events.length === 1 ? "Event" : "Events"}
-          </Badge>
-        </Stack>
-      </Paper>
-
-      {currentEvents.length > 0 && (
-        <Stack gap="md">
-          <Title order={3}>Currently Happening</Title>
-          <Stack gap="sm">
-            {currentEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </Stack>
-        </Stack>
-      )}
-
-      {upcomingEvents.length > 0 && (
-        <Stack gap="md">
-          <Title order={3}>Upcoming Events</Title>
-          <Stack gap="sm">
-            {upcomingEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </Stack>
-        </Stack>
-      )}
-
-      {pastEvents.length > 0 && (
-        <Stack gap="md">
-          <Title order={3}>Past Events</Title>
-          <Stack gap="sm">
-            {pastEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </Stack>
-        </Stack>
-      )}
-
-      {events.length === 0 && (
-        <Paper p="xl" withBorder>
-          <Text ta="center" c="dimmed">
-            No events have been scheduled at this location yet.
-          </Text>
         </Paper>
-      )}
+      </Tabs.Panel>
+
+      <Tabs.Panel value="events">
+        <Stack gap="xl">
+          {currentEvents.length > 0 && (
+            <Stack gap="md">
+              <Title order={3}>Current Events</Title>
+              {currentEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </Stack>
+          )}
+
+          {upcomingEvents.length > 0 && (
+            <Stack gap="md">
+              <Title order={3}>Upcoming Events</Title>
+              {upcomingEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </Stack>
+          )}
+
+          {pastEvents.length > 0 && (
+            <Stack gap="md">
+              <Title order={3}>Past Events</Title>
+              {pastEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </Stack>
+          )}
+
+          {events.length === 0 && (
+            <Paper p="xl" withBorder>
+              <Text c="dimmed">
+                No events have been scheduled at this location
+              </Text>
+            </Paper>
+          )}
+        </Stack>
+      </Tabs.Panel>
 
       <DescriptionEditor
         opened={descriptionModalOpened}
         onClose={closeDescriptionModal}
-        description={location?.description || ""}
-        locationId={location?.id || ""}
-        onUpdate={setLocation}
+        locationId={location.id}
+        description={location.description || ""}
+        onUpdate={(updatedLocation) => {
+          setLocation((prev) =>
+            prev ? { ...prev, ...updatedLocation } : null
+          );
+        }}
       />
-    </Stack>
+    </Tabs>
   );
 }

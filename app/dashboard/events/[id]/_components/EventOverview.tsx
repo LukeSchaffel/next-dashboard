@@ -9,10 +9,10 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { IconTag } from "@tabler/icons-react";
-import Link from "next/link";
 import { Event, Ticket } from "@prisma/client";
 import dayjs from "dayjs";
-import ImageUploader from "../../../_components/ImageUploader";
+import Link from "next/link";
+
 import { EventWithDetails, useEventStore } from "@/stores/useEventStore";
 
 interface EventOverviewProps {
@@ -46,9 +46,11 @@ export default function EventOverview({
               {event._count?.Tickets === 1 ? "Ticket" : "Tickets"}
             </Badge>
             {event.Location && (
-              <Badge size="lg" variant="light">
-                {event.Location.name}
-              </Badge>
+              <Link href={`/dashboard/locations/${event.Location.id}`}>
+                <Badge size="lg" variant="light">
+                  {event.Location.name}
+                </Badge>
+              </Link>
             )}
             {event.tags && event.tags.length > 0 && (
               <>

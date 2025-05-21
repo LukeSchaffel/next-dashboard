@@ -7,7 +7,6 @@ import {
   IconFileDescription,
   IconPhoto,
 } from "@tabler/icons-react";
-import { Event, Ticket, TicketType } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import { use } from "react";
@@ -71,14 +70,13 @@ export default function EventPage({
     openTicketTypeModal();
   };
 
-
   if (loading || !currentEvent) {
     return <EventSkeleton />;
   }
 
   return (
     <Tabs defaultValue="overview">
-      <Tabs.List>
+      <Tabs.List mb={16}>
         <Tabs.Tab value="overview" leftSection={<IconEye size={16} />}>
           Overview
         </Tabs.Tab>

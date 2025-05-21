@@ -41,10 +41,7 @@ export default function DescriptionEditor({
       const updatedLocation = await updateLocation(locationId, {
         description: editor.getHTML(),
       });
-      onUpdate((prev: Location) => ({
-        ...prev,
-        description: updatedLocation.description,
-      }));
+      onUpdate(updatedLocation);
       onClose();
     } catch (error) {
       console.error("Failed to update description:", error);
