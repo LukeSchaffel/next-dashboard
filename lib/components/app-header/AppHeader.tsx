@@ -1,5 +1,5 @@
 "use client";
-import { AppShellHeader, Burger, Button, Group } from "@mantine/core";
+import { AppShellHeader, Burger, Button, Group, Image } from "@mantine/core";
 import { usePathname } from "next/navigation";
 import { useAuth, SignInButton, SignOutButton } from "@clerk/nextjs";
 import Link from "next/link";
@@ -41,7 +41,9 @@ export default function AppHeader() {
             size="sm"
           />
 
-          <Link href={"/"}>Home</Link>
+          <Link href={"/"}>
+            <Image src="/logo.png" alt="Logo" width={150} height={80} />
+          </Link>
           <Link href="/discover">Discover</Link>
           <Link href="/events">Events</Link>
           <Link href="/locations">Locations</Link>
