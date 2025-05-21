@@ -20,6 +20,8 @@ export const eventWithDetailsSelector = {
       name: true,
       id: true,
       description: true,
+      startDate: true,
+      endDate: true,
     },
   },
   Location: {

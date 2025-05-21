@@ -24,6 +24,8 @@ export interface EventWithDetails extends Event {
   EventSeries?: {
     id: string;
     name: string;
+    startDate?: string;
+    endDate?: string;
   } | null;
   _count?: {
     Tickets: number;
