@@ -137,18 +137,22 @@ export async function PATCH(
       data: {
         name,
         description,
+        workspaceId,
         sections: {
           create: sections.map((section: any) => ({
             name: section.name,
             description: section.description,
             priceMultiplier: section.priceMultiplier,
+            workspaceId,
             rows: {
               create: section.rows.map((row: any) => ({
                 name: row.name,
+                workspaceId,
                 seats: {
                   create: row.seats.map((seat: any) => ({
                     number: seat.number,
                     status: seat.status,
+                    workspaceId,
                   })),
                 },
               })),

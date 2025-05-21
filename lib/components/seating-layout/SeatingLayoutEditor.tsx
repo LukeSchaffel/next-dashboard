@@ -22,35 +22,46 @@ import { useState } from "react";
 import { IconPlus, IconTrash, IconX } from "@tabler/icons-react";
 import { useFullscreen } from "@mantine/hooks";
 
-export interface Section {
+import { EventLayoutWithDetails } from "@/stores/useEventStore";
+
+// Base types that work for both editor and database states
+export interface Seat {
   id: string;
-  name: string;
-  description: string;
-  priceMultiplier: number;
-  rows: Row[];
+  number: string;
+  status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "DISABLED";
+  // Optional database fields
+  workspaceId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  rowId?: string;
 }
 
 export interface Row {
   id: string;
   name: string;
   seats: Seat[];
+  // Optional database fields
+  workspaceId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  sectionId?: string;
 }
 
-export interface Seat {
-  id: string;
-  number: string;
-  status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "DISABLED";
-}
-
-export interface SeatingLayout {
+export interface Section {
   id: string;
   name: string;
-  description: string;
-  sections: Section[];
+  description: string | null;
+  priceMultiplier: number;
+  rows: Row[];
+  // Optional database fields
+  workspaceId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  eventLayoutId?: string;
 }
 
 interface SeatingLayoutEditorProps {
-  initialLayout?: SeatingLayout;
+  initialLayout?: EventLayoutWithDetails;
   loading?: boolean;
   saving?: boolean;
   onSubmit: (values: {
@@ -92,7 +103,7 @@ export default function SeatingLayoutEditor({
     const newSection: Section = {
       id: crypto.randomUUID(),
       name: `Section ${sections.length + 1}`,
-      description: "",
+      description: null,
       priceMultiplier: 1.0,
       rows: [],
     };
@@ -278,7 +289,7 @@ export default function SeatingLayoutEditor({
                             />
                             <TextInput
                               label="Description"
-                              value={section.description}
+                              value={section.description || ""}
                               onChange={(e) =>
                                 updateSection(section.id, {
                                   description: e.target.value,

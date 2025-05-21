@@ -22,7 +22,8 @@ export default function EditEventLayoutPage({
   params: Promise<{ slug: string; layoutId: string }>;
 }) {
   const { slug, layoutId } = use(params);
-  const { currentEvent, loading, fetchEvent } = useEventStore();
+  const { currentEvent, loading, fetchEvent, currentEventLayout } =
+    useEventStore();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -97,7 +98,7 @@ export default function EditEventLayoutPage({
       </Paper>
 
       <SeatingLayoutEditor
-        initialLayout={currentEvent.eventLayout}
+        initialLayout={currentEventLayout ?? undefined}
         loading={loading}
         saving={saving}
         onSubmit={handleSubmit}
