@@ -32,7 +32,7 @@ export default function AppHeader() {
 
   return (
     <AppShellHeader>
-      <Group p={16} justify="space-between" wrap={"nowrap"}>
+      <Group p={16} justify="space-between" wrap={"nowrap"} h={"100%"}>
         <Group gap={16}>
           <Burger
             opened={!siderCollapsed}

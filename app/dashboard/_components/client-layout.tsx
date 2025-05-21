@@ -1,14 +1,14 @@
-// app/dashboard/_components/client-layout.tsx
 "use client";
 import { AppShell, Paper, Title } from "@mantine/core";
 import { usePathname } from "next/navigation";
 import { capitalize } from "lodash";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 
 import { Sider } from "../sider";
-import styles from "./_client-layout.module.css";
 import { UserRole, Workspace } from "@prisma/client";
 import { useAppStateStore } from "@/stores/useAppState";
+import AppHeader from "@/lib/components/app-header/AppHeader";
+import styles from "./_client-layout.module.css";
 
 export const DashboardContext = createContext<{
   userRole: UserRole;
@@ -43,7 +43,7 @@ export default function ClientDashboardLayout({
   return (
     <DashboardContext.Provider value={{ userRole, workspace }}>
       <AppShell
-        header={{ height: 60 }}
+        header={{ height: 80 }}
         navbar={{
           width: 300,
           breakpoint: "sm",
@@ -51,14 +51,13 @@ export default function ClientDashboardLayout({
         }}
         padding="md"
       >
+        <AppHeader />
         <AppShell.Navbar>
           <Sider />
         </AppShell.Navbar>
 
-        <AppShell.Main className={styles.main} pt={40}>
-          <Title pt={"xl"} pb={"md"}>
-            {formatTitle()}
-          </Title>
+        <AppShell.Main className={styles.main}>
+          <Title pb={"md"}>{formatTitle()}</Title>
           <Paper
             className={styles.mainContent}
             p={"xl"}

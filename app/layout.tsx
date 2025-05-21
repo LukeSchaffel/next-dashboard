@@ -12,10 +12,9 @@ import {
   MantineProvider,
   ColorSchemeScript,
   mantineHtmlProps,
-  AppShell,
 } from "@mantine/core";
 
-import AppHeader from "@/lib/components/app-header/AppHeader";
+import ServerHeader from "@/lib/components/app-header/ServerHeader";
 import styles from "./_app.module.css";
 import { theme } from "../theme";
 import { Notifications } from "@mantine/notifications";
@@ -31,7 +30,7 @@ export default function RootLayout({ children }: { children: any }) {
       <html lang="en" {...mantineHtmlProps}>
         <head>
           <ColorSchemeScript />
-          <link rel="shortcut icon" href="/favicon.png" />
+          <link rel="shortcut icon" href="/favicon.svg" />
           <meta
             name="viewport"
             content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
@@ -39,11 +38,9 @@ export default function RootLayout({ children }: { children: any }) {
         </head>
         <body className={styles.body}>
           <MantineProvider theme={theme}>
+            <ServerHeader />
             <Notifications position="top-right" />
-            <AppShell>
-              <AppHeader />
-              {children}
-            </AppShell>
+            {children}
           </MantineProvider>
         </body>
       </html>
