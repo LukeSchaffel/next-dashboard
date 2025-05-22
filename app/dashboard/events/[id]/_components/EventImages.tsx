@@ -13,21 +13,17 @@ import {
   Modal,
   Button,
   rem,
+  BackgroundImage,
 } from "@mantine/core";
-import { EventWithDetails } from "@/stores/useEventStore";
-import ImageUploader from "../../../_components/ImageUploader";
+import { useDisclosure } from "@mantine/hooks";
 import { IconTrash, IconPhoto, IconMaximize, IconX } from "@tabler/icons-react";
-import { useSupabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
 import { Carousel } from "@mantine/carousel";
-import { useDisclosure } from "@mantine/hooks";
-import classes from "./_styles.module.css";
 
-interface ImageInfo {
-  path: string;
-  url: string;
-  name: string;
-}
+import { useSupabase, ImageInfo } from "@/lib/supabase";
+import { EventWithDetails } from "@/stores/useEventStore";
+import ImageUploader from "../../../_components/ImageUploader";
+import classes from "./_styles.module.css";
 
 interface EventImagesProps {
   event: EventWithDetails;
@@ -50,29 +46,8 @@ export default function EventImages({
     useDisclosure(false);
 
   const fetchImages = async () => {
-    if (!client || !event.workspaceId) return;
-
-    const { data, error } = await client.storage
-      .from("images")
-      .list(`user-uploads/events/${event.workspaceId}/${event.id}`);
-
-    if (error) {
-      console.error("Failed to list images:", error);
-      return;
-    }
-
-    const imageInfos = data.map((file) => {
-      const { data: urlData } = client.storage
-        .from("images")
-        .getPublicUrl(
-          `user-uploads/events/${event.workspaceId}/${event.id}/${file.name}`
-        );
-      return {
-        path: `user-uploads/events/${event.workspaceId}/${event.id}/${file.name}`,
-        url: urlData.publicUrl,
-        name: file.name,
-      };
-    });
+    if (!listImages) return;
+    const imageInfos = await listImages("events", event.id);
 
     setImages(imageInfos);
     setLoading(false);
@@ -98,17 +73,13 @@ export default function EventImages({
 
   return (
     <Stack gap="xl">
+      {images[0]?.url && <BackgroundImage h={200} src={images[0].url} />}
       <Paper p="xl" withBorder radius="md">
         <Stack gap="md">
           <Group>
             <IconPhoto size={24} stroke={1.5} />
             <Title order={3}>Upload New Image</Title>
           </Group>
-          <Text size="sm" c="dimmed">
-            Upload an image named &quot;header&quot; to set it as the main image
-            on the event page. Otherwise, images will be displayed in the event
-            gallery.
-          </Text>
           <ImageUploader
             type="events"
             workspaceId={event.workspaceId}
@@ -142,9 +113,9 @@ export default function EventImages({
           ) : images.length > 0 ? (
             <Box className={classes.carouselWrapper}>
               <Carousel
+                slideSize="70%"
                 withIndicators
                 height={400}
-                slideSize="100%"
                 slideGap="md"
                 classNames={{
                   root: classes.carousel,

@@ -11,6 +11,8 @@ import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import { use } from "react";
 import { useDisclosure, useFullscreen } from "@mantine/hooks";
+import Link from "next/link";
+
 import { useEventStore } from "@/stores/useEventStore";
 import { useSupabase } from "@/lib/supabase";
 import TagManager from "./_components/TagManager";
@@ -21,7 +23,6 @@ import EventSeating from "./_components/EventSeating";
 import EventSkeleton from "./_components/EventSkeleton";
 import EventDescription from "./_components/EventDescription";
 import EventImages from "./_components/EventImages";
-import Link from "next/link";
 
 export default function EventPage({
   params,
@@ -43,9 +44,6 @@ export default function EventPage({
   const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
     useDisclosure(false);
   const [imagePath, setImagePath] = useState<string | null>(null);
-  const { listImages } = useSupabase();
-  const [images, setImages] = useState<string[]>([]);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   useEffect(() => {
     fetchEvent(id).catch(() => {
@@ -53,17 +51,6 @@ export default function EventPage({
     });
     fetchTicketTypes(id).catch(console.error);
   }, [id, fetchEvent, fetchTicketTypes]);
-
-  useEffect(() => {
-    if (currentEvent?.id && !imagesLoaded) {
-      const fetchImages = async () => {
-        const imgs = await listImages("events", currentEvent.id);
-        setImages(imgs || []);
-        setImagesLoaded(true);
-      };
-      fetchImages();
-    }
-  }, [listImages, currentEvent?.id, imagesLoaded]);
 
   const handleEditTicketType = async (ticketTypeId: string) => {
     setEditingTicketTypeId(ticketTypeId);

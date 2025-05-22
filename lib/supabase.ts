@@ -2,9 +2,16 @@ import { useSession } from "@clerk/nextjs";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { useClientAuthSession } from "@/app/dashboard/_components/client-layout";
+import { notifications } from "@mantine/notifications";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+export interface ImageInfo {
+  path: string;
+  url: string;
+  name: string;
+}
 
 export const useSupabase = () => {
   const { session } = useSession();
@@ -52,7 +59,7 @@ export const useSupabase = () => {
       console.error("Upload failed:", error);
       throw error;
     }
-
+    notifications.show({ message: "Succesfully upload image" });
     return data.path;
   };
 
@@ -66,30 +73,41 @@ export const useSupabase = () => {
   const listImages = async (
     type: "events" | "locations",
     resourceId: string
-  ): Promise<any[] | undefined> => {
-    if (client) {
-      if (!workspace?.id) {
-        throw new Error("No workspace selected");
-      }
-
-      const { data, error } = await client.storage
-        .from("images")
-        .list(`user-uploads/${type}/${workspace.id}/${resourceId}`);
-
-      if (error) {
-        console.error("Failed to list images:", error);
-        throw error;
-      }
-
-      return data.map((file) => {
-        const { data: urlData } = client.storage
-          .from("images")
-          .getPublicUrl(
-            `user-uploads/${type}/${workspace.id}/${resourceId}/${file.name}`
-          );
-        return urlData.publicUrl;
-      });
+  ): Promise<ImageInfo[]> => {
+    if (!client) {
+      throw new Error("Supabase client not initialized");
     }
+
+    if (!workspace?.id) {
+      throw new Error("No workspace selected");
+    }
+
+    const { data, error } = await client.storage
+      .from("images")
+      .list(`user-uploads/${type}/${workspace.id}/${resourceId}`);
+
+    if (error) {
+      console.error("Failed to list images:", error);
+      throw error;
+    }
+
+    if (!data || data.length < 1) {
+      return [];
+    }
+
+    return await Promise.all(
+      data.map(async (file) => {
+        const path = `user-uploads/${type}/${workspace.id}/${resourceId}/${file.name}`;
+        const { data: urlData } = await client.storage
+          .from("images")
+          .getPublicUrl(path);
+        return {
+          path: path,
+          url: urlData.publicUrl,
+          name: file.name,
+        };
+      })
+    );
   };
 
   const deleteImage = async (path: string) => {
