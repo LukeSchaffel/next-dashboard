@@ -65,6 +65,9 @@ export async function PATCH(
         ...(updateData.tags !== undefined && {
           tags: await updateEventTags(updateData.tags, workspaceId),
         }),
+        ...(updateData.headerImgUrl && {
+          headerImgUrl: updateData.headerImgUrl,
+        }),
       },
       include: eventIncludeOptions,
     });

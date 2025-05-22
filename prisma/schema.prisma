@@ -118,6 +118,7 @@ model Event {
   TicketTypes   TicketType[]
   eventLayout   EventLayout? @relation("EventCustomLayout")
   tags          EventTag[]
+  headerImgUrl  String?
 }
 
 model Ticket {

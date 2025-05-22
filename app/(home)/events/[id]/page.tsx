@@ -32,55 +32,7 @@ import {
 import classes from "./_styles.module.css";
 import { listImagesServer } from "@/lib/supabase-server";
 
-interface EventWithDetails extends Event {
-  Location: {
-    name: string;
-    id: string;
-    address: string | null;
-    description: string | null;
-    phoneNumber: string | null;
-    email: string | null;
-    website: string | null;
-    facebookUrl: string | null;
-    instagramUrl: string | null;
-    twitterUrl: string | null;
-    linkedinUrl: string | null;
-    workspaceId: string;
-  } | null;
-  TicketTypes: (TicketType & {
-    allowedSections: {
-      id: string;
-      name: string;
-    }[];
-    Tickets: {
-      id: string;
-    }[];
-    available: number;
-    maxPerOrder: number;
-  })[];
-  eventLayout: {
-    id: string;
-    name: string;
-    description: string | null;
-    sections: {
-      id: string;
-      name: string;
-      description: string | null;
-      priceMultiplier: number;
-      rows: {
-        id: string;
-        name: string;
-        seats: {
-          id: string;
-          number: string;
-          status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "DISABLED";
-        }[];
-      }[];
-    }[];
-  } | null;
-}
-
-async function getEvent(id: string): Promise<EventWithDetails | null> {
+const getEvent = async (id: string) => {
   const event = await prisma.event.findUnique({
     where: { id },
     include: {
@@ -155,7 +107,7 @@ async function getEvent(id: string): Promise<EventWithDetails | null> {
     ...event,
     TicketTypes: ticketTypesWithAvailability,
   };
-}
+};
 
 export default async function EventPage({
   params,
@@ -174,10 +126,7 @@ export default async function EventPage({
   const isPast = dayjs(event.endsAt).isBefore(dayjs());
   const isCurrent = !isUpcoming && !isPast;
 
-  const headerImage =
-    images.find((img) => img.name === "header")?.url ||
-    images[0]?.url ||
-    "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070";
+  const headerImage = event.headerImgUrl || "";
 
   return (
     <Box>

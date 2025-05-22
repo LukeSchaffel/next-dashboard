@@ -21,9 +21,10 @@ import { useState, useEffect } from "react";
 import { Carousel } from "@mantine/carousel";
 
 import { useSupabase, ImageInfo } from "@/lib/supabase";
-import { EventWithDetails } from "@/stores/useEventStore";
+import { EventWithDetails, useEventStore } from "@/stores/useEventStore";
 import ImageUploader from "../../../_components/ImageUploader";
 import classes from "./_styles.module.css";
+import { notifications } from "@mantine/notifications";
 
 interface EventImagesProps {
   event: EventWithDetails;
@@ -39,12 +40,13 @@ export default function EventImages({
   onImageRemoved,
 }: EventImagesProps) {
   const { listImages, deleteImage, client } = useSupabase();
+  const { updateEvent } = useEventStore();
   const [images, setImages] = useState<ImageInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<ImageInfo | null>(null);
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
-
+  console.log(event);
   const fetchImages = async () => {
     if (!listImages) return;
     const imageInfos = await listImages("events", event.id);
@@ -71,9 +73,18 @@ export default function EventImages({
     }
   };
 
+  const handleUpdateEventHeader = async (url: string) => {
+    try {
+      updateEvent(event.id, { headerImgUrl: url });
+    } catch (error) {}
+    notifications.show({ message: "Header changed" });
+  };
+
   return (
     <Stack gap="xl">
-      {images[0]?.url && <BackgroundImage h={200} src={images[0].url} />}
+      {event.headerImgUrl && (
+        <BackgroundImage h={200} src={event.headerImgUrl} />
+      )}
       <Paper p="xl" withBorder radius="md">
         <Stack gap="md">
           <Group>
@@ -147,9 +158,17 @@ export default function EventImages({
                           >
                             {imageInfo.name}
                           </Text>
-                          {imageInfo.name === "header" && (
-                            <Badge size="sm" variant="filled" color="blue">
-                              Header Image
+
+                          {imageInfo.url !== event.headerImgUrl && (
+                            <Badge
+                              size="sm"
+                              variant="filled"
+                              color="blue"
+                              onClick={() =>
+                                handleUpdateEventHeader(imageInfo.url)
+                              }
+                            >
+                              Set as header
                             </Badge>
                           )}
                         </Group>

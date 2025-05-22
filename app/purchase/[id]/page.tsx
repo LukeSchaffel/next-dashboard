@@ -22,36 +22,6 @@ import { prisma } from "@/lib/prisma";
 import { IconCalendar, IconMapPin } from "@tabler/icons-react";
 import classes from "./_styles.module.css";
 
-interface TicketType {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  quantity: number | null;
-  Event: {
-    id: string;
-    name: string;
-    description: string | null;
-    startsAt: Date;
-    endsAt: Date;
-    Location: {
-      name: string;
-      address: string | null;
-    } | null;
-    eventLayout: {
-      sections: {
-        id: string;
-      }[];
-    } | null;
-  };
-  Tickets: {
-    id: string;
-  }[];
-  allowedSections: {
-    id: string;
-  }[];
-}
-
 async function getTicketType(id: string) {
   const ticketType = await prisma.ticketType.findUnique({
     where: { id },
@@ -110,10 +80,7 @@ export default async function PurchasePage({
   return (
     <Box>
       {/* Hero Section with Background */}
-      <BackgroundImage
-        src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070"
-        h={300}
-      >
+      <BackgroundImage src={ticketType?.Event?.headerImgUrl || ""} h={300}>
         <Box
           style={{
             background:
