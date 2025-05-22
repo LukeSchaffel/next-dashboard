@@ -8,7 +8,7 @@
 3. Event enhancements - DOne
   - Event instances
     1. Each event can occur multiple times accross its timeframe, create specific instances by date-time 
-4. Stripe integration
+4. Stripe connect
 5. Add users and ushers into workspace
 
 
