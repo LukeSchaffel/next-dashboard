@@ -100,7 +100,7 @@ export function Sider() {
 
       <div className={classes.navbarMain}>{links}</div>
 
-      <div className={classes.footer}>
+      {/* <div className={classes.footer}>
         <a
           href="#"
           className={classes.link}
@@ -122,7 +122,7 @@ export function Sider() {
             <span>Logout</span>
           </a>
         </SignOutButton>
-      </div>
+      </div> */}
     </nav>
   );
 }

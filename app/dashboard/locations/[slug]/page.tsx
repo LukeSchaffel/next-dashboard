@@ -157,15 +157,15 @@ export default function LocationPage({
               <Group justify="space-between">
                 <Title order={2}>{location.name}</Title>
                 <Group>
-                  <Tooltip label={copied ? "URL Copied!" : "Copy Public URL"}>
-                    <Button
-                      variant="light"
-                      leftSection={<IconCopy size={16} />}
-                      onClick={handleCopyUrl}
-                    >
-                      Copy Public URL
-                    </Button>
-                  </Tooltip>
+                  <Button
+                    variant="subtle"
+                    leftSection={<IconEye size={16} />}
+                    component="a"
+                    href={`/locations/${location.id}`}
+                    target="_blank"
+                  >
+                    View Website
+                  </Button>
                   <Link
                     href={`/dashboard/locations/create-or-edit?locationId=${location.id}&from=details`}
                   >

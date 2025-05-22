@@ -31,9 +31,16 @@ export default function ServerHeader() {
           </SignInButton>
         </SignedOut>
         <SignedIn>
-          <SignOutButton>
-            <Button variant="transparent">Sign out</Button>
-          </SignOutButton>
+          <Group>
+            <Link href={"/dashboard"}>
+              <Button radius="xl" size="md">
+                Dashboard
+              </Button>
+            </Link>
+            <SignOutButton>
+              <Button variant="transparent">Sign out</Button>
+            </SignOutButton>
+          </Group>
         </SignedIn>
       </Group>
     </header>

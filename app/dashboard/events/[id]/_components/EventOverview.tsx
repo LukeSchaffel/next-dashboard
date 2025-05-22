@@ -8,7 +8,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { IconTag } from "@tabler/icons-react";
+import { IconTag, IconEye } from "@tabler/icons-react";
 import { Event, Ticket } from "@prisma/client";
 import dayjs from "dayjs";
 import Link from "next/link";
@@ -32,13 +32,24 @@ export default function EventOverview({
         <Stack gap="md">
           <Group justify="space-between">
             <Title order={2}>{event.name}</Title>
-            <Button
-              variant="subtle"
-              leftSection={<IconTag size={16} />}
-              onClick={onManageTags}
-            >
-              Manage Tags
-            </Button>
+            <Group>
+              <Button
+                variant="subtle"
+                leftSection={<IconEye size={16} />}
+                component="a"
+                href={`/events/${event.id}`}
+                target="_blank"
+              >
+                View Website
+              </Button>
+              <Button
+                variant="subtle"
+                leftSection={<IconTag size={16} />}
+                onClick={onManageTags}
+              >
+                Manage Tags
+              </Button>
+            </Group>
           </Group>
           <Group>
             <Badge size="lg" variant="light">

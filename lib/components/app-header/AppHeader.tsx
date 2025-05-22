@@ -1,7 +1,12 @@
 "use client";
 import { AppShellHeader, Burger, Button, Group, Image } from "@mantine/core";
 import { usePathname } from "next/navigation";
-import { useAuth, SignInButton, SignOutButton } from "@clerk/nextjs";
+import {
+  useAuth,
+  SignInButton,
+  SignOutButton,
+  UserButton,
+} from "@clerk/nextjs";
 import Link from "next/link";
 
 import { useAppStateStore } from "@/stores/useAppState";
@@ -20,9 +25,12 @@ export default function AppHeader() {
       );
     }
     return path.includes("dashboard") ? (
-      <SignOutButton>
-        <Button variant="transparent">Sign out</Button>
-      </SignOutButton>
+      <Group>
+        <UserButton />
+        <SignOutButton>
+          <Button variant="transparent">Sign out</Button>
+        </SignOutButton>
+      </Group>
     ) : (
       <Link href="/dashboard">
         <Button radius={"xl"}>Dashboard</Button>
@@ -44,9 +52,13 @@ export default function AppHeader() {
           <Link href={"/"}>
             <Image src="/logo.png" alt="Logo" width={150} height={80} />
           </Link>
-          <Link href="/discover">Discover</Link>
-          <Link href="/events">Events</Link>
-          <Link href="/locations">Locations</Link>
+          {/* {!siderCollapsed && (
+            <>
+              <Link href="/discover">Discover</Link>
+              <Link href="/events">Events</Link>
+              <Link href="/locations">Locations</Link>
+            </>
+          )} */}
         </Group>
 
         {getHeaderRight()}
