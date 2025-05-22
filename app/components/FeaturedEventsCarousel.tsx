@@ -63,7 +63,10 @@ export function FeaturedEventsCarousel({ events }: { events: any[] }) {
             <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
               <CardSection>
                 <Image
-                  src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070"
+                  src={
+                    event.headerImgUrl ||
+                    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070"
+                  }
                   height={160}
                   alt={event.name}
                 />
