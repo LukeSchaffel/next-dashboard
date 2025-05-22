@@ -46,7 +46,7 @@ export default function EventImages({
   const [selectedImage, setSelectedImage] = useState<ImageInfo | null>(null);
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
-  console.log(event);
+
   const fetchImages = async () => {
     if (!listImages) return;
     const imageInfos = await listImages("events", event.id);

@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { getAuthSession } from "@/lib/auth";
 import {
   updateEventTags,
-  eventIncludeOptions,
   validateEventAccess,
   eventWithDetailsSelector,
 } from "@/lib/event-helpers";
@@ -69,7 +68,7 @@ export async function PATCH(
           headerImgUrl: updateData.headerImgUrl,
         }),
       },
-      include: eventIncludeOptions,
+      include: eventWithDetailsSelector,
     });
 
     return NextResponse.json(event, { status: 200 });

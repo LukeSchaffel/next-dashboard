@@ -14,7 +14,6 @@ import { useDisclosure, useFullscreen } from "@mantine/hooks";
 import Link from "next/link";
 
 import { useEventStore } from "@/stores/useEventStore";
-import { useSupabase } from "@/lib/supabase";
 import TagManager from "./_components/TagManager";
 import TicketTypeForm from "./_components/TicketTypeForm";
 import EventOverview from "./_components/EventOverview";
@@ -50,7 +49,7 @@ export default function EventPage({
       notFound();
     });
     fetchTicketTypes(id).catch(console.error);
-  }, [id, fetchEvent, fetchTicketTypes]);
+  }, [id]);
 
   const handleEditTicketType = async (ticketTypeId: string) => {
     setEditingTicketTypeId(ticketTypeId);

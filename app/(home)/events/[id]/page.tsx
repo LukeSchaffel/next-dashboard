@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Event, TicketType, Location } from "@prisma/client";
 import dayjs from "dayjs";
 import {
   Stack,
@@ -21,6 +20,7 @@ import {
   BackgroundImage,
   SimpleGrid,
   Image,
+  Anchor,
 } from "@mantine/core";
 import Link from "next/link";
 import {
@@ -28,9 +28,18 @@ import {
   IconClock,
   IconMapPin,
   IconPhoto,
+  IconPhone,
+  IconMail,
+  IconWorld,
+  IconBrandFacebook,
+  IconBrandInstagram,
+  IconBrandTwitter,
+  IconBrandLinkedin,
 } from "@tabler/icons-react";
-import classes from "./_styles.module.css";
+
 import { listImagesServer } from "@/lib/supabase-server";
+import classes from "./_styles.module.css";
+import { formatPhoneNumber } from "@/lib/formatters";
 
 const getEvent = async (id: string) => {
   const event = await prisma.event.findUnique({
@@ -131,196 +140,83 @@ export default async function EventPage({
   return (
     <Box>
       {/* Hero Section with Background */}
-      <BackgroundImage src={headerImage} h={400}>
+      <BackgroundImage src={headerImage} h={500}>
         <Box
           style={{
             background:
-              "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))",
+              "linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8))",
             height: "100%",
             display: "flex",
             alignItems: "center",
           }}
         >
           <Container size="lg">
-            <Stack gap="md">
-              <Group justify="space-between" align="flex-start">
-                <Stack gap="xs">
-                  <Title order={1} size={rem(42)} c="white">
+            <Grid gutter="xl" align="center">
+              <GridCol span={{ base: 12, md: 7 }}>
+                <Stack gap="lg">
+                  <Badge
+                    size="xl"
+                    variant={isPast ? "light" : "filled"}
+                    color={isPast ? "gray" : isCurrent ? "green" : "blue"}
+                    w="fit-content"
+                  >
+                    {isPast
+                      ? "Past Event"
+                      : isCurrent
+                      ? "Happening Now"
+                      : "Upcoming"}
+                  </Badge>
+                  <Title order={1} size={rem(48)} c="white" lh={1.2}>
                     {event.name}
                   </Title>
-                  <Group gap="xl">
-                    <Group gap="xs">
-                      <IconCalendar size={20} stroke={1.5} color="white" />
-                      <Text size="lg" c="gray.3">
-                        {dayjs(event.startsAt).format("dddd, MMMM D, YYYY")}
-                      </Text>
-                    </Group>
-                    <Group gap="xs">
-                      <IconClock size={20} stroke={1.5} color="white" />
-                      <Text size="lg" c="gray.3">
-                        {dayjs(event.startsAt).format("h:mm A")} -{" "}
-                        {dayjs(event.endsAt).format("h:mm A")}
-                      </Text>
-                    </Group>
-                  </Group>
-                </Stack>
-                <Badge
-                  size="xl"
-                  variant={isPast ? "light" : "filled"}
-                  color={isPast ? "gray" : isCurrent ? "green" : "blue"}
-                >
-                  {isPast
-                    ? "Past Event"
-                    : isCurrent
-                    ? "Happening Now"
-                    : "Upcoming"}
-                </Badge>
-              </Group>
-            </Stack>
-          </Container>
-        </Box>
-      </BackgroundImage>
-
-      <Container size="lg" py="xl">
-        <Stack gap="xl">
-          {/* Event Images Section */}
-          {images.length > 0 && (
-            <Box className={classes.section}>
-              <Paper className={classes.sectionContent}>
-                <Stack gap="md">
-                  <Group className={classes.sectionTitle}>
-                    <IconPhoto size={24} stroke={1.5} />
-                    <Title order={2} className={classes.title}>
-                      Event <span className={classes.highlight}>Gallery</span>
-                    </Title>
-                  </Group>
-                  <Divider />
-                  <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                    {images.map((image) => (
-                      <Image
-                        key={image.name}
-                        src={image.url}
-                        alt={image.name}
-                        height={200}
-                        fit="cover"
-                        radius="md"
-                      />
-                    ))}
-                  </SimpleGrid>
-                </Stack>
-              </Paper>
-            </Box>
-          )}
-
-          {/* Event Description */}
-          {event.description && (
-            <Box className={classes.section}>
-              <Paper className={classes.sectionContent}>
-                <Stack gap="md">
-                  <Group className={classes.sectionTitle}>
-                    <Title order={2} className={classes.title}>
-                      About This{" "}
-                      <span className={classes.highlight}>Event</span>
-                    </Title>
-                  </Group>
-                  <Divider />
-                  <Box>
-                    <div
-                      dangerouslySetInnerHTML={{ __html: event.description }}
-                    />
-                  </Box>
-                </Stack>
-              </Paper>
-            </Box>
-          )}
-
-          {/* Location Section */}
-          {event.Location && (
-            <Box className={classes.sectionAlt}>
-              <Container size="lg">
-                <Paper className={classes.sectionContent}>
                   <Stack gap="md">
-                    <Group className={classes.sectionTitle}>
-                      <IconMapPin size={24} stroke={1.5} />
-                      <Title order={2} className={classes.title}>
-                        Event{" "}
-                        <span className={classes.highlight}>Location</span>
-                      </Title>
-                    </Group>
-                    <Divider />
-                    <Stack gap="md">
-                      <Text size="xl" fw={500}>
-                        {event.Location.name}
-                      </Text>
-                      {event.Location.address && (
-                        <Text size="lg" c="dimmed">
-                          {event.Location.address}
+                    <Group gap="xl">
+                      <Group gap="xs">
+                        <IconCalendar size={24} stroke={1.5} color="white" />
+                        <Text size="lg" c="gray.3">
+                          {dayjs(event.startsAt).format("dddd, MMMM D, YYYY")}
                         </Text>
-                      )}
-                      <Link href={`/locations/${event.Location.id}`}>
-                        <Button variant="light" size="md" radius="md">
-                          View Location Details
-                        </Button>
-                      </Link>
-                    </Stack>
+                      </Group>
+                      <Group gap="xs">
+                        <IconClock size={24} stroke={1.5} color="white" />
+                        <Text size="lg" c="gray.3">
+                          {dayjs(event.startsAt).format("h:mm A")} -{" "}
+                          {dayjs(event.endsAt).format("h:mm A")}
+                        </Text>
+                      </Group>
+                    </Group>
+                    {event.Location && (
+                      <Group gap="xs">
+                        <IconMapPin size={24} stroke={1.5} color="white" />
+                        <Text size="lg" c="gray.3">
+                          {event.Location.name}
+                        </Text>
+                      </Group>
+                    )}
                   </Stack>
-                </Paper>
-              </Container>
-            </Box>
-          )}
-
-          {/* Tickets Section */}
-          {isUpcoming && event.TicketTypes.length > 0 && (
-            <Box className={classes.section}>
-              <Container size="lg">
-                <Stack gap="xl">
-                  <Title order={2} className={classes.title} ta="center">
-                    Available <span className={classes.highlight}>Tickets</span>
-                  </Title>
-                  <Grid gutter="xl">
-                    {event.TicketTypes.map((ticketType) => (
-                      <GridCol
-                        key={ticketType.id}
-                        span={{ base: 12, sm: 6, md: 4 }}
-                      >
-                        <Paper className={classes.ticketCard}>
-                          <Stack
-                            gap="lg"
-                            justify="space-between"
-                            h="100%"
-                            p="xl"
-                          >
-                            <Stack gap="md">
-                              <Stack gap="xs">
-                                <Title order={3}>{ticketType.name}</Title>
-                                <Text className={classes.ticketPrice}>
-                                  ${(ticketType.price / 100).toFixed(2)}
-                                </Text>
-                                {ticketType.description && (
-                                  <Text size="sm" c="dimmed">
-                                    {ticketType.description}
-                                  </Text>
-                                )}
-                              </Stack>
-                              <List size="sm" spacing="xs">
-                                {ticketType.available > 0 ? (
-                                  <ListItem>
-                                    {ticketType.available} tickets remaining
-                                  </ListItem>
-                                ) : (
-                                  <ListItem c="red">Sold Out</ListItem>
-                                )}
-                                {ticketType.maxPerOrder && (
-                                  <ListItem>
-                                    Maximum {ticketType.maxPerOrder} per order
-                                  </ListItem>
-                                )}
-                              </List>
+                </Stack>
+              </GridCol>
+              {isUpcoming && event.TicketTypes.length > 0 && (
+                <GridCol span={{ base: 12, md: 5 }}>
+                  <Paper p="md" radius="md" bg="rgba(255, 255, 255, 0.95)">
+                    <Stack gap="xs">
+                      {event.TicketTypes.map((ticketType) => (
+                        <Paper
+                          key={ticketType.id}
+                          p="sm"
+                          radius="sm"
+                          withBorder
+                        >
+                          <Group justify="space-between" align="center">
+                            <Stack gap={0}>
+                              <Text fw={600}>{ticketType.name}</Text>
+                              <Text size="lg" fw={700} c="blue">
+                                ${(ticketType.price / 100).toFixed(2)}
+                              </Text>
                             </Stack>
                             <Link href={`/purchase/${ticketType.id}`}>
                               <Button
-                                fullWidth
-                                size="lg"
+                                size="sm"
                                 radius="md"
                                 disabled={ticketType.available === 0}
                                 variant={
@@ -331,33 +227,179 @@ export default async function EventPage({
                               >
                                 {ticketType.available === 0
                                   ? "Sold Out"
-                                  : "Select Tickets"}
+                                  : "Buy"}
                               </Button>
                             </Link>
-                          </Stack>
+                          </Group>
+                          {ticketType.available > 0 && (
+                            <Text size="xs" c="dimmed" mt={4}>
+                              {ticketType.available} available
+                            </Text>
+                          )}
                         </Paper>
-                      </GridCol>
-                    ))}
-                  </Grid>
-                </Stack>
-              </Container>
-            </Box>
-          )}
+                      ))}
+                    </Stack>
+                  </Paper>
+                </GridCol>
+              )}
+            </Grid>
+          </Container>
+        </Box>
+      </BackgroundImage>
 
-          {/* Past Event Message */}
-          {isPast && (
-            <Box className={classes.sectionAlt}>
-              <Container size="lg">
-                <Paper className={classes.sectionContent}>
-                  <Text ta="center" size="lg" c="dimmed">
-                    This event has ended. Check back for future events at this
-                    location.
-                  </Text>
-                </Paper>
-              </Container>
-            </Box>
-          )}
-        </Stack>
+      <Container size="lg" py="xl">
+        <Grid gutter="xl">
+          {/* Main Content Column */}
+          <GridCol span={{ base: 12, md: 8 }}>
+            {/* Event Description */}
+            {event.description && (
+              <Paper p="xl" radius="md" mb="xl">
+                <div dangerouslySetInnerHTML={{ __html: event.description }} />
+              </Paper>
+            )}
+
+            {/* Event Images Section */}
+            {images.length > 0 && (
+              <Paper p="xl" radius="md" mb="xl">
+                <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                  {images.map((image) => (
+                    <Image
+                      key={image.name}
+                      src={image.url}
+                      alt={image.name}
+                      height={300}
+                      fit="cover"
+                      radius="md"
+                    />
+                  ))}
+                </SimpleGrid>
+              </Paper>
+            )}
+          </GridCol>
+
+          {/* Sidebar Column */}
+          <GridCol span={{ base: 12, md: 4 }}>
+            {/* Location Details */}
+            {event.Location && (
+              <Paper p="xl" radius="md" mb="xl">
+                <Stack gap="md">
+                  <Group gap="xs">
+                    <IconMapPin size={24} stroke={1.5} />
+                    <Text size="lg" fw={500}>
+                      Location
+                    </Text>
+                  </Group>
+                  <Divider />
+                  <Stack gap="md">
+                    <Link
+                      href={`/locations/${event.Location.id}`}
+                      style={{ textDecoration: "none" }}
+                    >
+                      <Text fw={600} size="lg" c="blue">
+                        {event.Location.name}
+                      </Text>
+                    </Link>
+                    {event.Location.address && (
+                      <Text size="sm" c="dimmed">
+                        {event.Location.address}
+                      </Text>
+                    )}
+
+                    {/* Contact Information */}
+                    {(event.Location.phoneNumber ||
+                      event.Location.email ||
+                      event.Location.website) && (
+                      <Stack gap="xs">
+                        {event.Location.phoneNumber && (
+                          <Group gap="xs">
+                            <IconPhone size={18} stroke={1.5} />
+                            <Text size="sm">
+                              {formatPhoneNumber(event.Location.phoneNumber)}
+                            </Text>
+                          </Group>
+                        )}
+                        {event.Location.email && (
+                          <Group gap="xs">
+                            <IconMail size={18} stroke={1.5} />
+                            <Anchor
+                              href={`mailto:${event.Location.email}`}
+                              size="sm"
+                            >
+                              {event.Location.email}
+                            </Anchor>
+                          </Group>
+                        )}
+                        {event.Location.website && (
+                          <Group gap="xs">
+                            <IconWorld size={18} stroke={1.5} />
+                            <Anchor
+                              href={event.Location.website}
+                              target="_blank"
+                              size="sm"
+                            >
+                              {event.Location.website}
+                            </Anchor>
+                          </Group>
+                        )}
+                      </Stack>
+                    )}
+
+                    {/* Social Media Links */}
+                    {(event.Location.facebookUrl ||
+                      event.Location.instagramUrl ||
+                      event.Location.twitterUrl ||
+                      event.Location.linkedinUrl) && (
+                      <Group gap="xs">
+                        {event.Location.facebookUrl && (
+                          <Anchor
+                            href={event.Location.facebookUrl}
+                            target="_blank"
+                          >
+                            <IconBrandFacebook size={20} stroke={1.5} />
+                          </Anchor>
+                        )}
+                        {event.Location.instagramUrl && (
+                          <Anchor
+                            href={event.Location.instagramUrl}
+                            target="_blank"
+                          >
+                            <IconBrandInstagram size={20} stroke={1.5} />
+                          </Anchor>
+                        )}
+                        {event.Location.twitterUrl && (
+                          <Anchor
+                            href={event.Location.twitterUrl}
+                            target="_blank"
+                          >
+                            <IconBrandTwitter size={20} stroke={1.5} />
+                          </Anchor>
+                        )}
+                        {event.Location.linkedinUrl && (
+                          <Anchor
+                            href={event.Location.linkedinUrl}
+                            target="_blank"
+                          >
+                            <IconBrandLinkedin size={20} stroke={1.5} />
+                          </Anchor>
+                        )}
+                      </Group>
+                    )}
+                  </Stack>
+                </Stack>
+              </Paper>
+            )}
+
+            {/* Past Event Message */}
+            {isPast && (
+              <Paper p="xl" radius="md" bg="gray.0">
+                <Text ta="center" c="dimmed">
+                  This event has ended. Check back for future events at this
+                  location.
+                </Text>
+              </Paper>
+            )}
+          </GridCol>
+        </Grid>
       </Container>
     </Box>
   );

@@ -152,65 +152,6 @@ export function createEventLayoutFromTemplate(
 }
 
 /**
- * Common event include options for Prisma queries
- */
-export const eventIncludeOptions = {
-  Location: {
-    select: {
-      id: true,
-      name: true,
-      address: true,
-    },
-  },
-  Tickets: {
-    include: {
-      TicketType: true,
-      seat: { include: { Row: true } },
-      purchase: true,
-    },
-  },
-  TicketTypes: {
-    include: {
-      Tickets: true,
-    },
-  },
-  EventSeries: true,
-  tags: true,
-  eventLayout: {
-    include: {
-      sections: {
-        include: {
-          rows: {
-            include: {
-              seats: true,
-            },
-          },
-        },
-      },
-    },
-  },
-};
-
-/**
- * Lighter event include options for list views - only includes the minimum needed data
- */
-export const eventListIncludeOptions = {
-  Location: {
-    select: {
-      id: true,
-      name: true,
-    },
-  },
-  EventSeries: {
-    select: {
-      id: true,
-      name: true,
-      description: true,
-    },
-  },
-};
-
-/**
  * Updates event tags with proper Prisma operations
  */
 export async function updateEventTags(

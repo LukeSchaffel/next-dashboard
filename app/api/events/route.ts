@@ -7,8 +7,6 @@ import {
   processTags,
   createEventLayoutFromTemplate,
   createTicketTypes,
-  eventIncludeOptions,
-  eventListIncludeOptions,
   eventWithDetailsSelector,
 } from "@/lib/event-helpers";
 
@@ -69,7 +67,7 @@ export async function POST(request: NextRequest) {
               }
             : {}),
         },
-        include: eventIncludeOptions,
+        include: eventWithDetailsSelector,
       });
 
       return NextResponse.json(event, { status: 201 });
@@ -113,7 +111,7 @@ export async function POST(request: NextRequest) {
                   }
                 : {}),
             },
-            include: eventIncludeOptions,
+            include: eventWithDetailsSelector,
           });
         })
       );
@@ -123,7 +121,7 @@ export async function POST(request: NextRequest) {
         where: { id: series.id },
         include: {
           events: {
-            include: eventIncludeOptions,
+            include: eventWithDetailsSelector,
           },
         },
       });
