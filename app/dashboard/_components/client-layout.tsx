@@ -1,5 +1,5 @@
 "use client";
-import { AppShell, Paper, Title } from "@mantine/core";
+import { Alert, AppShell, Button, Paper, Title } from "@mantine/core";
 import { usePathname } from "next/navigation";
 import { capitalize } from "lodash";
 import { createContext, useContext, useEffect } from "react";
@@ -9,6 +9,7 @@ import { UserRole, Workspace } from "@prisma/client";
 import { useAppStateStore } from "@/stores/useAppState";
 import AppHeader from "@/lib/components/app-header/AppHeader";
 import styles from "./_client-layout.module.css";
+import { useStripe } from "@/lib/useStripe";
 
 export const DashboardContext = createContext<{
   userRole: UserRole;
@@ -26,6 +27,8 @@ export default function ClientDashboardLayout({
 }) {
   const pathname = usePathname();
   const { siderCollapsed } = useAppStateStore();
+  const { handleCreateStripeAccount, connectedAccountId, getStripeLink } =
+    useStripe();
 
   const formatTitle = () => {
     const split = pathname.split("/");
@@ -39,6 +42,12 @@ export default function ClientDashboardLayout({
 
     return capitalize(title);
   };
+
+  useEffect(() => {
+    if (workspace) {
+      handleCreateStripeAccount(workspace);
+    }
+  }, [workspace]);
 
   return (
     <DashboardContext.Provider value={{ userRole, workspace }}>
@@ -57,6 +66,15 @@ export default function ClientDashboardLayout({
         </AppShell.Navbar>
 
         <AppShell.Main className={styles.main}>
+          {connectedAccountId && (
+            <Alert variant="light" color="blue" title="Account incomplete">
+              Onboarding incomplete, please complete onboarding before you can
+              accept payements
+              <Button variant="subtle" onClick={getStripeLink}>
+                Take me
+              </Button>
+            </Alert>
+          )}
           <Title pb={"md"}>{formatTitle()}</Title>
           <Paper
             className={styles.mainContent}

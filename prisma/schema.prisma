@@ -9,9 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -46,6 +46,10 @@ model Workspace {
   EventSeat       EventSeat[]
   TicketPurchase  TicketPurchase[]
   EventTags       EventTag[]
+
+  stripeAccountId          String?
+  stripeAccountStatus      String?
+  stripeOnboardingComplete Boolean @default(false)
 }
 
 model UserRole {
