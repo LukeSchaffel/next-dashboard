@@ -50,6 +50,7 @@ export const useStripe = () => {
 
   const getStripeLink = async () => {
     try {
+      
       const res = await fetch("/api/stripe/create_link", {
         method: "POST",
         headers: {
