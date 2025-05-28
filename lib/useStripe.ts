@@ -60,8 +60,9 @@ export const useStripe = () => {
         }),
       });
 
-      const json = await res.json()
-      console.log(json)
+      const json = await res.json();
+      const { url } = json;
+      window.open(url, "_blank");
     } catch (error) {
       console.log(error);
     }
@@ -72,6 +73,6 @@ export const useStripe = () => {
     accountCreatePending,
     accountLinkCreatePending,
     connectedAccountId,
-    getStripeLink
+    getStripeLink,
   };
 };
